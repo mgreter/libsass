@@ -204,6 +204,8 @@ namespace Sass {
     ADD_CONSTREF(CssMediaQueryVector, media);
 
     // Flag to hoist import to the top.
+    // This case is possible if an `@import` within
+    // an imported css file is inside a `CssStyleRule`.
     ADD_CONSTREF(bool, outOfOrder);
 
   public:

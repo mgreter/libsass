@@ -1,5 +1,8 @@
-#ifndef SASS_UTF8_STRING_HPP
-#define SASS_UTF8_STRING_HPP
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+#ifndef SASS_UNICODE_HPP
+#define SASS_UNICODE_HPP
 
 // sass.hpp must go before all system headers
 // to get the __EXTENSIONS__ fix on Solaris.

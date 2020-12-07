@@ -3,16 +3,8 @@
 
 #include "memory/allocator.hpp"
 
-#ifndef MAX_NESTING
-// Note that this limit is not an exact science
-// it depends on various factors, which some are
-// not under our control (compile time or even OS
-// dependent settings on the available stack size)
-// It should fix most common segfault cases though.
-#define MAX_NESTING 512
-#endif
-
-// Helper class to switch a flag and revert once we go out of scope
+// Helper class to switch a flag
+// and revert once we go out of scope
 template <class T>
 class LocalOption final {
   private:
@@ -29,24 +21,22 @@ class LocalOption final {
     }
 };
 
-  // Helper class to put something on a vector
-  // and revert once we go out of scope.
-  template <class T>
-  class LocalStack final {
-  private:
-    sass::vector<T>& cnt; // container
-  public:
-    LocalStack(sass::vector<T>& cnt, T push) :
-      cnt(cnt)
-    {
-      cnt.emplace_back(push);
-    }
-    ~LocalStack() {
-      cnt.pop_back();
-    }
-  };
-
-  // typedef LocalOptions<bool> 
+// Helper class to put something on a vector
+// and revert once we go out of scope.
+template <class T>
+class LocalStack final {
+private:
+  sass::vector<T>& cnt; // container
+public:
+  LocalStack(sass::vector<T>& cnt, T push) :
+    cnt(cnt)
+  {
+    cnt.emplace_back(push);
+  }
+  ~LocalStack() {
+    cnt.pop_back();
+  }
+};
 
 // Macros to help create and maintain local and recursive flag states
 #define LOCAL_FLAG(name,opt) LocalOption<bool> flag_##name(name, opt)
@@ -55,7 +45,7 @@ class LocalOption final {
 
 #define NESTING_GUARD(name) \
   LocalOption<size_t> cnt_##name(name, name + 1); \
-  if (name > MAX_NESTING) throw Exception::RecursionLimitError(); \
+  if (name > SassMaxNesting) throw Exception::RecursionLimitError(); \
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -109,22 +99,6 @@ private:
     #define SASS_MEMORY_ARGS_VOID
 
   #endif
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  // Inverting these functions is a bit tricky as there are consequences
-  // Easiest would be to just switch out the operand, but that would mean
-  // that the right hand side would determine the implementation. It would
-  // also invert the arguments given, e.g. for error reporting. Another way
-  // is to make both comparisons in order to keep left and right arguments.
-  // #ifdef SASS_OPTIMIZE_CMP_OPS
-  // bool operator>(const AstNode& rhs) const { return rhs < *this; }
-  // bool operator<=(const AstNode& rhs) const { return !(rhs < *this); }
-  // #else
-  // bool operator>(const AstNode& rhs) const { return !(*this < rhs || *this == rhs); }
-  // bool operator<=(const AstNode& rhs) const { return *this < rhs || *this == rhs; }
-  // #endif
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

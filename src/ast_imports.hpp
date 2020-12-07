@@ -17,6 +17,7 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
+  // Static imports are plain css imports with `url()`
   class StaticImport final : public ImportBase
   {
   private:
@@ -51,20 +52,20 @@ namespace Sass {
   // Dynamic import beside its name must have a static url
   // We do not support to load sass partials programmatic
   // They also don't allow any supports or media queries.
-  class IncludeImport final : public ImportBase, public ModRule
+  class IncludeImport62 final : public ImportBase, public ModRule
   {
   private:
     ADD_PROPERTY(bool, wasExported33);
   public:
 
-    const sass::vector<ResolvedImport>* candidates = nullptr;
+    const sass::vector<ResolvedImport>* candidates22 = nullptr;
 
-    IncludeImport(const SourceSpan& pstate,
+    IncludeImport62(const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,
-      Import* import);
+      Import93* import);
     // Implement final up-casting method
-    IMPLEMENT_ISA_CASTER(IncludeImport);
+    IMPLEMENT_ISA_CASTER(IncludeImport62);
   };
 
   /////////////////////////////////////////////////////////////////////////

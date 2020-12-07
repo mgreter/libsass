@@ -40,7 +40,7 @@ namespace Sass {
         MapObj result = SASS_MEMORY_COPY(map2);
 
         // Because values in `map2` take precedence over `map1`, we just check if any
-        // entires in `map1` don't have corresponding keys in `map2`, or if they're
+        // entries in `map1` don't have corresponding keys in `map2`, or if they're
         // maps that need to be merged in their own right.
         for (auto kv : map1->elements()) {
           Value* key = kv.first;
@@ -441,7 +441,6 @@ namespace Sass {
         module.addFunction(key_deep_remove, ctx.createBuiltInFunction(key_deep_remove, "$map, $key, $keys...", fnDeepRemove));
 
       }
-
 
       /*******************************************************************/
 

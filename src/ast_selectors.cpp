@@ -226,7 +226,7 @@ namespace Sass {
     const sass::string& name,
     bool element) :
     SimpleSelector(pstate, name),
-    normalized_(Util::unvendor(name)),
+    normalized_(StringUtils::unvendor(name)),
     argument_(),
     selector_(),
     isSyntacticClass_(!element),
@@ -695,7 +695,7 @@ namespace Sass {
     ListObj list = SASS_MEMORY_NEW(List,
       pstate(), {}, SASS_SPACE);
     for (SelectorComponent* component : elements()) {
-      SassOutputOptionsCpp out({
+      OutputOptions out({
         SASS_STYLE_TO_CSS,
         SassDefaultPrecision });
       Cssize inspect(out, false);

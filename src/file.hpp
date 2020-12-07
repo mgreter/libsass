@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_FILE_HPP
 #define SASS_FILE_HPP
 
@@ -8,20 +11,15 @@
 #include <string>
 #include <vector>
 
-#include "source.hpp"
-#include "sass/context.h"
-#include "sass/functions.h"
 #include "ast_fwd_decl.hpp"
 #include "ast_def_macros.hpp"
-#include "util_string.hpp"
+#include "hashing.hpp"
+#include "source.hpp"
 
 namespace Sass {
 
-  extern sass::string CWD;
-
-
-  class ResolvedImport;
-
+  // Should be thread_local?
+  extern thread_local sass::string CWD;
 
   namespace File {
 
@@ -79,7 +77,7 @@ namespace Sass {
     // returned memory must be freed
     char* slurp_file(const sass::string& file, const sass::string& CWD);
 
-    Import* read_file(const ResolvedImport& import);
+    Import93* read_file(const ResolvedImport& import);
 
   }
 
@@ -94,7 +92,7 @@ namespace Sass {
       // this really just acts as a cache
       sass::string base_path;
       // Consider `.import` files?
-      bool considerImports;
+      bool considerImports = false;
     public:
       ImportRequest(
         sass::string imp_path,
@@ -104,7 +102,11 @@ namespace Sass {
         ctx_path(File::make_canonical_path(ctx_path)),
         base_path(File::dir_name(ctx_path)),
         considerImports(considerImports)
-      {}
+      {
+        if (base_path == "stream://") {
+          base_path = CWD;
+        }
+      }
 
       bool operator==(const ImportRequest& other) const {
         return considerImports == other.considerImports
@@ -121,36 +123,47 @@ namespace Sass {
       // resolved absolute path
       sass::string abs_path;
       // which importer to use
-      SassImportFormat syntax;
+      SassImportSyntax syntax;
     public:
       ResolvedImport(
         const ImportRequest& imp,
         sass::string abs_path,
-        SassImportFormat syntax)
-      : ImportRequest(imp), abs_path(abs_path), syntax(syntax)
-      { }
+        SassImportSyntax syntax)
+      : ImportRequest(imp),
+        abs_path(abs_path),
+        syntax(syntax)
+      {}
   };
 
 
   // Base class for entry points
-  class Import : public RefCounted {
+  class Import93 : public RefCounted {
   public:
     SourceDataObj source;
-    SassImportFormat syntax;
+    SassImportSyntax syntax;
+    char* error = nullptr;
     void loadIfNeeded();
     bool isLoaded() const;
     const char* getImpPath() const;
     const char* getAbsPath() const;
     const char* getFileName() const;
-    Import(SassImportFormat syntax = SASS_IMPORT_AUTO) :
+    // This is used by custom importer
+    // Easiest way to communicate back
+    const char* getErrorMsg() const;
+    void setErrorMsg(const char* msg);
+    Import93(SassImportSyntax syntax = SASS_IMPORT_AUTO) :
       syntax(syntax)
     {}
 
-    Import(
-      SourceData* source,
-      SassImportFormat syntax);
+    ~Import93() {
+      sass_free_c_string(error);
+    }
 
-    CAPI_WRAPPER(Import, SassImport);
+    Import93(
+      SourceData* source,
+      SassImportSyntax syntax);
+
+    CAPI_WRAPPER(Import93, SassImport);
   };
 
   // Error thrown by certain file functions

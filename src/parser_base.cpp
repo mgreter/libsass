@@ -1,8 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "parser_base.hpp"
 
-#include "character.hpp"
-#include "utf8/checked.h"
-
-namespace Sass {
-
-}
+// Nothing to see here yet

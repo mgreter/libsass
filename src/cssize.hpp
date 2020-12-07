@@ -15,7 +15,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
 
     Cssize(
-      SassOutputOptionsCpp& opt,
+      OutputOptions& opt,
       bool srcmap_enabled) :
       Inspect(opt, srcmap_enabled)
     {}

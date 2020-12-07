@@ -8,7 +8,8 @@
 #include "output.hpp"
 #include "sources.hpp"
 #include "stylesheet.hpp"
-#include "capi_lists.hpp"
+#include "capi_import.hpp"
+#include "capi_importer.hpp"
 #include "ast_imports.hpp"
 #include "parser_scss.hpp"
 #include "parser_sass.hpp"
@@ -25,7 +26,10 @@
 #include "fn_colors.hpp"
 #include "fn_selectors.hpp"
 
+#include "b64/encode.hpp"
 #include "preloader.hpp"
+#include "plugins.hpp"
+#include "file.hpp"
 
 #include <cstring>
 #include <csignal>
@@ -33,134 +37,19 @@
 #include <excpt.h>
 #endif
 
-#include "debugger.hpp"
-
-struct SassImport;
-
 namespace Sass {
 
+  // Initialize current directory once
+  thread_local sass::string CWD(File::get_cwd());
 
-
-  struct SassValue* get_global(struct SassCompiler* comp, struct SassValue* name)
+  Compiler::~Compiler()
   {
-    // Value& value(Value::unwrap(name));
-    // Compiler& compiler(Compiler::unwrap(comp));
-    // ValueObj rv = compiler.findVariable(
-    //   value.assertString(compiler, "name")->getText(), true);
-    // if (rv) rv->refcount += 1;
-    // return rv ? Value::wrap(rv) : sass_make_null();
-    return sass_make_null();
-  }
-
-  struct SassValue* get_lexical(struct SassCompiler* comp, struct SassValue* name)
-  {
-    // Value& value(Value::unwrap(name));
-    // Compiler& compiler(Compiler::unwrap(comp));
-    // ValueObj rv = compiler.findVariable(
-    //   value.assertString(compiler, "name")->getText());
-    // if (rv) rv->refcount += 1;
-    // return rv ? Value::wrap(rv) : sass_make_null();
-    return sass_make_null();
-  }
-
-  struct SassValue* get_local(struct SassCompiler* comp, struct SassValue* name)
-  {
-    // Value& value(Value::unwrap(name));
-    // Compiler& compiler(Compiler::unwrap(comp));
-    // ValueObj rv = compiler.findVariable(
-    //   value.assertString(compiler, "name")->getText());
-    // if (rv) rv->refcount += 1;
-    // return rv ? Value::wrap(rv) : sass_make_null();
-    return sass_make_null();
-  }
-
-  struct SassValue* set_global(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)
-  {
-    // Value& key(Value::unwrap(name));
-    // Value& val(Value::unwrap(value));
-    // Compiler& compiler(Compiler::unwrap(comp));
-    // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, true);
-    return sass_make_null();
-  }
-
-  struct SassValue* set_lexical(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)
-  {
-    // Value& key(Value::unwrap(name));
-    // Value& val(Value::unwrap(value));
-    // Compiler& compiler(Compiler::unwrap(comp));
-    // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, false);
-    return sass_make_null();
-  }
-
-  struct SassValue* set_local(struct SassCompiler* comp, struct SassValue* name, struct SassValue* value)
-  {
-    // Value& key(Value::unwrap(name));
-    // Value& val(Value::unwrap(value));
-    // Compiler& compiler(Compiler::unwrap(comp));
-    // compiler.setVariable(key.assertString(compiler, "name")->getText(), &val, false, false);
-    return value;
-  }
-
-  // so far only pow has two arguments
-#define IMPLEMENT_2_ARG_FN(fn) \
-struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, struct SassCompiler* comp) \
-{ \
-  if (!sass_value_is_list(s_args)) { \
-    return sass_make_error("Invalid arguments for " #fn); \
-  } \
-  if (sass_list_get_size(s_args) != 2) { \
-    return sass_make_error("Exactly two arguments expected for " #fn); \
-  } \
-  struct SassValue* name = sass_list_get_value(s_args, 0); \
-  struct SassValue* value = sass_list_get_value(s_args, 1); \
-  return fn(comp, name, value); \
-} \
-
-  // so far only pow has two arguments
-#define IMPLEMENT_1_ARG_FN(fn) \
-struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, struct SassCompiler* comp) \
-{ \
-  if (!sass_value_is_list(s_args)) { \
-    return sass_make_error("Invalid arguments for " #fn); \
-  } \
-  if (sass_list_get_size(s_args) != 1) { \
-    return sass_make_error("Exactly one arguments expected for " #fn); \
-  } \
-  struct SassValue* name = sass_list_get_value(s_args, 0); \
-  return fn(comp, name); \
-} \
-
-// one argument functions
-  // IMPLEMENT_2_ARG_FN(pow);
-
-  IMPLEMENT_1_ARG_FN(get_global);
-  IMPLEMENT_1_ARG_FN(get_lexical);
-  IMPLEMENT_1_ARG_FN(get_local);
-  IMPLEMENT_2_ARG_FN(set_global);
-  IMPLEMENT_2_ARG_FN(set_lexical);
-  IMPLEMENT_2_ARG_FN(set_local);
-
-  // create a custom header to define to variables
-  struct SassImportList* custom_header(const char* cur_path, struct SassImporter* cb, struct SassCompiler* comp)
-  {
-    // create a list to hold our import entries
-    struct SassImportList* incs = sass_make_import_list();
-
-    // sass_env_set_global(comp, "test", sass_make_number(42, ""));
-    // sass_env_set_global(comp, "$test", sass_make_number(42, ""));
-    // create our only import entry (must make copy)
-    sass_import_list_push(incs, sass_make_import(
-        "[math]", "[math]", sass_copy_c_string(
-          "$E: 2.718281828459045235360287471352;\n"
-          "$PI: 3.141592653589793238462643383275;\n"
-          "$TAU: 6.283185307179586476925286766559;\n"
-        ), 0, SASS_IMPORT_AUTO));
-    // return imports
-    return incs;
+    for (auto& mod : modules) {
+      delete mod.second;
+    }
   }
 
   Compiler::Compiler() :
-    Context(),
     varRoot(*this),
     state(SASS_COMPILER_CREATED),
     output_path("stream://stdout"),
@@ -168,12 +57,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     footer(nullptr),
     srcmap(nullptr),
     error()
-  {
-    // allocate a custom function caller
-    // Sass_Importer_Entry c_header =
-    //   sass_make_importer(custom_header, 5000, (void*)0);
-    // addCustomHeader(c_header);
-  }
+  {}
 
   // Get path of compilation entry point
   // Returns the resolved/absolute path
@@ -299,7 +183,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   // Case 1) output to stdout, source map must be fully inline
   // Case 2) output to path, source map output is deducted from it
-  char* Compiler::renderSrcMapLink(struct SassSrcMapOptions options, const SourceMap& source_map)
+  char* Compiler::renderSrcMapLink(SrcMapOptions options, const SourceMap& source_map)
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
@@ -316,7 +200,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // EO renderSrcMapLink
 
   // Memory returned by this function must be freed by caller via `sass_free_c_string`
-  char* Compiler::renderEmbeddedSrcMap(struct SassSrcMapOptions options, const SourceMap& source_map)
+  char* Compiler::renderEmbeddedSrcMap(SrcMapOptions options, const SourceMap& source_map)
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
@@ -333,7 +217,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   // EO renderEmbeddedSrcMap
 
   // Memory returned by this function must be freed by caller via `sass_free_c_string`
-  char* Compiler::renderSrcMapJson(struct SassSrcMapOptions options, const SourceMap& source_map)
+  char* Compiler::renderSrcMapJson(SrcMapOptions options, const SourceMap& source_map)
   {
     // Create the emitter object
     // Sass::OutputBuffer buffer;
@@ -465,22 +349,17 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
     const char* ctx_path = pstate.getAbsPath();
 
-
     // Process custom importers and headers.
     // They must be presorted by priorities.
     for (struct SassImporter* importer : importers) {
 
       // Get the external importer function
-      SassImporterLambda fn = importer->importer;
-
-      // std::cerr << "Calling custom loader " << fn << "\n";
+      SassImporterLambda fn = importer->lambda;
 
       // Call the external function, then check what it returned
       struct SassImportList* imports = fn(imp_path.c_str(), importer, this->wrap());
       // External provider want to handle this
       if (imports != nullptr) {
-
-        // std::cerr << "HAS imports\n";
 
         // Get the list of possible imports
         // A list with zero items does nothing
@@ -489,7 +368,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
           ++count;
           // Consume the first item from the list
           struct SassImport* entry = sass_import_list_shift(imports);
-          Import& import = Import::unwrap(entry);
+          Import93& import = Import93::unwrap(entry);
           // Create a unique path to use as key
           sass::string uniq_path = imp_path;
           // Append counter to the path
@@ -501,42 +380,22 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
           }
           // create the importer struct
           ImportRequest importer(uniq_path, ctx_path, false);
-          // query data from the current include
-          SourceDataObj source = import.source;
-          // const char* content = sass_import_get_source(import);
-          // const char* srcmap = sass_import_get_srcmap(import);
-          // auto format = sass_import_get_type(import2);
-
-          //if (sass_import_get_error_message(import)) {
-          //  BackTraces& traces = *this;
-          //  traces.push_back(BackTrace(pstate));
-          //  Exception::CustomImportError err(traces, "custom error");
-          //  sass_delete_import_list(imports);
-          //  sass_delete_import(import2);
-          //  throw err;
-          //
-          //  /*
-          //
-          //
-          //
-          //// Handle error message passed back from custom importer
-          //// It may (or may not) override the line and column info
-          //  size_t line = sass_import_get_error_line(import);
-          //  size_t column = sass_import_get_error_column(import);
-          //  // sass_delete_import(import); // will error afterwards
-          //  if (line == sass::string::npos) error(err_message, pstate, *logger123);
-          //  else if (column == sass::string::npos) error(err_message, pstate, *logger123);
-          //  else error(err_message, { source, Offset::init(line, column) }, *logger123);
-          //  */
-          //}
-          // Content for import was set.
-          // No need to load it ourself.
-          //else
-            if (source) {
-
+          // Check if importer returned and error state.
+          // Should only happen if importer knows that
+          // this import must only be handled by itself.
+          if (sass_import_get_error_message(entry)) {
+            BackTraces& traces = *this;
+            traces.push_back(BackTrace(pstate));
+            Exception::CustomImportError err(traces,
+              sass_import_get_error_message(entry));
+            sass_delete_import_list(imports);
+            sass_delete_import(entry);
+            throw err;
+          }
+          // Source must be set, even if the actual data is not loaded yet
+          else if (SourceDataObj source = import.source) {
             const char* rel_path = import.getImpPath();
             const char* abs_path = import.getAbsPath();
-
             if (import.isLoaded()) {
               // Resolved abs_path should be set by custom importer
               // Use the created uniq_path as fall-back (enforce?)
@@ -547,8 +406,8 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               ImportStackFrame iframe(*this, &import);
               Root* sheet = registerImport(&import);
               // Add a dynamic import to the import rule
-              auto inc = SASS_MEMORY_NEW(IncludeImport,
-                pstate, ctx_path, abs_path, &import);
+              auto inc = SASS_MEMORY_NEW(IncludeImport62,
+                pstate, ctx_path, path_key, &import);
               inc->root(sheet);
               rule->append(inc);
             }
@@ -559,12 +418,9 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
               sass::string path(abs_path ? abs_path : rel_path);
               // Pass it on as if it was a regular import
               ImportRequest request(path, ctx_path, false);
-
               // Search for valid imports (e.g. partials) on the file-system
               // Returns multiple valid results for ambiguous import path
               const sass::vector<ResolvedImport>& resolved(findIncludes(request, true));
-
-
               // Error if no file to import was found
               if (resolved.empty()) {
                 BackTraces& traces = *this;
@@ -583,18 +439,17 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
                 sass_delete_import(entry);
                 throw err;
               }
-
               // We made sure exactly one entry was found, load its content
-              if (ImportObj loaded = loadImport(resolved[0])) {
+              if (Import93Obj loaded = loadImport(resolved[0])) {
                 ImportStackFrame iframe(*this, loaded);
                 Root* sheet = registerImport(loaded);
                 const sass::string& url(resolved[0].abs_path);
-                auto inc = SASS_MEMORY_NEW(IncludeImport,
+                auto inc = SASS_MEMORY_NEW(IncludeImport62,
                   pstate, ctx_path, url, &import);
                 inc->root(sheet);
                 rule->append(inc);
-                // Must set the sheet somehow
               }
+              // Import failed to load
               else {
                 BackTraces& traces = *this;
                 traces.push_back(BackTrace(pstate));
@@ -613,7 +468,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
         sass_delete_import_list(imports);
         // Set success flag
         has_import = true;
-        // Break out of loop
+        // Break out of loop?
         if (singleton) break;
       }
     }
@@ -745,7 +600,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     ScssParser parser(*this, source.ptr());
     ExternalCallable* callable =
       parser.parseExternalCallable();
-    callable->function(function);
+    callable->lambda(function->lambda);
     auto& functions(varRoot.intFunction);
     uint32_t offset((uint32_t)functions.size());
     varRoot.intFunction.push_back(callable);
@@ -758,7 +613,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   /////////////////////////////////////////////////////////////////////////
 
   // Invoke parser according to import format
-  RootObj Compiler::parseSource(ImportObj import)
+  RootObj Compiler::parseSource(Import93Obj import)
   {
     Root* root = nullptr;
     if (import->syntax == SASS_IMPORT_CSS)
@@ -782,14 +637,12 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
 
   // Parse the import (updates syntax flag if AUTO was set)
   // Results will be stored at `sheets[source->getAbsPath()]`
-  Root* Compiler::registerImport(ImportObj import)
+  Root* Compiler::registerImport(Import93Obj import)
   {
 
-    SassImportFormat& format(import->syntax);
+    SassImportSyntax& format(import->syntax);
     const SourceDataObj& source(import->source);
     const sass::string& abs_path(source->getAbsPath());
-
-    // ImportStackFrame iframe(*this, import);
 
     // ToDo: We don't take format into account
     auto cached = sheets.find(abs_path);
@@ -815,28 +668,21 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
         format = SASS_IMPORT_SCSS;
       }
       else {
-        throw Exception::RuntimeException(*this,
-          "Can't find stylesheet to import.");
+        throw Exception::UnknwonImport(callStack);
       }
     }
-
-    // std::cerr << "Parsing '" << import->getAbsPath() << "'\n";
 
     // Invoke correct parser according to format
     RootObj stylesheet = parseSource(import);
 
-    // Pop from import stack
-    // import_stack.pop_back();
-
     // Put the parsed stylesheet into the map
     sheets.insert({ abs_path, stylesheet });
 
-    // stylesheet->import = import;
-    if (stylesheet) {
+    if (stylesheet.ptr() != nullptr) {
       stylesheet->import = import;
     }
 
-    // Return pointer, we are already managed
+    // Return pointer, it is already managed
     // Don't call detach, as it could leak then
     return stylesheet.ptr();
 
@@ -867,7 +713,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     exit(EXIT_FAILURE);
   }
 
-  Root* Compiler::parseRoot(ImportObj import)
+  Root* Compiler::parseRoot(Import93Obj import)
   {
 
     // Attach signal handlers
@@ -884,25 +730,6 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // ImportStackFrame iframe(*this, import);
 
     loadBuiltInFunctions();
-
-
-    // auto qwe = sass_make_function("pow($foo, $bar)", fn_pow, (void*)31);
-
-    // registerCustomFunction(qwe);
-
-    registerCustomFunction(sass_make_function("set-local($name, $value)", fn_set_local, (void*)31));
-    // registerCustomFunction(sass_make_function("set-global($name, $value)", fn_set_global, (void*)31));
-    // registerCustomFunction(sass_make_function("set-lexical($name, $value)", fn_set_lexical, (void*)31));
-    // 
-    // registerCustomFunction(sass_make_function("get-local($name)", fn_get_local, (void*)31));
-    // registerCustomFunction(sass_make_function("get-global($name)", fn_get_global, (void*)31));
-    // registerCustomFunction(sass_make_function("get-lexical($name)", fn_get_lexical, (void*)31));
-
-    // ScopedStack scoped(varStack, &varRoot);
-
-    // register custom functions (defined via C-API)
-    //for (auto& function : cFunctions)
-    //  registerCustomFunction(function);
 
     #ifdef DEBUG_SHARED_PTR
     // Enable reference tracking
@@ -928,7 +755,7 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ImportStackFrame::ImportStackFrame(Compiler& compiler, Import* import) :
+  ImportStackFrame::ImportStackFrame(Compiler& compiler, Import93* import) :
     compiler(compiler)
   {
 
@@ -971,5 +798,137 @@ struct SassValue* fn_##fn(struct SassValue* s_args, Sass_Function_Entry cb, stru
     // std::cerr << "EXIT " << compiler.import_stack2.size()
     //   << " -> " << source->getAbsPath() << "\n";
   }
+
+
+
+
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Add additional include paths, which can be path separated
+  void Compiler::addIncludePaths(const sass::string& paths)
+  {
+    // Check if we have anything to do
+    if (paths.empty()) return;
+    // Load plugins from all paths
+    sass::vector<sass::string> split =
+      StringUtils::split(paths, PATH_SEP, true);
+    for (sass::string& path : split) {
+      if (*path.rbegin() != '/') path += '/';
+      includePaths.emplace_back(path);
+    }
+  }
+  // EO addIncludePaths
+
+  // Load plugins from paths, which can be path separated
+  void Compiler::loadPlugins(const sass::string& paths)
+  {
+    Plugins plugins(*this);
+    // Check if we have anything to do
+    if (paths.empty()) return;
+    // Load plugins from all paths
+    sass::vector<sass::string> split =
+      StringUtils::split(paths, PATH_SEP, true);
+    for (sass::string& path : split) {
+      if (*path.rbegin() != '/') path += '/';
+      plugins.load_plugins(path);
+    }
+    // Take over ownership from plugin
+    // plugins.consume_headers(cHeaders);
+    // plugins.consume_importers(cImporters);
+    // plugins.consume_functions(cFunctions);
+    // Sort the merged arrays by callback priorities
+    sort(cHeaders.begin(), cHeaders.end(), cmpImporterPrio);
+    sort(cImporters.begin(), cImporters.end(), cmpImporterPrio);
+  }
+  // EO loadPlugins
+
+  /////////////////////////////////////////////////////////////////////////
+  // Helpers for `sass_prepare_context`
+  // Obsolete when c_ctx and cpp_ctx are merged.
+  /////////////////////////////////////////////////////////////////////////
+
+  void Compiler::addCustomHeader(struct SassImporter* header)
+  {
+    if (header == nullptr) return;
+    cHeaders.emplace_back(header);
+    // need to sort the array afterwards (no big deal)
+    sort(cHeaders.begin(), cHeaders.end(), cmpImporterPrio);
+  }
+
+  void Compiler::addCustomImporter(struct SassImporter* importer)
+  {
+    if (importer == nullptr) return;
+    std::cerr << "addCustomImporter\n";
+    cImporters.emplace_back(importer);
+    // need to sort the array afterwards (no big deal)
+    sort(cImporters.begin(), cImporters.end(), cmpImporterPrio);
+  }
+
+  void Compiler::addCustomFunction(struct SassFunction* function)
+  {
+    if (function == nullptr) return;
+    cFunctions.emplace_back(function);
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Implementation for `sass_compiler_find_file`
+  sass::string Compiler::findFile(const sass::string& path)
+  {
+    // Get last import entry for current base
+    Import93& import = import_stack.back();
+    // create the vector with paths to lookup
+    sass::vector<sass::string> incpaths(1 + includePaths.size());
+    incpaths.emplace_back(File::dir_name(import.source->getAbsPath()));
+    incpaths.insert(incpaths.end(), includePaths.begin(), includePaths.end());
+    return File::find_file(path, CWD, incpaths, fileExistsCache);
+  }
+
+  // Look for all possible filename variants (e.g. partials)
+  // Returns all results (e.g. for ambiguous valid imports)
+  const sass::vector<ResolvedImport>& Compiler::findIncludes(const ImportRequest& import, bool forImport)
+  {
+    // Try to find cached result first
+    auto it = resolveCache.find(import);
+    if (it != resolveCache.end()) return it->second;
+
+    // make sure we resolve against an absolute path
+    sass::string base_path(File::rel2abs(import.base_path, ".", CWD));
+
+    // first try to resolve the load path relative to the base path
+    sass::vector<ResolvedImport>& vec(resolveCache[import]);
+
+    vec = File::resolve_includes(base_path, import.imp_path, CWD, forImport, fileExistsCache);
+
+    // then search in every include path (but only if nothing found yet)
+    for (size_t i = 0, S = includePaths.size(); vec.size() == 0 && i < S; ++i)
+    {
+      sass::vector<ResolvedImport> resolved(File::resolve_includes(
+        includePaths[i], import.imp_path, CWD, forImport, fileExistsCache));
+      vec.insert(vec.end(), resolved.begin(), resolved.end());
+    }
+    // return vector
+    return vec;
+  }
+
+  // Load import from the file-system and create source object
+  Import93* Compiler::loadImport(const ResolvedImport& import)
+  {
+    // Try to find the item in the cache first
+    auto cached = sources.find(import.abs_path);
+    if (cached != sources.end()) return cached->second;
+    // Try to read source and (ToDo) optional mappings
+    if (Import93Obj loaded = File::read_file(import)) {
+      sources.insert({ import.abs_path, loaded });
+      return loaded.ptr();
+    }
+    // Throw error if read has failed
+    throw Exception::OperationError(
+      "File to read not found or unreadable.");
+  }
+  // EO loadImport
 
 }

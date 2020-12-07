@@ -1,8 +1,12 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "plugins.hpp"
 
 #include <cstring>
 #include <sstream>
-#include <sass/lists.h>
+#include "unicode.hpp"
+#include "compiler.hpp"
 #include "string_utils.hpp"
 
 #ifdef _WIN32
@@ -20,21 +24,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Constructor
-  Plugins::Plugins(void) {}
-
-  // Destructor
-  Plugins::~Plugins(void)
-  {
-    for (auto function : functions) {
-      sass_delete_function(function);
-    }
-    for (auto importer : importers) {
-      sass_delete_importer(importer);
-    }
-    for (auto header : headers) {
-      sass_delete_importer(header);
-    }
-  }
+  Plugins::Plugins(Compiler& compiler) :
+    compiler(compiler) {}
 
   // check if plugin is compatible with this version
   // plugins may be linked static against libsass
@@ -63,8 +54,10 @@ namespace Sass {
 
     typedef const char* (*__plugin_version__)(void);
     typedef const char* (*__plugin_set_seed__)(uint32_t);
-    typedef struct SassFunctionList* (*__plugin_load_fns__)(void);
-    typedef struct SassImporterList* (*__plugin_load_imps__)(void);
+    // typedef struct SassFunctionList* (*__plugin_load_fns__)(void);
+    // typedef struct SassImporterList* (*__plugin_load_imps__)(void);
+
+    typedef void(*__plugin_init__)(struct SassCompiler* compiler);
 
     // Pass seed by env variable until further notice
     sass::sstream strm; strm << getHashSeed();
@@ -77,45 +70,18 @@ namespace Sass {
       {
         // get the libsass version of the plugin
         if (!compatibility(plugin_version())) return false;
-        // try to get import address for "libsass_load_functions"
+        // try to get import address for "plugin_set_seed_function"
         if (LOAD_LIB_FN(__plugin_set_seed__, plugin_set_seed_function, "libsass_set_seed_function"))
         {
           plugin_set_seed_function(getHashSeed());
         }
-        // try to get import address for "libsass_load_functions"
-        if (LOAD_LIB_FN(__plugin_load_fns__, plugin_load_functions, "libsass_load_functions"))
+
+        // try to get import address for "plugin_init" function
+        if (LOAD_LIB_FN(__plugin_init__, plugin_init_function, "libsass_init_plugin"))
         {
-          struct SassFunctionList* fns = plugin_load_functions();
-          while (sass_function_list_size(fns) > 0) {
-            functions.emplace_back(sass_function_list_shift(fns));
-          }
-          // only delete the container, items not yet
-          // albeit the list should be empty by now
-          sass_delete_function_list(fns);
+          plugin_init_function(compiler.wrap());
         }
-        // try to get import address for "libsass_load_importers"
-        if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_importers, "libsass_load_importers"))
-        {
-          struct SassImporterList* imps = plugin_load_importers();
-          while (sass_importer_list_size(imps) > 0) {
-            importers.emplace_back(sass_importer_list_shift(imps));
-          }
-          // only delete the container, items not yet
-          // albeit the list should be empty by now
-          sass_delete_importer_list(imps);
-        }
-        // try to get import address for "libsass_load_headers"
-        if (LOAD_LIB_FN(__plugin_load_imps__, plugin_load_headers, "libsass_load_headers"))
-        {
-          struct SassImporterList* imps = plugin_load_headers();
-          while (sass_importer_list_size(imps) > 0) {
-            headers.emplace_back(sass_importer_list_shift(imps));
-          }
-          // only delete the container, items not yet
-          // albeit the list should be empty by now
-          sass_delete_importer_list(imps); 
-        }
-        // success
+
         return true;
       }
       else

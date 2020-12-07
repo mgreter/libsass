@@ -12,9 +12,6 @@ test_ordered_map: build/test_ordered_map
 test_character: build/test_character
 	build/test_character
 
-test_util_string: build/test_util_string
-	build/test_util_string
-
 test_string_utils: build/test_string_utils
 	build/test_string_utils
 
@@ -27,6 +24,9 @@ test_lurlparser: build/test_lurlparser
 test_offset: build/test_offset
 	build/test_offset
 
+test_units: build/test_units
+	build/test_units
+
 build:
 	@mkdir build
 
@@ -35,9 +35,6 @@ build/test_shared_ptr: test_shared_ptr.cpp ../src/memory/shared_ptr.cpp | build
 
 build/test_ordered_map: test_ordered_map.cpp ../src/memory/shared_ptr.cpp | build
 	$(CXX) $(CXXFLAGS) ../src/memory/allocator.cpp -o build/test_ordered_map test_ordered_map.cpp
-
-# build/test_util_string: test_util_string.cpp ../src/util_string.cpp | build
-#	$(CXX) $(CXXFLAGS) ../src/memory/allocator.cpp ../src/util_string.cpp -o build/test_util_string test_util_string.cpp
 
 build/test_character: test_character.cpp ../src/character.cpp | build
 	$(CXX) $(CXXFLAGS) ../src/memory/allocator.cpp ../src/character.cpp -o build/test_character test_character.cpp
@@ -53,6 +50,9 @@ build/test_lurlparser: test_lurlparser.cpp ../src/LUrlParser/LUrlParser.cpp | bu
 
 build/test_offset: test_offset.cpp ../src/offset.cpp | build
 	$(CXX) $(CXXFLAGS) ../src/memory/allocator.cpp -o build/test_offset test_offset.cpp ../src/offset.cpp
+
+build/test_units: test_units.cpp ../src/units.cpp | build
+	$(CXX) $(CXXFLAGS) ../src/memory/allocator.cpp -o build/test_units test_units.cpp ../src/units.cpp
 
 clean: | build
 	rm -rf build

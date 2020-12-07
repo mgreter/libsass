@@ -11,6 +11,7 @@
 #include "ast_nodes.hpp"
 #include "ast_callable.hpp"
 #include "ast_statements.hpp"
+#include "capi_function.hpp"
 #include "environment_key.hpp"
 #include "environment_stack.hpp"
 
@@ -140,7 +141,7 @@ namespace Sass {
     // The declaration (parameters this function takes).
     ADD_CONSTREF(ArgumentDeclarationObj, declaration);
     // The attached external callback reference
-    ADD_PROPERTY(struct SassFunction*, function);
+    ADD_PROPERTY(SassFunctionLambda, lambda);
 
   public:
 
@@ -148,11 +149,11 @@ namespace Sass {
     ExternalCallable(
       const EnvKey& fname,
       ArgumentDeclaration* parameters,
-      struct SassFunction* function);
+      SassFunctionLambda function);
 
     // Destructor
     ~ExternalCallable() override final {
-      sass_delete_function(function_);
+      // sass_delete_function(function_);
     }
 
     // The main entry point to execute the function (implemented in each specialization)

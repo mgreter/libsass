@@ -8,59 +8,65 @@
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
-  // Old but trusted implementation following:
-  /////////////////////////////////////////////////////////////////////////
   /* the conversion matrix can be read the following way */
   /* if you go down, the factor is for the numerator (multiply) */
   /* if you go right, the factor is for the denominator (divide) */
   /* and yes, we actually use both, not sure why, but why not!? */
   /////////////////////////////////////////////////////////////////////////
 
+  const int size_conversion_factors_count = 7;
   const double size_conversion_factors[7][7] =
   {
-             /*  in          cm          pc          mm          pt          px          q           */
-    /* in   */ { 1.0,        2.54,       6.0,        25.4,       72.0,       96.0,       101.6       },
-    /* cm   */ { 1.0/2.54,   2.54/2.54,  6.0/2.54,   25.4/2.54,  72.0/2.54,  96.0/2.54,  101.6/2.54  },
-    /* pc   */ { 1.0/6.0,    2.54/6.0,   6.0/6.0,    25.4/6.0,   72.0/6.0,   96.0/6.0,   101.6/6.0   },
-    /* mm   */ { 1.0/25.4,   2.54/25.4,  6.0/25.4,   25.4/25.4,  72.0/25.4,  96.0/25.4,  101.6/25.4  },
-    /* pt   */ { 1.0/72.0,   2.54/72.0,  6.0/72.0,   25.4/72.0,  72.0/72.0,  96.0/72.0,  101.6/72.0  },
-    /* px   */ { 1.0/96.0,   2.54/96.0,  6.0/96.0,   25.4/96.0,  72.0/96.0,  96.0/96.0,  101.6/96.0  },
-    /* q    */ { 1.0/101.6,  2.54/101.6, 6.0/101.6,  25.4/101.6, 72.0/101.6, 96.0/101.6, 101.6/101.6 },
+             /*  in           cm           pc           mm           pt           px           q           */
+    /* in   */ { 1.0,         2.54,        6.0,         25.4,        72.0,        96.0,        101.6       },
+    /* cm   */ { 1.0/2.54,    2.54/2.54,   6.0/2.54,    25.4/2.54,   72.0/2.54,   96.0/2.54,   101.6/2.54  },
+    /* pc   */ { 1.0/6.0,     2.54/6.0,    6.0/6.0,     25.4/6.0,    72.0/6.0,    96.0/6.0,    101.6/6.0   },
+    /* mm   */ { 1.0/25.4,    2.54/25.4,   6.0/25.4,    25.4/25.4,   72.0/25.4,   96.0/25.4,   101.6/25.4  },
+    /* pt   */ { 1.0/72.0,    2.54/72.0,   6.0/72.0,    25.4/72.0,   72.0/72.0,   96.0/72.0,   101.6/72.0  },
+    /* px   */ { 1.0/96.0,    2.54/96.0,   6.0/96.0,    25.4/96.0,   72.0/96.0,   96.0/96.0,   101.6/96.0  },
+    /* q    */ { 1.0/101.6,   2.54/101.6,  6.0/101.6,   25.4/101.6,  72.0/101.6,  96.0/101.6,  101.6/101.6 }
   };
 
-  const double angle_conversion_factors[4][4] =
-  {
-             /*  deg        grad       rad        turn      */
-    /* deg  */ { 1.0,       40.0/36.0, PI/180.0,  1.0/360.0 },
-    /* grad */ { 36.0/40.0, 1.0,       PI/200.0,  1.0/400.0 },
-    /* rad  */ { 180.0/PI,  200.0/PI,  1.0,       0.5/PI    },
-    /* turn */ { 360.0,     400.0,     2.0*PI,    1.0       }
-  };
-
+  const int time_conversion_factors_count = 2;
   const double time_conversion_factors[2][2] =
   {
-             /*  s          ms        */
-    /* s    */ { 1.0,       1000.0    },
-    /* ms   */ { 1/1000.0,  1.0       }
+             /*  s            ms        */
+    /* s    */ { 1.0,         1000.0    },
+    /* ms   */ { 1/1000.0,    1.0       }
   };
+
+  const int angle_conversion_factors_count = 4;
+  const double angle_conversion_factors[4][4] =
+  {
+             /*  deg          grad         rad          turn      */
+    /* deg  */ { 1.0,         40.0/36.0,   PI/180.0,    1.0/360.0 },
+    /* grad */ { 36.0/40.0,   1.0,         PI/200.0,    1.0/400.0 },
+    /* rad  */ { 180.0/PI,    200.0/PI,    1.0,         0.5/PI    },
+    /* turn */ { 360.0,       400.0,       2.0*PI,      1.0       }
+  };
+
+  const int frequency_conversion_factors_count = 2;
   const double frequency_conversion_factors[2][2] =
   {
-             /*  Hz         kHz       */
-    /* Hz   */ { 1.0,       1/1000.0  },
-    /* kHz  */ { 1000.0,    1.0       }
+             /*  Hz           kHz       */
+    /* Hz   */ { 1.0,         1/1000.0  },
+    /* kHz  */ { 1000.0,      1.0       }
   };
+
+  const int resolution_conversion_factors_count = 3;
   const double resolution_conversion_factors[3][3] =
   {
-             /*  dpi        dpcm       dppx     */
-    /* dpi  */ { 1.0,       1.0/2.54,  1.0/96.0 },
-    /* dpcm */ { 2.54,      1.0,       2.54/96  },
-    /* dppx */ { 96.0,      96.0/2.54, 1.0      }
+             /*  dpi          dpcm         dppx     */
+    /* dpi  */ { 1.0,         1.0/2.54,    1.0/96.0 },
+    /* dpcm */ { 2.54,        1.0,         2.54/96  },
+    /* dppx */ { 96.0,        96.0/2.54,   1.0      }
   };
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  UnitClass get_unit_type(UnitType unit)
+  // Return unit class enum for given unit type enum
+  UnitClass get_unit_class(UnitType unit)
   {
     switch (unit & 0xFF00)
     {
@@ -73,19 +79,21 @@ namespace Sass {
     }
   };
 
+  // Return standard unit for the given unit class enum
   UnitType get_standard_unit(const UnitClass unit)
   {
     switch (unit)
     {
       case UnitClass::LENGTH:      return UnitType::PX;
-      case UnitClass::ANGLE:       return UnitType::DEG;
       case UnitClass::TIME:        return UnitType::SEC;
+      case UnitClass::ANGLE:       return UnitType::DEG;
       case UnitClass::FREQUENCY:   return UnitType::HERTZ;
       case UnitClass::RESOLUTION:  return UnitType::DPI;
       default:                     return UnitType::UNKNOWN;
     }
   };
 
+  // Return unit type enum from unit string
   UnitType string_to_unit(const sass::string& s)
   {
     // size units
@@ -96,14 +104,14 @@ namespace Sass {
     else if (s == "cm")   return UnitType::CM;
     else if (s == "in")   return UnitType::INCH;
     else if (s == "q")    return UnitType::QMM;
+    // time units
+    else if (s == "s")    return UnitType::SEC;
+    else if (s == "ms")   return UnitType::MSEC;
     // angle units
     else if (s == "deg")  return UnitType::DEG;
     else if (s == "grad") return UnitType::GRAD;
     else if (s == "rad")  return UnitType::RAD;
     else if (s == "turn") return UnitType::TURN;
-    // time units
-    else if (s == "s")    return UnitType::SEC;
-    else if (s == "ms")   return UnitType::MSEC;
     // frequency units
     else if (s == "Hz")   return UnitType::HERTZ;
     else if (s == "kHz")  return UnitType::KHERTZ;
@@ -115,6 +123,7 @@ namespace Sass {
     else return UnitType::UNKNOWN;
   }
 
+  // Return unit as string from unit type enum
   const char* unit_to_string(UnitType unit)
   {
     switch (unit) {
@@ -126,14 +135,14 @@ namespace Sass {
       case UnitType::CM:      return "cm";
       case UnitType::INCH:    return "in";
       case UnitType::QMM:     return "q";
-        // angle units
+      // time units
+      case UnitType::SEC:     return "s";
+      case UnitType::MSEC:    return "ms";
+      // angle units
       case UnitType::DEG:     return "deg";
       case UnitType::GRAD:    return "grad";
       case UnitType::RAD:     return "rad";
       case UnitType::TURN:    return "turn";
-      // time units
-      case UnitType::SEC:     return "s";
-      case UnitType::MSEC:    return "ms";
       // frequency units
       case UnitType::HERTZ:   return "Hz";
       case UnitType::KHERTZ:  return "kHz";
@@ -149,7 +158,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // throws incompatibleUnits exceptions
+  // Return conversion factor from s1 to s2 (returns zero for incompatible units)
   double conversion_factor(const sass::string& s1, const sass::string& s2)
   {
     // assert for same units
@@ -158,32 +167,43 @@ namespace Sass {
     UnitType u1 = string_to_unit(s1);
     UnitType u2 = string_to_unit(s2);
     // query unit group types
-    UnitClass t1 = get_unit_type(u1);
-    UnitClass t2 = get_unit_type(u2);
+    UnitClass t1 = get_unit_class(u1);
+    UnitClass t2 = get_unit_class(u2);
     // return the conversion factor
     return conversion_factor(u1, u2, t1, t2);
   }
 
-  // throws incompatibleUnits exceptions
+  // Return conversion factor from u1 to u2 (returns zero for incompatible units)
+  // Note: unit classes are passed as parameters since we mostly already have them
+  // Note: not sure how much performance this saves, but it fits our use-cases well
   double conversion_factor(UnitType u1, UnitType u2, UnitClass t1, UnitClass t2)
   {
-    // can't convert between groups
+    // can't convert different classes
     if (t1 != t2) return 0;
-    // get absolute offset
-    // used for array access
-    size_t i1 = size_t(u1) > size_t(t1) ? u1 - t1 : t1 - u1;
-    size_t i2 = size_t(u2) > size_t(t2) ? u2 - t2 : t2 - u2;
+    // get absolute offset for array access
+    size_t i1 = u1 & 0x00FF;
+    size_t i2 = u2 & 0x00FF;
     // process known units
     switch (t1) {
       case LENGTH:
+        if (i1 >= size_conversion_factors_count) return 0.0;
+        if (i2 >= size_conversion_factors_count) return 0.0;
         return size_conversion_factors[i1][i2];
-      case ANGLE:
-        return angle_conversion_factors[i1][i2];
       case TIME:
+        if (i1 >= time_conversion_factors_count) return 0.0;
+        if (i2 >= time_conversion_factors_count) return 0.0;
         return time_conversion_factors[i1][i2];
+      case ANGLE:
+        if (i1 >= angle_conversion_factors_count) return 0.0;
+        if (i2 >= angle_conversion_factors_count) return 0.0;
+        return angle_conversion_factors[i1][i2];
       case FREQUENCY:
+        if (i1 >= frequency_conversion_factors_count) return 0.0;
+        if (i2 >= frequency_conversion_factors_count) return 0.0;
         return frequency_conversion_factors[i1][i2];
       case RESOLUTION:
+        if (i1 >= resolution_conversion_factors_count) return 0.0;
+        if (i2 >= resolution_conversion_factors_count) return 0.0;
         return resolution_conversion_factors[i1][i2];
       case INCOMMENSURABLE:
         return 0;
@@ -192,25 +212,27 @@ namespace Sass {
     return 0;
   }
 
-  double convert_units(const sass::string& lhs, const sass::string& rhs, int& lhsexp, int& rhsexp)
+  // Reduce units so that the result either is fully represented by lhs or rhs unit.
+  // Exponents are adjusted accordingly and returning factor must be applied to the scalar.
+  double reduce_units(const sass::string& lhs, const sass::string& rhs, int& lhsexp, int& rhsexp)
   {
     double f = 0;
     // do not convert same ones
-    if (lhs == rhs) return 0;
+    if (lhs == rhs) return 0.0;
     // skip already canceled out unit
-    if (lhsexp == 0) return 0;
-    if (rhsexp == 0) return 0;
+    if (lhsexp == 0) return 0.0;
+    if (rhsexp == 0) return 0.0;
     // check if it can be converted
     UnitType ulhs = string_to_unit(lhs);
     UnitType urhs = string_to_unit(rhs);
     // skip units we cannot convert
-    if (ulhs == UNKNOWN) return 0;
-    if (urhs == UNKNOWN) return 0;
+    if (ulhs == UNKNOWN) return 0.0;
+    if (urhs == UNKNOWN) return 0.0;
     // query unit group types
-    UnitClass clhs = get_unit_type(ulhs);
-    UnitClass crhs = get_unit_type(urhs);
+    UnitClass clhs = get_unit_class(ulhs);
+    UnitClass crhs = get_unit_class(urhs);
     // skip units we cannot convert
-    if (clhs != crhs) return 0;
+    if (clhs != crhs) return 0.0;
     // if right denominator is bigger than lhs, we want to keep it in rhs unit
     if (rhsexp < 0 && lhsexp > 0 && - rhsexp > lhsexp) {
       // get the conversion factor for units
@@ -231,12 +253,22 @@ namespace Sass {
     return f;
   }
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Compare units (without any normalizing)
   bool Units::operator== (const Units& rhs) const
   {
     return (numerators == rhs.numerators) &&
            (denominators == rhs.denominators);
   }
 
+  // Normalize all units to the standard unit class
+  // Additionally sorts all units in ascending order
+  // In combination with `reduce` this allows numbers
+  // to be compared for equality independent of units
+  // E.g. '1000ms' will be normalized to '1s'
+  // Returns factor to be applied to scalar
   double Units::normalize()
   {
 
@@ -245,13 +277,13 @@ namespace Sass {
     size_t nL = denominators.size();
 
     // the final conversion factor
-    double factor = 1;
+    double factor = 1.0;
 
     for (size_t i = 0; i < iL; i++) {
       sass::string &lhs = numerators[i];
       UnitType ulhs = string_to_unit(lhs);
       if (ulhs == UNKNOWN) continue;
-      UnitClass clhs = get_unit_type(ulhs);
+      UnitClass clhs = get_unit_class(ulhs);
       UnitType umain = get_standard_unit(clhs);
       if (ulhs == umain) continue;
       double f(conversion_factor(umain, ulhs, clhs, clhs));
@@ -264,7 +296,7 @@ namespace Sass {
       sass::string &rhs = denominators[n];
       UnitType urhs = string_to_unit(rhs);
       if (urhs == UNKNOWN) continue;
-      UnitClass crhs = get_unit_type(urhs);
+      UnitClass crhs = get_unit_class(urhs);
       UnitType umain = get_standard_unit(crhs);
       if (urhs == umain) continue;
       // this is never hit via spec-tests!?
@@ -281,6 +313,9 @@ namespace Sass {
     return factor;
   }
 
+  // Cancel out all compatible unit classes
+  // E.g. `1000ms/s` will be reduced to `1`
+  // Returns factor to be applied to scalar
   double Units::reduce()
   {
 
@@ -311,7 +346,7 @@ namespace Sass {
       for (size_t n = 0; n < nL; n++) {
         sass::string &lhs = numerators[i], &rhs = denominators[n];
         int &lhsexp = exponents[lhs], &rhsexp = exponents[rhs];
-        double f(convert_units(lhs, rhs, lhsexp, rhsexp));
+        double f(reduce_units(lhs, rhs, lhsexp, rhsexp));
         if (f == 0) continue;
         factor /= f;
       }
@@ -365,6 +400,7 @@ namespace Sass {
     }
   }
 
+  // Convert units to string
   const sass::string& Units::unit() const
   {
     // Units are expected to be short, so we hopefully
@@ -398,27 +434,30 @@ namespace Sass {
     return stringified;
   }
 
-  bool Units::hasUnit(sass::string unit)
+  // Returns true if we only have given numerator
+  bool Units::isOnlyOfUnit(sass::string unit) const
   {
     return numerators.size() == 1 &&
       denominators.empty() &&
       numerators[0] == unit;
   }
 
+  // Returns true if empty
   bool Units::isUnitless() const
   {
     return numerators.empty() &&
            denominators.empty();
   }
 
+  // Returns true if valid for css
   bool Units::isValidCssUnit() const
   {
     return numerators.size() <= 1 &&
            denominators.size() == 0;
   }
 
-  // this does not cover all cases (multiple preferred units)
-  double Units::getUnitConvertFactor(const Units& r) const
+  // Return factor to convert into passed units
+  double Units::getUnitConversionFactor(const Units& r) const
   {
 
     sass::vector<sass::string> miss_nums(0);

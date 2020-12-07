@@ -1,9 +1,13 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "parser_sass.hpp"
 
 #include "character.hpp"
 #include "utf8/checked.h"
 #include "interpolation.hpp"
 #include "ast_imports.hpp"
+#include "compiler.hpp"
 
 namespace Sass {
 
@@ -128,8 +132,11 @@ namespace Sass {
     }
     else {
 
-      rule->append(SASS_MEMORY_NEW(IncludeImport,
-        scanner.relevantSpanFrom(start), scanner.sourceUrl, url, nullptr));
+      SourceSpan pstate(scanner.relevantSpanFrom(start));
+      if (!context.callCustomImporters(url, pstate, rule)) {
+        rule->append(SASS_MEMORY_NEW(IncludeImport62,
+          pstate, scanner.sourceUrl, url, nullptr));
+      }
 
     }
 

@@ -8,6 +8,7 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+#include "ast_fwd_decl.hpp"
 #include "environment_cnt.hpp"
 
 namespace Sass {

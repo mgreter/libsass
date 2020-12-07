@@ -371,7 +371,7 @@ namespace Sass {
         scanner.relevantSpanFrom(start));
     }
 
-    sass::string fname(Util::unvendor(name));
+    sass::string fname(StringUtils::unvendor(name));
     if (fname == "calc" || fname == "element" || fname == "expression" ||
       fname == "url" || fname == "and" || fname == "or" || fname == "not") {
       error("Invalid function name.",
@@ -523,7 +523,7 @@ namespace Sass {
     }
 
     // This is guaranteed to either load or error out!
-    ImportObj loaded = compiler.loadImport(resolved[0]);
+    Import93Obj loaded = compiler.loadImport(resolved[0]);
     ImportStackFrame iframe(compiler, loaded);
 
     sass::string abspath(loaded->getAbsPath());
@@ -541,7 +541,7 @@ namespace Sass {
   }
 
 
-  Root* Eval::resolveIncludeImport(IncludeImport* rule)
+  Root* Eval::resolveIncludeImport(IncludeImport62* rule)
   {
     // Seems already loaded?
     if (rule->root()) {
@@ -551,7 +551,6 @@ namespace Sass {
     if (rule->module() && rule->module()->isBuiltIn) {
       return nullptr;
     }
-
 
     if (Root* sheet2 = loadModule(
       rule->prev(),
@@ -826,7 +825,7 @@ namespace Sass {
 
   }
 
-  void Eval::exposeImpRule(IncludeImport* rule)
+  void Eval::exposeImpRule(IncludeImport62* rule)
   {
 
     EnvRefs* pframe = compiler.getCurrentFrame();
@@ -904,7 +903,7 @@ namespace Sass {
 
   }
 
-  void Eval::acceptIncludeImport(IncludeImport* rule)
+  void Eval::acceptIncludeImport(IncludeImport62* rule)
   {
     BackTrace trace(rule->pstate(), Strings::importRule);
     callStackFrame cframe(logger456, trace);

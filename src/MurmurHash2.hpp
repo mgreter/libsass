@@ -6,9 +6,8 @@
 /*****************************************************************************/
 /* LibSass only needs MurmurHash2, so we made this header only               */
 /*****************************************************************************/
-
-#ifndef _MURMURHASH2_H_
-#define _MURMURHASH2_H_
+#ifndef SASS_MURMURHASH2_HPP
+#define SASS_MURMURHASH2_HPP
 
 /////////////////////////////////////////////////////////////////////////
 // Platform-specific functions and macros
@@ -92,5 +91,5 @@ inline uint32_t MurmurHash2 ( const void * key, int len, uint32_t seed )
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
-#endif // _MURMURHASH2_H_
+#endif
 

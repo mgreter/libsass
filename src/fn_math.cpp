@@ -26,7 +26,7 @@ namespace Sass {
 
       double coerceToRad(Number* number, Compiler& compiler, const sass::string& vname) {
         Units radiants("rad");
-        if (double factor = number->getUnitConvertFactor(radiants)) {
+        if (double factor = number->getUnitConversionFactor(radiants)) {
           return number->value() * factor;
         }
         callStackFrame csf(compiler, number->pstate());
@@ -114,7 +114,7 @@ namespace Sass {
         for (size_t i = 0; i < numbers.size(); i++) {
           auto& number = numbers[i];
           if (number->hasUnits() == numbers[0]->hasUnits()) {
-            if (double factor = number->getUnitConvertFactor(numbers[0])) {
+            if (double factor = number->getUnitConversionFactor(numbers[0])) {
               subtotal += std::pow(number->value() * factor, 2.0);
             }
             else {
@@ -407,7 +407,7 @@ namespace Sass {
             "Arguments must all have units or all be unitless.");
         }
 
-        if (double factor = x->getUnitConvertFactor(y)) {
+        if (double factor = x->getUnitConversionFactor(y)) {
           double xValue = fuzzyRoundIfZero(x->value() * factor, compiler.epsilon);
           double yValue = fuzzyRoundIfZero(y->value(), compiler.epsilon);
           double result = std::atan2(yValue, xValue) * 180 / PI;

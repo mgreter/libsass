@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_INSPECT_HPP
 #define SASS_INSPECT_HPP
 
@@ -34,8 +37,8 @@ namespace Sass {
     bool inspect;
 
     // We should probably pass an emitter, so we can switch implementation?
-    Inspect(struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
-    Inspect(Logger& logger, struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
+    Inspect(OutputOptions& opt, bool srcmap_enabled);
+    Inspect(Logger& logger, OutputOptions& opt, bool srcmap_enabled);
 
     void visitBlockStatements(CssNodeVector children);
     

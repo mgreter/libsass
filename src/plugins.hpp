@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_PLUGINS_HPP
 #define SASS_PLUGINS_HPP
 
@@ -5,10 +8,7 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-#include <string>
-#include <vector>
-#include "unicode.hpp"
-#include "sass/functions.h"
+#include "ast_fwd_decl.hpp"
 
 #ifdef _WIN32
 
@@ -31,43 +31,19 @@
 
 namespace Sass {
 
-
   class Plugins {
 
-    public: // c-tor
-      Plugins();
-      ~Plugins();
+  private:
+    // Associated compiler
+    Compiler& compiler;
 
-    public: // methods
-      // load one specific plugin
-      bool load_plugin(const sass::string& path);
-      // load all plugins from a directory
-      size_t load_plugins(const sass::string& path);
-
-    public: // public accessors
-      void consume_headers(sass::vector<struct SassImporter*>& destination) {
-        destination.insert(destination.end(),
-          std::make_move_iterator(headers.begin()),
-          std::make_move_iterator(headers.end()));
-        headers.clear();
-      }
-      void consume_importers(sass::vector<struct SassImporter*>& destination) {
-        destination.insert(destination.end(),
-          std::make_move_iterator(importers.begin()),
-          std::make_move_iterator(importers.end()));
-        importers.clear();
-      }
-      void consume_functions(sass::vector<struct SassFunction*>& destination) {
-        destination.insert(destination.end(),
-          std::make_move_iterator(functions.begin()),
-          std::make_move_iterator(functions.end()));
-        functions.clear();
-      }
-
-  private: // private vars
-      sass::vector<struct SassImporter*> headers;
-      sass::vector<struct SassImporter*> importers;
-      sass::vector<struct SassFunction*> functions;
+  public:
+    // Value constructor
+    Plugins(Compiler& compiler);
+    // Load one specific plugin
+    bool load_plugin(const sass::string& path);
+    // Load all plugins from a directory
+    size_t load_plugins(const sass::string& path);
 
   };
 

@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "inspect.hpp"
 
 #include <iomanip>
@@ -8,6 +11,7 @@
 #include "exceptions.hpp"
 #include "ast_values.hpp"
 #include "ast_selectors.hpp"
+#include "fn_utils.hpp"
 
 namespace Sass {
 
@@ -15,12 +19,12 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  Inspect::Inspect(SassOutputOptionsCpp& opt, bool srcmap_enabled)
+  Inspect::Inspect(OutputOptions& opt, bool srcmap_enabled)
     : Emitter(opt, srcmap_enabled), quotes(true), inspect(false)
   {
   }
 
-  Inspect::Inspect(Logger& logger, SassOutputOptionsCpp& opt, bool srcmap_enabled)
+  Inspect::Inspect(Logger& logger, OutputOptions& opt, bool srcmap_enabled)
     : Emitter(opt, srcmap_enabled), quotes(true), inspect(false)
   {
   }

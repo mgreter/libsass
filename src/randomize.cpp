@@ -27,7 +27,9 @@ namespace Sass {
       seed = atol(envseed);
     }
     else {
-      #ifdef USE_WIN_CRYPT
+      #ifdef SassStaticHashSeed
+      seed = SassStaticHashSeed;
+      #elsifdef USE_WIN_CRYPT
       // Get seed via MS API
       HCRYPTPROV hp = 0;
       CryptAcquireContext(&hp, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
@@ -53,9 +55,8 @@ namespace Sass {
   // Creates one true random number to seed us
   uint32_t getHashSeed(uint32_t* preset)
   {
-    #ifdef StaticHashSeed
-    return StaticHashSeed
-    // return 0x9e3779b9;
+    #ifdef SassStaticHashSeed
+    return SassStaticHashSeed
     #else
     // This should be thread safe
     static uint32_t seed = preset

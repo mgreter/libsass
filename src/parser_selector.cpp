@@ -391,7 +391,7 @@ namespace Sass {
     scanWhitespace();
 
     sass::string unvendored(name);
-    unvendored = Util::unvendor(unvendored);
+    unvendored = StringUtils::unvendor(unvendored);
 
     sass::string argument;
     // Offset beforeArgument(scanner.offset);

@@ -16,7 +16,7 @@ namespace Sass {
   class Emitter {
 
     public:
-      Emitter(struct SassOutputOptionsCpp& opt, bool srcmap_enabled);
+      Emitter(OutputOptions& opt, bool srcmap_enabled);
 
     protected:
       OutputBuffer wbuf;
@@ -36,7 +36,7 @@ namespace Sass {
       SourceSpan remap(const SourceSpan& pstate);
 
     public:
-      struct SassOutputOptionsCpp& opt;
+      OutputOptions& opt;
       size_t indentation;
       size_t scheduled_space;
       size_t scheduled_linefeed;

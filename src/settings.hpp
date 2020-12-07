@@ -16,9 +16,18 @@
 #define SassDefaultEpsilon 10E-10
 #define SassDefaultNrSprintf "%.10f"
 
-//#define SassEagerUseParsing
-#define SassEagerImportParsing
-//#define SassEagerForwardParsing
+/////////////////////////////////////////////////////////////////////////
+// Hard-coded maximum nesting until we bail out.
+// Note that this limit is not an exact science
+// it depends on various factors, which some are
+// not under our control (compile time or even OS
+// dependent settings on the available stack size)
+// It should fix most common segfault cases though.
+/////////////////////////////////////////////////////////////////////////
+
+#ifndef SassMaxNesting
+#define SassMaxNesting 512
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // Should we preserve color information when possible
@@ -32,27 +41,35 @@
 // transformations between formats it will not clamp the components.
 /////////////////////////////////////////////////////////////////////////
 
-#define SassPreserveColorInfo
+#ifndef SassPreserveColorInfo
+#define SassPreserveColorInfo 1
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // Error when extending compound selectors
 /////////////////////////////////////////////////////////////////////////
 
-#define SassRestrictCompoundExtending
+// Disable for older LibSass 3.6.3 behavior
+#ifndef SassRestrictCompoundExtending
+#define SassRestrictCompoundExtending 1
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // Logger default settings
 /////////////////////////////////////////////////////////////////////////
 
 // Default output character columns
+#ifndef SassDefaultColumns
 #define SassDefaultColumns 80
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // Optional static hash seed
 /////////////////////////////////////////////////////////////////////////
 
 // Define static hash seed (random otherwise)
-// #define STAStaticHashSeed 0x9e3779b9
+// 0x9e3779b9 is the Fibonacci/Golden Ratio
+// #define SassStaticHashSeed 0x9e3779b9
 
 /////////////////////////////////////////////////////////////////////////
 // Optimization configurations
@@ -83,8 +100,11 @@
 /////////////////////////////////////////////////////////////////////////
 #define SASS_OPTIMIZE_SELF_ASSIGN
 
-// Number of references to safely self assign
+// Number of references until we can safely self assign.
+// Set to a zero to practically disable this feature.
+#ifndef AssignableRefCount
 #define AssignableRefCount 3
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////

@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_REMOVE_PLACEHOLDERS_HPP
 #define SASS_REMOVE_PLACEHOLDERS_HPP
 

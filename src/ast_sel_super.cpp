@@ -203,7 +203,7 @@ namespace Sass {
   {
 
     // ToDo: move normalization function
-    sass::string name(Util::unvendor(pseudo1->name()));
+    sass::string name(StringUtils::unvendor(pseudo1->name()));
 
     if (name == "matches" || name == "any") {
       sass::vector<PseudoSelectorObj> pseudos =

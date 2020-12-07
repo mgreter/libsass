@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "source_span.hpp"
 
 #include "sources.hpp"
@@ -37,7 +40,8 @@ namespace Sass {
       lhs->pstate(), rhs->pstate());
   }
 
-  bool SourceSpan::operator==(const SourceSpan& rhs) const {
+  bool SourceSpan::operator==(const SourceSpan& rhs) const
+  {
     return source.ptr() == rhs.source.ptr()
       && position == rhs.position
       && span == rhs.span;

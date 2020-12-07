@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "eval.hpp"
 
 #include "cssize.hpp"
@@ -397,9 +400,9 @@ namespace Sass {
 
     // Get some items from passed parameters
     const EnvKey& name(callable->envkey());
-    struct SassFunction* callback(callable->function());
+    SassFunctionLambda lambda(callable->lambda());
     ArgumentDeclaration* prototype(callable->declaration());
-    if (!callback) throw std::runtime_error("C-API declaration has no callback");
+    if (!lambda) throw std::runtime_error("C-API declaration has no callback");
     if (!prototype) throw std::runtime_error("C-API declaration has no prototype");
     const sass::vector<ArgumentObj>& parameters(prototype->arguments());
 
@@ -470,8 +473,8 @@ namespace Sass {
     }
 
     // Now invoke the function of the callback object
-    struct SassValue* c_val = callback->function(
-      c_args, callback, compiler.wrap());
+    struct SassValue* c_val = (*lambda)(
+      c_args, compiler.wrap());
     // It may not return anything at all
     if (c_val == nullptr) return nullptr;
     // Unwrap the result into C++ object
@@ -695,7 +698,7 @@ namespace Sass {
     // Needed in loop
     ValueObj value;
     // Create CSS output options
-    SassOutputOptionsCpp out({
+    OutputOptions out({
       SASS_STYLE_TO_CSS,
       compiler.precision });
     // Create the emitter
@@ -1267,12 +1270,13 @@ namespace Sass {
     // We know that warn override function can only be external
     SASS_ASSERT(fn->isaExternalCallable(), "Custom callable must be external");
     ExternalCallable* def = static_cast<ExternalCallable*>(fn);
-    struct SassFunction* c_function = def->function();
-    SassFunctionLambda c_func = sass_function_get_function(c_function);
+    SassFunctionLambda lambda = def->lambda();
     struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
+    std::cerr << "Create c_args with " << Value::unwrap(c_args).refcount << "\n";
     sass_list_push(c_args, Value::wrap(message));
-    struct SassValue* c_val = c_func(
-      c_args, c_function, compiler.wrap());
+    struct SassValue* c_val = lambda(
+      c_args, compiler.wrap());
+    std::cerr << "After c_args with " << Value::unwrap(c_args).refcount << "\n";
     sass_delete_value(c_args);
     sass_delete_value(c_val);
   }
@@ -1296,7 +1300,7 @@ namespace Sass {
   Value* Eval::visitWarnRule(WarnRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::debugRule, "");
+    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::warnRule, "");
     if (fidx.isValid()) {
       CallableObj& fn = compiler.varRoot.getFunction(fidx);
       callExternalMessageOverloadFunction(fn, message);
@@ -1314,11 +1318,12 @@ namespace Sass {
     ValueObj message = node->expression()->accept(this);
     EnvRef fidx = compiler.varRoot.findFnIdx(Keys::errorRule, "");
     if (fidx.isValid()) {
+
       CallableObj& fn = compiler.varRoot.getFunction(fidx);
       callExternalMessageOverloadFunction(fn, message);
     }
     else {
-      sass::string result(message->toCss(logger456, true));
+      sass::string result(message->inspect());
       traces.push_back(BackTrace(node->pstate()));
       throw Exception::RuntimeException(traces, result);
     }
@@ -1407,7 +1412,7 @@ namespace Sass {
     // Regular style rule
     else if (node->interpolation()) {
       // Check current importer context
-      Import* imp = compiler.import_stack.back();
+      Import93* imp = compiler.import_stack.back();
       bool plainCss = imp->syntax == SASS_IMPORT_CSS;
       // Evaluate the interpolation and try to parse a selector list
       SelectorListObj slist = interpolationToSelector(node->interpolation(), plainCss)->
@@ -1650,7 +1655,7 @@ namespace Sass {
 
     EnvScope scoped(compiler.varRoot, node->idxs);
 
-    sass::string normalized(Util::unvendor(name->text()));
+    sass::string normalized(StringUtils::unvendor(name->text()));
     bool isKeyframe = normalized == "keyframes";
     LOCAL_FLAG(inUnknownAtRule, !isKeyframe);
     LOCAL_FLAG(inKeyframes, isKeyframe);
@@ -2067,7 +2072,7 @@ namespace Sass {
               addComma = true;
             }
             sels << "` instead.\nSee http://bit.ly/ExtendCompound for details.";
-            #ifdef SassRestrictCompoundExtending
+            #if SassRestrictCompoundExtending
             callStackFrame csf(logger456, compound->pstate());
             throw Exception::RuntimeException(traces, sels.str());
             #else
@@ -2253,7 +2258,7 @@ namespace Sass {
   {
     for (const ImportBaseObj& import : rule->elements()) {
       if (StaticImport* stimp = import->isaStaticImport()) { acceptStaticImport(stimp); }
-      else if (IncludeImport* stimp = import->isaIncludeImport()) { acceptIncludeImport(stimp); }
+      else if (IncludeImport62* stimp = import->isaIncludeImport62()) { acceptIncludeImport(stimp); }
       else throw std::runtime_error("undefined behavior");
     }
     return nullptr;

@@ -8,20 +8,22 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-#include "ast_def_macros.hpp"
-
 namespace Sass {
 
-  const double PI = std::acos(-1);
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   enum UnitClass {
     LENGTH = 0x000,
-    ANGLE = 0x100,
-    TIME = 0x200,
+    TIME = 0x100,
+    ANGLE = 0x200,
     FREQUENCY = 0x300,
     RESOLUTION = 0x400,
     INCOMMENSURABLE = 0x500
   };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   enum UnitType {
 
@@ -34,54 +36,60 @@ namespace Sass {
     PX,
     QMM,
 
+    // time units
+    SEC = UnitClass::TIME,
+    MSEC,
+
     // angle units
-    DEG = ANGLE,
+    DEG = UnitClass::ANGLE,
     GRAD,
     RAD,
     TURN,
 
-    // time units
-    SEC = TIME,
-    MSEC,
-
     // frequency units
-    HERTZ = FREQUENCY,
+    HERTZ = UnitClass::FREQUENCY,
     KHERTZ,
 
     // resolutions units
-    DPI = RESOLUTION,
+    DPI = UnitClass::RESOLUTION,
     DPCM,
     DPPX,
 
     // for unknown units
-    UNKNOWN = INCOMMENSURABLE
+    UNKNOWN = UnitClass::INCOMMENSURABLE
 
   };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   class Units {
 
   private:
 
+    // Cache the final unit string
     mutable sass::string stringified;
 
   public:
 
+    // The units in the numerator
     sass::vector<sass::string> numerators;
+    // The units in the denominator
     sass::vector<sass::string> denominators;
 
-    // default constructor
+    // Default constructor
     Units() :
       numerators(),
       denominators()
     { }
 
+    // Construct from string 
     Units(const sass::string& u) :
       numerators(),
       denominators()
     {
       unit(u);
     }
-
 
     // copy constructor
     Units(const Units* ptr) :
@@ -101,25 +109,42 @@ namespace Sass {
       denominators(std::move(other.denominators))
     { }
 
-    // convert to string
+    // Convert units to string
     const sass::string& unit() const;
+
+    // Reset unit without conversion factor
     void unit(const sass::string& unit);
-    // get if units are empty
+
+    // Returns true if empty
     bool isUnitless() const;
 
+    // Returns true if not empty
     bool hasUnits() const {
       return !isUnitless();
     }
-    // return if valid for css
+
+    // Returns true if we only have given numerator
+    bool isOnlyOfUnit(sass::string numerator) const;
+
+    // Returns true if valid for css
     bool isValidCssUnit() const;
-    // reduce units for output
-    // returns conversion factor
+
+    // Cancel out all compatible unit classes
+    // E.g. `1000ms/s` will be reduced to `1`
+    // Returns factor to be applied to scalar
     double reduce();
-    // normalize units for compare
-    // returns conversion factor
+
+    // Normalize all units to the standard unit class
+    // Additionally sorts all units in ascending order
+    // In combination with `reduce` this allows numbers
+    // to be compared for equality independent of units
+    // E.g. '1000ms' will be normalized to '1s'
+    // Returns factor to be applied to scalar
     double normalize();
-    // compare operations
+
+    // Compare units (without any normalizing)
     bool operator==(const Units& rhs) const;
+
     // Delete other operators to make implementation more clear
     // Helps us spot cases where we use undefined implementations
     // bool operator!=(const Units& rhs) const = delete;
@@ -128,11 +153,13 @@ namespace Sass {
     // bool operator>(const Units& rhs) const = delete;
     // bool operator<(const Units& rhs) const = delete;
 
-    // factor to convert into given units
-    double getUnitConvertFactor(const Units&) const;
-    // 
-    bool hasUnit(sass::string numerator);
+    // Return factor to convert into passed units
+    double getUnitConversionFactor(const Units&) const;
+
   };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   /* Declare matrix tables for unit conversion factors*/
   extern const double size_conversion_factors[7][7];
@@ -141,14 +168,36 @@ namespace Sass {
   extern const double frequency_conversion_factors[2][2];
   extern const double resolution_conversion_factors[3][3];
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Return unit class enum for given unit type enum
+  UnitClass get_unit_class(UnitType unit);
+
+  // Return standard unit for the given unit class enum
   UnitType get_standard_unit(const UnitClass unit);
-  enum Sass::UnitType string_to_unit(const sass::string&);
-  const char* unit_to_string(Sass::UnitType unit);
-  enum Sass::UnitClass get_unit_type(Sass::UnitType unit);
-  // throws incompatibleUnits exceptions
-  double conversion_factor(const sass::string&, const sass::string&);
-  double conversion_factor(UnitType, UnitType, UnitClass, UnitClass);
-  double convert_units(const sass::string&, const sass::string&, int&, int&);
+
+  // Return unit type enum from unit string
+  UnitType string_to_unit(const sass::string& s);
+
+  // Return unit as string from unit type enum
+  const char* unit_to_string(UnitType unit);
+
+  // Return conversion factor from s1 to s2 (returns zero for incompatible units)
+  double conversion_factor(const sass::string& s1, const sass::string& s2);
+
+  // Return conversion factor from u1 to u2 (returns zero for incompatible units)
+  // Note: unit classes are passed as parameters since we mostly already have them
+  // Note: not sure how much performance this saves, but it fits our use-cases well
+  double conversion_factor(UnitType u1, UnitType u2, UnitClass c1, UnitClass c2);
+
+  // Reduce units so that the result either is fully represented by lhs or rhs unit.
+  // Exponents are adjusted accordingly and returning factor must be applied to the scalar.
+  // Basically tries to cancel out compatible units (e.g. s/ms) and converts the remaining ones.
+  double reduce_units(const sass::string& lhs, const sass::string& rhs, int& lhsexp, int& rhsexp);
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }
 

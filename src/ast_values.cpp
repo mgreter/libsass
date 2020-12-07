@@ -52,10 +52,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   void CustomError::accept(ValueVisitor<void>* visitor) {
-    throw std::runtime_error("CustomError::accept not implemented");
+    throw std::runtime_error("CustomError::accept<void> not implemented");
   }
   Value* CustomError::accept(ValueVisitor<Value*>* visitor) {
-    throw std::runtime_error("CustomError::accept not implemented");
+    throw std::runtime_error("CustomError::accept<Value> not implemented");
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -90,10 +90,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   void CustomWarning::accept(ValueVisitor<void>* visitor) {
-    throw std::runtime_error("CustomWarning::accept not implemented");
+    throw std::runtime_error("CustomWarning::accept<void> not implemented");
   }
   Value* CustomWarning::accept(ValueVisitor<Value*>* visitor) {
-    throw std::runtime_error("CustomWarning::accept not implemented");
+    throw std::runtime_error("CustomWarning::accept<Value> not implemented");
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -938,7 +938,7 @@ namespace Sass {
       Number left(this), right(rhs);
       left.reduce(); right.reduce();
       // Get the necessary conversion factor
-      double f(right.getUnitConvertFactor(left));
+      double f(right.getUnitConversionFactor(left));
       // Returns zero on incompatible units
       if (f == 0.0) {
         callStackFrame csf(logger, pstate);
