@@ -3,6 +3,7 @@
 /*****************************************************************************/
 #include "capi_sass.hpp"
 
+#include <cstring>
 #include "terminal.hpp"
 #include "file.hpp"
 
