@@ -43,7 +43,14 @@ include_HEADERS = $(top_srcdir)/include/sass.h
 sass_includedir = $(includedir)/sass
 
 sass_include_HEADERS = $(top_srcdir)/include/sass/base.h \
+                       $(top_srcdir)/include/sass/compiler.h \
+                       $(top_srcdir)/include/sass/enums.h \
+                       $(top_srcdir)/include/sass/error.h \
+                       $(top_srcdir)/include/sass/function.h \
+                       $(top_srcdir)/include/sass/fwdecl.h \
+                       $(top_srcdir)/include/sass/import.h \
+                       $(top_srcdir)/include/sass/importer.h \
+                       $(top_srcdir)/include/sass/traces.h \
                        $(top_srcdir)/include/sass/values.h \
-                       $(top_srcdir)/include/sass/version.h \
-                       $(top_srcdir)/include/sass/context.h \
-                       $(top_srcdir)/include/sass/functions.h
+                       $(top_srcdir)/include/sass/variable.h \
+                       $(top_srcdir)/include/sass/version.h
