@@ -273,15 +273,15 @@ $(DESTDIR)$(PREFIX)/include/%.h: include/%.h \
 install-headers: $(DESTDIR)$(PREFIX)/include/sass.h \
                  $(DESTDIR)$(PREFIX)/include/sass/base.h \
                  $(DESTDIR)$(PREFIX)/include/sass/compiler.h \
-                 $(DESTDIR)$(PREFIX)/include/sass/context.h \
                  $(DESTDIR)$(PREFIX)/include/sass/enums.h \
                  $(DESTDIR)$(PREFIX)/include/sass/error.h \
-                 $(DESTDIR)$(PREFIX)/include/sass/functions.h \
+                 $(DESTDIR)$(PREFIX)/include/sass/function.h \
                  $(DESTDIR)$(PREFIX)/include/sass/fwdecl.h \
                  $(DESTDIR)$(PREFIX)/include/sass/import.h \
-                 $(DESTDIR)$(PREFIX)/include/sass/lists.h \
+                 $(DESTDIR)$(PREFIX)/include/sass/importer.h \
                  $(DESTDIR)$(PREFIX)/include/sass/traces.h \
                  $(DESTDIR)$(PREFIX)/include/sass/values.h \
+                 $(DESTDIR)$(PREFIX)/include/sass/variable.h \
                  $(DESTDIR)$(PREFIX)/include/sass/version.h
 
 $(DESTDIR)$(PREFIX)/lib/%.a: lib/%.a \
