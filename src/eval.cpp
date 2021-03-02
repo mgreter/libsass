@@ -1470,7 +1470,7 @@ namespace Sass {
   }
 
   /*
-   
+
   /// Whether this node has a visible sibling after it.
   bool get hasFollowingSibling {
     if (_parent == null) return false;
@@ -2004,6 +2004,11 @@ namespace Sass {
     ValueObj high = f->upper_bound()->accept(this);
     NumberObj sass_start = low->assertNumber(logger456, "");
     NumberObj sass_end = high->assertNumber(logger456, "");
+    // Support compatible unit types (e.g. cm to mm)
+    sass_end = sass_end->coerce(logger456, sass_start);
+    // Can only use integer ranges
+    sass_start->assertInt(logger456);
+    sass_end->assertInt(logger456);
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
       callStackFrame csf(logger456, f->pstate());
