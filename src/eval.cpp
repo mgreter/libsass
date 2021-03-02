@@ -1818,7 +1818,7 @@ namespace Sass {
   /// Evaluates [condition] and converts it to a plain CSS string, with
   sass::string Eval::_visitSupportsCondition(SupportsCondition* condition)
   {
-    if (auto operation = condition->isaSupportsOperation()) {
+    if (SupportsOperation* operation = condition->isaSupportsOperation()) {
       sass::string strm;
       SupportsOperation::Operand operand = operation->operand();
       strm += _parenthesize(operation->left(), operand);
@@ -1826,36 +1826,30 @@ namespace Sass {
       strm += _parenthesize(operation->right(), operand);
       return strm;
     }
-    else if (auto negation = condition->isaSupportsNegation()) {
+    else if (SupportsNegation* negation = condition->isaSupportsNegation()) {
       return "not " + _parenthesize(negation->condition());
     }
-    else if (auto interpolation = condition->isaSupportsInterpolation()) {
+    else if (SupportsInterpolation* interpolation = condition->isaSupportsInterpolation()) {
       return toCss(interpolation->value(), false);
     }
-    else if (auto declaration = condition->isaSupportsDeclaration()) {
+    else if (SupportsDeclaration* declaration = condition->isaSupportsDeclaration()) {
       sass::string strm("(");
       strm += toCss(declaration->feature()); strm += ": ";
       strm += toCss(declaration->value()); strm += ")";
       return strm;
     }
-    else if (auto declaration = condition->isaSupportsFunction()) {
-      return "SupportsFunction";
+    else if (SupportsFunction* function = condition->isaSupportsFunction()) {
+      return acceptInterpolation(function->name(), false)
+        + "(" + acceptInterpolation(function->args(), false) + ")";
     }
-    else if (auto anything = condition->isaSupportsAnything()) {
-      return acceptInterpolation(anything->contents(), false);
+    else if (SupportsAnything* anything = condition->isaSupportsAnything()) {
+      return "(" + acceptInterpolation(anything->contents(), false) + ")";
     }
     else {
       return Strings::empty;
     }
 
   }
-
-  // String* Eval::operator()(SupportsCondition* condition)
-  // {
-  //   throw std::runtime_error("to delete");
-  //   return SASS_MEMORY_NEW(String, condition->pstate(),
-  //     _visitSupportsCondition(condition));
-  // }
 
   /// Adds the values in [map] to [values].
   ///
