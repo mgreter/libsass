@@ -463,7 +463,8 @@ namespace Sass {
     // Consumes tokens until it reaches a top-level `";"`, `")"`, `"]"`, or `"}"` and 
     // returns their contents as a string. If [allowEmpty] is `false` (the default), this
     // requires at least one token. Unlike [declarationValue], this allows interpolation.
-    Interpolation* readInterpolatedDeclarationValue(bool allowEmpty = false);
+    Interpolation* readInterpolatedDeclarationValue(bool allowEmpty = false,
+      bool allowSemicolon = false, bool allowColon = true);
 
     // Consumes an identifier that may contain interpolation.
     Interpolation* readInterpolatedIdentifier();
@@ -499,6 +500,8 @@ namespace Sass {
     // Tries to consume a negated supports condition.
     // Returns `nullptr` if it fails.
     SupportsNegation* trySupportsNegation();
+
+    SupportsOperation* trySupportsOperation(Interpolation* interpolation, Offset& start);
 
     // Like [identifier], but rejects identifiers that begin with `_` or `-`.
     sass::string readPublicIdentifier();

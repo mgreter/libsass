@@ -271,9 +271,9 @@ namespace Sass {
     if ((output_style() != SASS_STYLE_COMPRESSED) && wbuf.buffer.size()) {
       unsigned char lst = buffer().at(buffer().length() - 1);
       if (!isspace(lst) || scheduled_delimiter) {
-        if (last_char() != '(') {
+        // if (last_char() != '(') {
           append_mandatory_space();
-        }
+        // }
       }
     }
   }

@@ -372,7 +372,7 @@ namespace Sass {
     }
 
     sass::string fname(StringUtils::unvendor(name));
-    if (fname == "calc" || fname == "element" || fname == "expression" ||
+    if (fname == "calc" || fname == "element" || fname == "expression" || fname == "clamp" ||
       fname == "url" || fname == "and" || fname == "or" || fname == "not") {
       error("Invalid function name.",
         scanner.relevantSpanFrom(start));

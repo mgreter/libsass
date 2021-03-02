@@ -730,6 +730,20 @@ inline void debug_ast(AstNode* node, std::string ind)
     debug_ast(block->left(), ind + " left) ");
     debug_ast(block->right(), ind + " right) ");
   }
+  else if (Cast<SupportsFunction>(node)) {
+  SupportsFunction* block = Cast<SupportsFunction>(node);
+    std::cerr << ind << "SupportsFunction " << block;
+    std::cerr << " (" << pstate_source_position(node) << ")"
+      << std::endl;
+    // debug_ast(block->condition(), ind + " condition) ");
+  }
+  else if (Cast<SupportsAnything>(node)) {
+  SupportsAnything* block = Cast<SupportsAnything>(node);
+    std::cerr << ind << "SupportsAnything " << block;
+    std::cerr << " (" << pstate_source_position(node) << ")"
+      << std::endl;
+    // debug_ast(block->condition(), ind + " condition) ");
+  }
   else if (Cast<SupportsNegation>(node)) {
     SupportsNegation* block = Cast<SupportsNegation>(node);
     std::cerr << ind << "SupportsNegation " << block;

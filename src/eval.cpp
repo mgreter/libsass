@@ -1795,7 +1795,8 @@ namespace Sass {
   sass::string Eval::_parenthesize(SupportsCondition* condition) {
     SupportsNegation* negation = condition->isaSupportsNegation();
     SupportsOperation* operation = condition->isaSupportsOperation();
-    if (negation != nullptr || operation != nullptr) {
+    SupportsAnything* anything = condition->isaSupportsAnything();
+    if (negation != nullptr || operation != nullptr || anything != nullptr) {
       return "(" + _visitSupportsCondition(condition) + ")";
     }
     else {
@@ -1836,6 +1837,12 @@ namespace Sass {
       strm += toCss(declaration->feature()); strm += ": ";
       strm += toCss(declaration->value()); strm += ")";
       return strm;
+    }
+    else if (auto declaration = condition->isaSupportsFunction()) {
+      return "SupportsFunction";
+    }
+    else if (auto anything = condition->isaSupportsAnything()) {
+      return acceptInterpolation(anything->contents(), false);
     }
     else {
       return Strings::empty;

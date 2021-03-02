@@ -1085,6 +1085,17 @@ namespace Sass {
     return value_;
   }
 
+  const Number* Number::checkPercent(Logger& logger, const sass::string& name) const
+  {
+    if (!hasUnit("%")) {
+      sass::sstream msg;
+      msg << "$" << name << ": Passing a number without unit % (" << inspect() << ") is deprecated." << STRMLF;
+      msg << "To preserve current behavior: $" << name << " * 1%" << STRMLF;
+      logger.addDeprecation(msg.str(), pstate());
+    }
+    return this;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   // Implement delayed value fetcher
   /////////////////////////////////////////////////////////////////////////

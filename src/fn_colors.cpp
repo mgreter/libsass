@@ -21,7 +21,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    // Create typedef for value function callback
+    // Create typedef for color function callback
     typedef Value* (*colFn)(
       const sass::string& name,
       const ValueVector& arguments,
@@ -71,7 +71,8 @@ namespace Sass {
         || startsWith(str->value(), "var(", 4)
         || startsWith(str->value(), "env(", 4)
         || startsWith(str->value(), "min(", 4)
-        || startsWith(str->value(), "max(", 4);
+        || startsWith(str->value(), "max(", 4)
+        || startsWith(str->value(), "clamp(", 6);
     }
     // EO isSpecialNumber
 
@@ -1251,8 +1252,8 @@ namespace Sass {
         double r = nr_r ? nr_r->assertRange(0.0, 255.0, compiler, Strings::red) : 0.0;
         double g = nr_g ? nr_g->assertRange(0.0, 255.0, compiler, Strings::green) : 0.0;
         double b = nr_b ? nr_b->assertRange(0.0, 255.0, compiler, Strings::blue) : 0.0;
-        double s = nr_s ? nr_s->assertRange(0.0, 100.0, compiler, Strings::saturation) : 0.0;
-        double l = nr_l ? nr_l->assertRange(0.0, 100.0, compiler, Strings::lightness) : 0.0;
+        double s = nr_s ? nr_s->checkPercent(compiler, Strings::saturation)->assertRange(0.0, 100.0, compiler, Strings::saturation) : 0.0;
+        double l = nr_l ? nr_l->checkPercent(compiler, Strings::lightness)->assertRange(0.0, 100.0, compiler, Strings::lightness) : 0.0;
         double a = nr_a ? nr_a->assertRange(0.0, 1.0, compiler, Strings::alpha) : 0.0;
         double wn = nr_wn ? nr_wn->assertHasUnits(compiler, Strings::percent, Strings::whiteness)->assertRange(0.0, 100.0, compiler, Strings::whiteness) : 0.0;
         double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange( 0.0, 100.0, compiler, Strings::blackness) : 0.0;
@@ -1680,10 +1681,10 @@ namespace Sass {
         return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }
 
-      Number* h = _h->assertNumber(logger, Strings::hue);
-      Number* s = _s->assertNumber(logger, Strings::saturation);
-      Number* l = _l->assertNumber(logger, Strings::lightness);
-      Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+      const Number* h = _h->assertNumber(logger, Strings::hue);
+      const Number* s = _s->assertNumber(logger, Strings::saturation)->checkPercent(logger, Strings::saturation);
+      const Number* l = _l->assertNumber(logger, Strings::lightness)->checkPercent(logger, Strings::lightness);
+      const Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
       return SASS_MEMORY_NEW(ColorHsla, pstate,
         h->value(),

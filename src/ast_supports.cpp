@@ -20,13 +20,37 @@ namespace Sass {
 
   SupportsOperation::SupportsOperation(
     const SourceSpan& pstate,
-    SupportsConditionObj lhs,
-    SupportsConditionObj rhs,
+    SupportsCondition* lhs,
+    SupportsCondition* rhs,
     Operand operand) :
     SupportsCondition(pstate),
     left_(lhs),
     right_(rhs),
     operand_(operand)
+  {}
+
+  /////////////////////////////////////////////////////////////////////////
+  // A supports function
+  /////////////////////////////////////////////////////////////////////////
+
+  SupportsFunction::SupportsFunction(
+    const SourceSpan& pstate,
+    Interpolation* name,
+    Interpolation* args) :
+    SupportsCondition(pstate),
+    name_(name),
+    args_(args)
+  {}
+
+  /////////////////////////////////////////////////////////////////////////
+  // A supports anything
+  /////////////////////////////////////////////////////////////////////////
+
+  SupportsAnything::SupportsAnything(
+    const SourceSpan& pstate,
+    Interpolation* contents) :
+    SupportsCondition(pstate),
+    contents_(contents)
   {}
 
   /////////////////////////////////////////////////////////////////////////
