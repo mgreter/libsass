@@ -1096,6 +1096,14 @@ namespace Sass {
     return this;
   }
 
+  Number* Number::coerce(Logger& logger, Number& lhs)
+  {
+    if (this->Units::operator==(lhs)) return this;
+    double factor = getUnitConversionFactor(lhs);
+    if (factor == 0.0) throw Exception::UnitMismatch(logger, lhs, *this);
+    return SASS_MEMORY_NEW(Number, pstate(), value() * factor, lhs);
+  }
+
   /////////////////////////////////////////////////////////////////////////
   // Implement delayed value fetcher
   /////////////////////////////////////////////////////////////////////////

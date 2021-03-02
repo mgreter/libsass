@@ -399,6 +399,8 @@ namespace Sass {
       value_ *= this->Units::normalize();
     }
 
+    Number* coerce(Logger& logger, Number& rhs);
+
     // Implement delayed value fetcher
     Value* withoutSlash() override final;
 
