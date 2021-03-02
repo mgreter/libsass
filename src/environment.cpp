@@ -302,7 +302,7 @@ namespace Sass {
     EnvFrame local(context, false);
     // Create space for optional content callable
     // ToDo: check if this can be conditionally done?
-    auto cidx = local.idxs->createMixin(Keys::contentRule);
+    local.idxs->createMixin(Keys::contentRule);
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
     sass::string name = readIdentifier();
