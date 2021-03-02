@@ -1272,11 +1272,9 @@ namespace Sass {
     ExternalCallable* def = static_cast<ExternalCallable*>(fn);
     SassFunctionLambda lambda = def->lambda();
     struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
-    std::cerr << "Create c_args with " << Value::unwrap(c_args).refcount << "\n";
     sass_list_push(c_args, Value::wrap(message));
     struct SassValue* c_val = lambda(
       c_args, compiler.wrap());
-    std::cerr << "After c_args with " << Value::unwrap(c_args).refcount << "\n";
     sass_delete_value(c_args);
     sass_delete_value(c_val);
   }
@@ -1833,10 +1831,8 @@ namespace Sass {
       return toCss(interpolation->value(), false);
     }
     else if (SupportsDeclaration* declaration = condition->isaSupportsDeclaration()) {
-      sass::string strm("(");
-      strm += toCss(declaration->feature()); strm += ": ";
-      strm += toCss(declaration->value()); strm += ")";
-      return strm;
+      return "(" + toCss(declaration->feature()) + ": "
+             + toCss(declaration->value()) + ")";
     }
     else if (SupportsFunction* function = condition->isaSupportsFunction()) {
       return acceptInterpolation(function->name(), false)

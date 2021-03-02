@@ -667,7 +667,7 @@ namespace Sass {
       else if (endsWithIgnoreCase(abs_path, ".scss", 5)) {
         format = SASS_IMPORT_SCSS;
       }
-      else {
+      else if (abs_path != "stream://stdin") {
         throw Exception::UnknwonImport(callStack);
       }
     }
