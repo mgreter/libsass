@@ -68,11 +68,10 @@ namespace Sass {
 
         auto arg2 = min->hasUnits() != number->hasUnits() ? number : max;
         auto arg2Name = min->hasUnits() != number->hasUnits() ? "$number" : "$max";
-        auto unit1 = min->hasUnits() ? "has unit " + min->unit() : "is unitless";
-        auto unit2 = arg2->hasUnits() ? "has unit " + arg2->unit() : "is unitless";
         throw Exception::RuntimeException(compiler,
-          "$min " + unit1 + " but " + arg2Name + " " + unit2 + ". "
-          "Arguments must all have units or all be unitless.");
+          sass::string(arg2Name) + ": " + arg2->inspect() + " and " +
+          "$min: " + min->inspect() + " have incompatible units " +
+          "(one has units and the other doesn't).");
       }
 
 
@@ -122,12 +121,11 @@ namespace Sass {
             }
           }
           else {
-            auto unit1 = numbers[0]->hasUnits() ? "has unit " + numbers[0]->unit() : "is unitless";
-            auto unit2 = number->hasUnits() ? "has unit " + number->unit() : "is unitless";
             sass::sstream strm; strm << (i + 1);
             throw Exception::RuntimeException(compiler,
-              "Argument 1 " + unit1 + " but argument " + strm.str() + " " + unit2 + ". "
-              "Arguments must all have units or all be unitless.");
+              "$numbers[" + strm.str() + "]: " + number->inspect() + " and " +
+              "$numbers[1]: " + numbers[0]->inspect() + " have incompatible units " +
+              "(one has units and the other doesn't).");
           }
         }
 
@@ -400,11 +398,10 @@ namespace Sass {
         auto y = arguments[0]->assertNumber(compiler, "y");
         auto x = arguments[1]->assertNumber(compiler, "x");
         if (y->hasUnits() != x->hasUnits()) {
-          auto unit1 = y->hasUnits() ? "has unit " + y->unit() : "is unitless";
-          auto unit2 = x->hasUnits() ? "has unit " + x->unit() : "is unitless";
           throw Exception::RuntimeException(compiler,
-            "$y " + unit1 + " but $x " + unit2 + ". "
-            "Arguments must all have units or all be unitless.");
+            "$x: " + x->inspect() + " and $y: " +
+            y->inspect() + " have incompatible units " +
+            "(one has units and the other doesn't).");
         }
 
         if (double factor = x->getUnitConversionFactor(y)) {
@@ -454,7 +451,7 @@ namespace Sass {
         module.addFunction(key_unit, ctx.registerBuiltInFunction(key_unit, "$number", unit));
         module.addFunction(key_percentage, ctx.registerBuiltInFunction(key_percentage, "$number", percentage));
         module.addFunction(key_is_unitless, ctx.registerBuiltInFunction(key_unitless, "$number", isUnitless));
-          module.addFunction(key_compatible, ctx.registerBuiltInFunction(key_comparable, "$number1, $number2", compatible));
+        module.addFunction(key_compatible, ctx.registerBuiltInFunction(key_comparable, "$number1, $number2", compatible));
       }
 
       /*******************************************************************/

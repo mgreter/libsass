@@ -433,6 +433,8 @@ namespace Sass {
     Number* assertHasUnits(Logger& logger, const sass::string& unit, const sass::string& name = Strings::empty);
     double assertRange(double min, double max, Logger& logger, const sass::string& name = Strings::empty) const;
 
+    const Number* checkPercent(Logger& logger, const sass::string& name) const;
+
     // Implement equality comparators for base value class
     bool operator== (const Value& rhs) const override final;
     // Implement same class compare operator

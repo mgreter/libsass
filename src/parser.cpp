@@ -441,7 +441,7 @@ namespace Sass {
     }
     else if (isHex(first)) {
       for (uint8_t i = 0; i < 6; i++) {
-        scanner.peekChar(next);
+        if (!scanner.peekChar(next)) break;
         if (next == $nul || !isHex(next)) break;
         value *= 16;
         value += asHex(scanner.readChar());

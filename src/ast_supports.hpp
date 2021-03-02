@@ -23,6 +23,8 @@ namespace Sass {
       const SourceSpan& pstate);
     // Declare up-casting methods
     DECLARE_ISA_CASTER(SupportsOperation);
+    DECLARE_ISA_CASTER(SupportsFunction);
+    DECLARE_ISA_CASTER(SupportsAnything);
     DECLARE_ISA_CASTER(SupportsNegation);
     DECLARE_ISA_CASTER(SupportsDeclaration);
     DECLARE_ISA_CASTER(SupportsInterpolation);
@@ -43,11 +45,45 @@ namespace Sass {
     // Value constructor
     SupportsOperation(
       const SourceSpan& pstate,
-      SupportsConditionObj lhs,
-      SupportsConditionObj rhs,
+      SupportsCondition* lhs,
+      SupportsCondition* rhs,
       Operand operand);
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SupportsOperation);
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  // A supports function
+  /////////////////////////////////////////////////////////////////////////
+  class SupportsFunction final : public SupportsCondition
+  {
+  private:
+    ADD_CONSTREF(InterpolationObj, name);
+    ADD_CONSTREF(InterpolationObj, args);
+  public:
+    // Value constructor
+    SupportsFunction(
+      const SourceSpan& pstate,
+      Interpolation* name,
+      Interpolation* args);
+    // Implement final up-casting method
+    IMPLEMENT_ISA_CASTER(SupportsFunction);
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  // A supports anything
+  /////////////////////////////////////////////////////////////////////////
+  class SupportsAnything final : public SupportsCondition
+  {
+  private:
+    ADD_CONSTREF(InterpolationObj, contents);
+  public:
+    // Value constructor
+    SupportsAnything(
+      const SourceSpan& pstate,
+      Interpolation* contents);
+    // Implement final up-casting method
+    IMPLEMENT_ISA_CASTER(SupportsAnything);
   };
 
   /////////////////////////////////////////////////////////////////////////

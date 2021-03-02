@@ -14,6 +14,8 @@
 #include "ast_expressions.hpp"
 #include "parser_expression.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
 
   // Import some namespaces
@@ -575,7 +577,7 @@ namespace Sass {
     scanWhitespace();
 
     if (parseCustomProperties && startsWith(name->getInitialPlain(), "--", 2)) {
-      InterpolationObj value = readInterpolatedDeclarationValue();
+      InterpolationObj value(readInterpolatedDeclarationValue());
       expectStatementSeparator("custom property");
       return SASS_MEMORY_NEW(Declaration,
         scanner.relevantSpanFrom(start),
@@ -1164,6 +1166,7 @@ namespace Sass {
       if (!lookingAtExpression()) break;
     }
 
+    scanWhitespace();
     scanner.expectChar($rparen);
     return true;
   }
@@ -3037,6 +3040,14 @@ namespace Sass {
       return SASS_MEMORY_NEW(StringExpression,
         scanner.relevantSpanFrom(start), contents);
     }
+    else if (normalized == "clamp") {
+      // Vendor-prefixed clamp() functions aren't parsed specially, because
+      // no browser has ever supported clamp() with a prefix.
+      if (name != "clamp") return nullptr;
+      if (!scanner.scanChar($lparen)) return nullptr;
+      buffer.write(name);
+      buffer.write($lparen);
+    }
     else {
       return nullptr;
     }
@@ -3085,7 +3096,17 @@ namespace Sass {
 
       case $c:
       case $C:
-        if (!tryMinMaxFunction(buffer, "calc")) return false;
+        switch (scanner.peekChar(1)) {
+        case $a:
+        case $A:
+          if (!tryMinMaxFunction(buffer, "calc")) return false;
+          break;
+
+        case $l:
+        case $L:
+          if (!tryMinMaxFunction(buffer, "clamp")) return false;
+          break;
+        }
         break;
 
       case $e:
@@ -3371,10 +3392,12 @@ namespace Sass {
   }
   // readAlmostAnyValue
 
-    // Consumes tokens until it reaches a top-level `";"`, `")"`, `"]"`, or `"}"` and 
-  // returns their contents as a string. If [allowEmpty] is `false` (the default), this
-  // requires at least one token. Unlike [declarationValue], this allows interpolation.
-  Interpolation* StylesheetParser::readInterpolatedDeclarationValue(bool allowEmpty)
+  // Consumes tokens until it reaches a top-level `";"`, `")"`, `"]"`, or `"}"` and returns
+  // their contents as a string. If [allowEmpty] is `false` (the default), this requires
+  // at least one token. If [allowSemicolon] is `true`, this doesn't stop at semicolons
+  // and instead includes them in the interpolated output. If [allowColon] is `false`,
+  // this stops at top-level colons.Unlike [declarationValue], this allows interpolation.
+  Interpolation* StylesheetParser::readInterpolatedDeclarationValue(bool allowEmpty, bool allowSemicolon, bool allowColon)
   {
     // NOTE: this logic is largely duplicated in Parser.declarationValue and
     // isIdentifier in utils.dart. Most changes here should be mirrored there.
@@ -3471,9 +3494,16 @@ namespace Sass {
         break;
 
       case $semicolon:
-        if (brackets.empty()) goto endOfLoop;
+        if (!allowSemicolon && brackets.empty()) goto endOfLoop;
         buffer.write(scanner.readChar());
+        wroteNewline = false;
         break;
+
+      case $colon:
+        if (!allowColon && brackets.empty()) goto endOfLoop;
+        buffer.writeCharCode(scanner.readChar());
+        wroteNewline = false;
+      break;
 
       case $u:
       case $U:
@@ -3756,10 +3786,8 @@ namespace Sass {
   SupportsCondition* StylesheetParser::readSupportsCondition()
   {
     Offset start(scanner.offset);
-    uint8_t first = scanner.peekChar();
-    if (first != $lparen && first != $hash) {
-      Offset start(scanner.offset);
-      expectIdentifier("not", "\"not\"");
+
+    if (scanIdentifier("not")) {
       scanWhitespace();
       return SASS_MEMORY_NEW(SupportsNegation,
         scanner.relevantSpanFrom(start), readSupportsConditionInParens());
@@ -3768,25 +3796,31 @@ namespace Sass {
     SupportsConditionObj condition =
       readSupportsConditionInParens();
     scanWhitespace();
+    bool hasOp = false;
+    SupportsOperation::Operand op;
     while (lookingAtIdentifier()) {
-      SupportsOperation::Operand op;
-      if (scanIdentifier("or")) {
+      if (hasOp) {
+        if (op == SupportsOperation::AND)
+          expectIdentifier("and", "\"and\"");
+        else
+          expectIdentifier("or", "\"or\"");
+      }
+      else if (scanIdentifier("or")) {
         op = SupportsOperation::OR;
+        hasOp = true;
       }
       else {
         expectIdentifier("and", "\"and\"");
         op = SupportsOperation::AND;
+        hasOp = true;
       }
-
       scanWhitespace();
       SupportsConditionObj right =
         readSupportsConditionInParens();
-      
       condition = SASS_MEMORY_NEW(SupportsOperation,
         scanner.relevantSpanFrom(start), condition, right, op);
       scanWhitespace();
     }
-
     return condition.detach();
   }
   // EO readSupportsCondition
@@ -3795,33 +3829,78 @@ namespace Sass {
   SupportsCondition* StylesheetParser::readSupportsConditionInParens()
   {
     Offset start(scanner.offset);
-    if (scanner.peekChar() == $hash) {
+
+    if (lookingAtInterpolatedIdentifier()) {
+      InterpolationObj identifier = readInterpolatedIdentifier();
+      sass::string initialPlain(identifier->getInitialPlain());
+      if (StringUtils::equalsIgnoreCase(initialPlain, "not", 3)) {
+        error("\"not\" is not a valid identifier here.", identifier->pstate());
+      }
+
+      if (scanner.scanChar($lparen)) {
+        InterpolationObj arguments =
+          readInterpolatedDeclarationValue(true, true);
+        scanner.expectChar($rparen);
+        return SASS_MEMORY_NEW(SupportsFunction,
+          scanner.relevantSpanFrom(start),
+          identifier, arguments);
+      }
+      else if (identifier->size() != 1 || !identifier->first()->isaExpression()) {
+        error("Expected @supports condition.", identifier->pstate());
+      }
       return SASS_MEMORY_NEW(SupportsInterpolation,
-        scanner.relevantSpanFrom(start), readSingleInterpolation());
+        scanner.relevantSpanFrom(start),
+        identifier->first()->isaExpression());
     }
 
     scanner.expectChar($lparen);
     scanWhitespace();
-    uint8_t next = scanner.peekChar();
-    if (next == $lparen || next == $hash) {
+    if (scanIdentifier("not")) {
+      scanWhitespace();
+      SupportsConditionObj condition
+        = readSupportsConditionInParens();
+      scanner.expectChar($rparen);
+      return SASS_MEMORY_NEW(SupportsNegation,
+        scanner.relevantSpanFrom(start),
+        condition);
+    }
+    else if (scanner.peekChar() == $lparen) {
       SupportsConditionObj condition
         = readSupportsCondition();
-      scanWhitespace();
       scanner.expectChar($rparen);
       return condition.detach();
     }
 
-    if (next == $n || next == $N) {
-      SupportsNegationObj negation
-        = trySupportsNegation();
-      if (negation != nullptr) {
+    ExpressionObj name;
+    StringScannerState state(scanner.state());
+    try {
+      name = readExpression();
+      scanner.expectChar($colon);
+    }
+    catch (Exception::ParserException& err) {
+
+      scanner.backtrack(state);
+      InterpolationObj identifier = readInterpolatedIdentifier();
+      SupportsOperationObj operation = trySupportsOperation(identifier, start);
+      if (operation != nullptr) {
         scanner.expectChar($rparen);
-        return negation.detach();
+        return operation.detach();
       }
+
+      // If parsing an expression fails, try to parse an
+      // `InterpolatedAnyValue` instead. But if that value runs into a
+      // top-level colon, then this is probably intended to be a declaration
+      // after all, so we rethrow the declaration-parsing error.
+      InterpolationBuffer buffer(scanner);
+      buffer.addInterpolation(identifier);
+      buffer.addInterpolation(readInterpolatedDeclarationValue(true, true, false));
+      if (scanner.peekChar() == $colon) throw err;
+      scanner.expectChar($rparen);
+
+      return SASS_MEMORY_NEW(SupportsAnything, scanner.relevantSpanFrom(start),
+        buffer.getInterpolation(scanner.relevantSpanFrom(start), false));
     }
 
-    ExpressionObj name(readExpression());
-    scanner.expectChar($colon);
     scanWhitespace();
     ExpressionObj value(readExpression());
     scanner.expectChar($rparen);
@@ -3854,6 +3933,65 @@ namespace Sass {
 
   }
   // trySupportsNegation
+
+
+  // If [interpolation] is followed by `"and"` or `"or"`, parse it as a supports operation.
+  // Otherwise, return `null` without moving the scanner position.
+  SupportsOperation* StylesheetParser::trySupportsOperation(Interpolation* interpolation, Offset& start)
+  {
+    if (interpolation->size() != 1) return nullptr;
+    Interpolant* expression = interpolation->first();
+    if (!expression->isaExpression()) return nullptr;
+    StringScannerState state(scanner.state());
+
+    scanWhitespace();
+
+    bool hasOp = false;
+    SupportsOperation::Operand op;
+    SupportsOperationObj operation{};
+    while (lookingAtIdentifier()) {
+      if (hasOp) {
+        if (op == SupportsOperation::AND)
+          expectIdentifier("and", "\"and\"");
+        else
+          expectIdentifier("or", "\"or\"");
+      }
+      else if (scanIdentifier("or")) {
+        op = SupportsOperation::OR;
+        hasOp = true;
+      }
+      else if (scanIdentifier("and")) {
+        op = SupportsOperation::AND;
+        hasOp = true;
+      }
+      else {
+        scanner.backtrack(state);
+        return nullptr;
+      }
+
+      scanWhitespace();
+
+      SupportsConditionObj rhs = readSupportsConditionInParens();
+
+      if (operation != nullptr) {
+        operation = SASS_MEMORY_NEW(SupportsOperation,
+          scanner.rawSpanFrom(start),
+          operation.ptr(), rhs, op);
+      }
+      else {
+        SupportsInterpolationObj wrapped = SASS_MEMORY_NEW(
+          SupportsInterpolation, interpolation->pstate(),
+          expression->isaExpression());
+        operation = SASS_MEMORY_NEW(SupportsOperation,
+          scanner.rawSpanFrom(start),
+          wrapped.ptr(), rhs, op);
+      }
+
+      scanWhitespace();
+    }
+
+    return operation.detach();
+  }
 
   // Returns whether the scanner is immediately before an identifier that may contain
   // interpolation. This is based on the CSS algorithm, but it assumes all backslashes

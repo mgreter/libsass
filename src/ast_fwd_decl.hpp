@@ -158,6 +158,8 @@ namespace Sass {
   class String;
 
   class SupportsCondition;
+  class SupportsFunction;
+  class SupportsAnything;
   class SupportsOperation;
   class SupportsNegation;
   class SupportsDeclaration;
@@ -289,6 +291,8 @@ namespace Sass {
   IMPL_MEM_OBJ(ItplString);
   IMPL_MEM_OBJ(StringExpression);
   IMPL_MEM_OBJ(SupportsCondition);
+  IMPL_MEM_OBJ(SupportsFunction);
+  IMPL_MEM_OBJ(SupportsAnything);
   IMPL_MEM_OBJ(SupportsOperation);
   IMPL_MEM_OBJ(SupportsNegation);
   IMPL_MEM_OBJ(SupportsDeclaration);

@@ -532,13 +532,11 @@ namespace Sass {
 
   void Inspect::visitSelectorCombinator(SelectorCombinator* combinator)
   {
-    append_optional_space();
     switch (combinator->combinator()) {
     case SelectorCombinator::Combinator::CHILD: append_string(">"); break;
     case SelectorCombinator::Combinator::GENERAL: append_string("~"); break;
     case SelectorCombinator::Combinator::ADJACENT: append_string("+"); break;
     }
-    append_optional_space();
     // Add the post line break (from ruby sass)
     // Dart sass uses another logic for newlines
     // if (combinator->hasPostLineBreak()) {
