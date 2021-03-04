@@ -2,7 +2,7 @@
 
 ```C:data.c
 #include <stdio.h>
-#include "sass/context.h"
+#include <sass/context.h>
 
 int main( int argc, const char* argv[] )
 {

@@ -1,14 +1,24 @@
 ## Introduction
 
-LibSass wouldn't be much good without a way to interface with it. These
-interface documentations describe the various functions and data structures
-available to implementers. They are split up over three major components, which
-have all their own source files (plus some common functionality).
+LibSass C-API is designed as a functional API; every access on the C-API is a
+function call. This has a few drawbacks, but a lot of desirable characteristics.
+The most important one is that it reduces the API surface to simple function calls.
+Any implementor does not need to know how internal structures look, so we are free
+to adjust them as we see fit, as long as the functional API stays the same.
 
-- [Sass Context](api-context.md) - Trigger and handle the main Sass compilation
+Under the hood, LibSass uses advanced C++ code (c++11 being the current target), so
+you will need a modern compiler and also link against c++ runtime libraries. This poses
+some issues in regard of portability and deployment of precompiled binary distributions.
+
+The API has been split into a few categories which come with their own documentation:
+
+- [Sass Basics](api-basics.md) - Further details and information about the C-API
+- [Sass Compiler](api-compiler.md) - Trigger and handle the main Sass compilation
 - [Sass Value](api-value.md) - Exchange values and its format with LibSass
 - [Sass Function](api-function.md) - Get invoked by LibSass for function statments
 - [Sass Importer](api-importer.md) - Get invoked by LibSass for @import statments
+- [Sass Variable](api-variable.md) - Query or update existing scope variables
+- [Sass Traces](api-traces.md) - Access to traces for debug information
 
 ### Basic usage
 
@@ -51,8 +61,8 @@ process. The compiler has two different modes: direct input as a string with
 `Sass_File_Context`. See the code for a list of options available
 [Sass_Options](https://github.com/sass/libsass/blob/36feef0/include/sass/interface.h#L18)
 
-The general rule is if the API takes `const char*` it will make a copy, 
-but where the API is `char*` it will take over memory ownership, so make sure to pass 
+The general rule is if the API takes `const char*` it will make a copy,
+but where the API is `char*` it will take over memory ownership, so make sure to pass
 in memory that is allocated via `sass_copy_c_string` or `sass_alloc_memory`.
 
 **Building a file compiler**

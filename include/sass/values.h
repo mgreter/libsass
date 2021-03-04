@@ -72,7 +72,7 @@ extern "C" {
   ADDAPI struct SassValue* ADDCALL sass_make_warning(const char* msg);
 
   // Generic destructor function for all types
-  // Will release memory of all associated Sass_Values
+  // Will release memory of all associated SassValue children
   // Means we will delete recursively for lists and maps
   ADDAPI void ADDCALL sass_delete_value(struct SassValue* val);
 
