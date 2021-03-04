@@ -3,7 +3,7 @@
 
 The custom importer C-API allows implementors to decide how `@import` and similar
 rules (e.g. `@use`) are handled with given sass code. Custom importers will we called
-once we try to resolve an import rule. Without any custom importer LibSass will try
+once we try to resolve an import rule. Without any custom importer, LibSass will try
 to resolve the import by looking into all include directories. Custom importers will
 be invoked before this happens, if any are registered. LibSass passes the current
 path that should be imported and the resolved path to the parent import, in order
@@ -31,8 +31,9 @@ The C-API for `SassImportList` is designed like a FiFo queue (first in, first ou
 only allows to push or shift items from the list.
 
 ```C
-Sass_Import_Entry* rv = sass_make_import_list(1);
-rv[0] = sass_make_import(rel, abs, source, srcmap);
+struct SassImportList* imports = sass_make_import_list();
+sass_import_list_push(imports, sass_make_import(rel, abs, source, srcmap));
+struct SassImport* import = sass_import_list_shift(imports);
 ```
 
 Every import will then be included in LibSass. You are allowed to only return a file path
@@ -64,22 +65,22 @@ typedef struct SassImportList* (*SassImporterLambda)(
 
 // Create custom importer (with arbitrary data pointer called `cookie`)
 // The pointer is often used to store the callback into the actual binding.
-ADDAPI struct SassImporter* ADDCALL sass_make_importer(SassImporterLambda lambda, double priority, void* cookie);
+struct SassImporter* sass_make_importer(SassImporterLambda lambda, double priority, void* cookie);
 
 // Deallocate the importer and release memory
-ADDAPI void ADDCALL sass_delete_importer(struct SassImporter* cb);
+void sass_delete_importer(struct SassImporter* cb);
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
 // Getter for importer lambda function (the one being actually invoked)
-ADDAPI SassImporterLambda ADDCALL sass_importer_get_lambda(struct SassImporter* cb);
+SassImporterLambda sass_importer_get_lambda(struct SassImporter* cb);
 
 // Getter for importer priority (lowest priority is invoked first)
-ADDAPI double ADDCALL sass_importer_get_priority(struct SassImporter* cb);
+double sass_importer_get_priority(struct SassImporter* cb);
 
 // Getter for arbitrary cookie (used by implementers to store stuff)
-ADDAPI void* ADDCALL sass_importer_get_cookie(struct SassImporter* cb);
+void* sass_importer_get_cookie(struct SassImporter* cb);
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
