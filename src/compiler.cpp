@@ -861,7 +861,6 @@ namespace Sass {
   void Compiler::addCustomImporter(struct SassImporter* importer)
   {
     if (importer == nullptr) return;
-    std::cerr << "addCustomImporter\n";
     cImporters.emplace_back(importer);
     // need to sort the array afterwards (no big deal)
     sort(cImporters.begin(), cImporters.end(), cmpImporterPrio);
