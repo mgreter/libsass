@@ -39,7 +39,6 @@ extern "C" {
     SASS_ERROR,
     SASS_WARNING,
     SASS_FUNCTION,
-    SASS_PARENT,
   };
 
   // List separators

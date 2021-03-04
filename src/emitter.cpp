@@ -73,7 +73,7 @@ namespace Sass {
   // add outstanding delimiter
   void Emitter::finalize(bool final)
   {
-    scheduled_space = 0;
+    scheduled_space = false;
     if (output_style() == SASS_STYLE_COMPRESSED)
       if (final) scheduled_delimiter = false;
     if (scheduled_linefeed)
@@ -90,8 +90,8 @@ namespace Sass {
 
       for (size_t i = 0; i < scheduled_linefeed; i++)
         linefeeds += opt.linefeed;
-      scheduled_space = 0;
-      scheduled_linefeed = 0;
+      scheduled_space = false;
+      scheduled_linefeed = false;
       if (scheduled_delimiter) {
         scheduled_delimiter = false;
         write_char(';');
@@ -101,7 +101,7 @@ namespace Sass {
     }
     else if (scheduled_space) {
       sass::string spaces(scheduled_space, ' ');
-      scheduled_space = 0;
+      scheduled_space = false;
       if (scheduled_delimiter) {
         scheduled_delimiter = false;
         write_char(';');
@@ -249,21 +249,29 @@ namespace Sass {
 
   void Emitter::append_comma_separator()
   {
-    // scheduled_space = 0;
+    scheduled_space = false;
     append_char(',');
     append_optional_space();
   }
 
   void Emitter::append_colon_separator()
   {
-    scheduled_space = 0;
+    scheduled_space = false;
     append_char(':');
     if (!in_custom_property) append_optional_space();
   }
 
   void Emitter::append_mandatory_space()
   {
-    scheduled_space = 1;
+    if (buffer().empty()) {
+      scheduled_space = true;
+    }
+    else {
+      unsigned char lst = buffer().at(buffer().length() - 1);
+      if (!isspace(lst)) {
+        scheduled_space = true;
+      }
+    }
   }
 
   void Emitter::append_optional_space()

@@ -140,7 +140,7 @@ namespace Sass {
         if (iL == i + 1) break;
         next = text[i+1];
         if (isHex(next) || next == $space || next == $tab) {
-          append_char($space);
+          append_mandatory_space();
         }
         break;
       case $backslash:
@@ -391,7 +391,7 @@ namespace Sass {
       append_mandatory_space();
       for (CssMediaQueryObj query : import->media()) {
         if (first == false) {
-          append_char($comma);
+          append_comma_separator();
           append_optional_space();
         }
         acceptCssMediaQuery(query);
@@ -488,7 +488,7 @@ namespace Sass {
       append_optional_linefeed();
     }
     for (SelectorComponentObj& item : complex->elements()) {
-      if (many) append_optional_space();
+      if (many) append_mandatory_space();
       if (SelectorCombinator* combinator = item->isaSelectorCombinator()) {
         visitSelectorCombinator(combinator);
       }
