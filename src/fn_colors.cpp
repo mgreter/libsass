@@ -88,6 +88,41 @@ namespace Sass {
     }
     // EO isMsFilterStart
 
+/// Prints a deprecation warning if [hue] has a unit other than `deg`.
+    void checkAngle(Logger& logger, const Number* angle, const sass::string& name)
+    {
+
+      if (!angle->hasUnits() || angle->hasUnit("deg")) return;
+
+      sass::sstream message;
+      message << "$" << name << ": Passing a unit other than deg (";
+      message << angle->inspect() << ") is deprecated." << STRMLF;
+
+      if (angle->numerators.size() == 1 && angle->denominators.size() == 0 &&
+        get_unit_class(string_to_unit(angle->numerators[0])) == UnitClass::ANGLE)
+      {
+        double coerced = angle->getUnitConversionFactor(Strings::deg) * angle->value();
+        Number correct(angle->pstate(), coerced, "deg");
+        Number wrong(angle->pstate(), angle->value(), "deg");
+        message << "You're passing " << angle->inspect() << ", which is currently (incorrectly) converted to " << wrong.inspect() << "." << STRMLF;
+        message << "Soon, it will instead be correctly converted to " << correct.inspect() << "." << STRMLF << STRMLF;
+        message << "To preserve current behavior: $" << name << " * 1deg/1" << angle->numerators[0] << STRMLF;
+        message << "To migrate to new behavior: 0deg + $" << name << STRMLF;
+      }
+      else {
+        StringVector dif(angle->numerators);
+        StringVector mul(angle->denominators);
+        // ToDo: don't report percentage twice!?
+        for (auto& unit : mul) unit = " * 1" + unit;
+        for (auto& unit : dif) unit = " / 1" + unit;
+        message << STRMLF << "To preserve current behavior: $" << name
+          << StringUtils::join(mul, "") << StringUtils::join(dif, "") << STRMLF;
+      }
+
+      message << STRMLF << "See https://sass-lang.com/d/color-units" << STRMLF;
+      logger.addDeprecation(message.str(), angle->pstate());
+    }
+
     // Helper function for debugging
     // ToDo return EnvKey?
     const sass::string& getColorArgName(
@@ -875,6 +910,7 @@ namespace Sass {
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* degrees = arguments[1]->assertNumber(compiler, Strings::degrees);
+        checkAngle(compiler, degrees, Strings::degrees);
         ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
         copy->h(absmod(copy->h() + degrees->value(), 360.0));
         return copy.detach();
@@ -1162,6 +1198,10 @@ namespace Sass {
         Number* nr_wn = getKwdArg(keywords, key_whiteness, compiler);
         Number* nr_bn = getKwdArg(keywords, key_blackness, compiler);
 
+        if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
+        if (nr_s) nr_s->checkPercent(compiler, Strings::saturation);
+        if (nr_l) nr_l->checkPercent(compiler, Strings::lightness);
+
         double r = nr_r ? nr_r->assertRange(-255.0, 255.0, compiler, Strings::red) : 0.0;
         double g = nr_g ? nr_g->assertRange(-255.0, 255.0, compiler, Strings::green) : 0.0;
         double b = nr_b ? nr_b->assertRange(-255.0, 255.0, compiler, Strings::blue) : 0.0;
@@ -1248,6 +1288,8 @@ namespace Sass {
         Number* nr_a = getKwdArg(keywords, key_alpha, compiler);
         Number* nr_wn = getKwdArg(keywords, key_whiteness, compiler);
         Number* nr_bn = getKwdArg(keywords, key_blackness, compiler);
+
+        if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
 
         double r = nr_r ? nr_r->assertRange(0.0, 255.0, compiler, Strings::red) : 0.0;
         double g = nr_g ? nr_g->assertRange(0.0, 255.0, compiler, Strings::green) : 0.0;
@@ -1681,10 +1723,14 @@ namespace Sass {
         return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }
 
-      const Number* h = _h->assertNumber(logger, Strings::hue);
-      const Number* s = _s->assertNumber(logger, Strings::saturation)->checkPercent(logger, Strings::saturation);
-      const Number* l = _l->assertNumber(logger, Strings::lightness)->checkPercent(logger, Strings::lightness);
-      const Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+      Number* h = _h->assertNumber(logger, Strings::hue);
+      Number* s = _s->assertNumber(logger, Strings::saturation);
+      Number* l = _l->assertNumber(logger, Strings::lightness);
+      Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+
+      checkAngle(logger, h, Strings::hue);
+      s->checkPercent(logger, Strings::saturation);
+      l->checkPercent(logger, Strings::lightness);
 
       return SASS_MEMORY_NEW(ColorHsla, pstate,
         h->value(),

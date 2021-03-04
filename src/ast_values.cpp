@@ -1089,8 +1089,14 @@ namespace Sass {
   {
     if (!hasUnit("%")) {
       sass::sstream msg;
+      StringVector dif(numerators);
+      StringVector mul(denominators);
+      // ToDo: don't report percentage twice!?
+      for (auto& unit : mul) unit = " * 1" + unit;
+      for (auto& unit : dif) unit = " / 1" + unit;
+      sass::string reunit(StringUtils::join(mul, "") + StringUtils::join(dif, ""));
       msg << "$" << name << ": Passing a number without unit % (" << inspect() << ") is deprecated." << STRMLF;
-      msg << "To preserve current behavior: $" << name << " * 1%" << STRMLF;
+      msg << "To preserve current behavior: $" << name << reunit << " * 1%" << STRMLF;
       logger.addDeprecation(msg.str(), pstate());
     }
     return this;
