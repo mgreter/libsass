@@ -12,16 +12,16 @@ groups as we saw fit, or you can simply include the main `sass.h` header.
 
 ### List of C-API headers
 
-- sass/base.h - Includes basic headers and sets a few definitions.
-- sass/fwdecl.h - Forward declares all known anonymous structures.
-- sass/enums.h - Enums for e.g. config options exposed on the C-API.
-- sass/error.h - C-API functions to access `SassError` structs.
-- sass/import.h - C-API functions to access `SassImport` structs.
-- sass/importer.h - C-API functions to access `SassImporter` structs.
-- sass/traces.h - C-API functions to access `SassTrace` structs.
-- sass/values.h - C-API functions to access `SassValue` structs.
-- sass/variable.h - C-API functions to access scoped variables.
-- sass/version.h - Header including hardcoded LibSass version.
+- base.h - Includes and defines basic stuff.
+- fwdecl.h - Forward declares all known anonymous structures.
+- enums.h - Enums for e.g. config options exposed on the C-API.
+- error.h - C-API functions to access `SassError` structs.
+- import.h - C-API functions to access `SassImport` structs.
+- importer.h - C-API functions to access `SassImporter` structs.
+- traces.h - C-API functions to access `SassTrace` structs.
+- values.h - C-API functions to access `SassValue` structs.
+- variable.h - C-API functions to access scoped variables.
+- version.h - Header including hardcoded LibSass version.
 
 ## Anonymous structure pointers
 
@@ -36,17 +36,17 @@ be statically casted back to the actual implementation. Since we provide
 a unique anonymous struct for every internal type, this should be safe as
 compilers should catch the case when arguments mismatch on the C-API side.
 
-### List of anonymous structure pointers
+### List of anonymous structures
 
 These structs have no real implementation are only passed around as pointers.
 Internally in LibSass those pointers represent mostly different c++ objects.
 
-- struct SassTrace - An single stack-trace object to get further information
 - struct SassError - An error object to get further information
-- struct SassCompiler - Main object to hold state for whole compilation phase.
-- struct SassFunction - Custom function object holding callback and cookie.
+- struct SassTrace - An single stack-trace object to get further information
 - struct SassSource - Imported source with associated import and resolved path.
 - struct SassSrcSpan - Parser state for column, line and source information.
+- struct SassCompiler - Main object to hold state for whole compilation phase.
+- struct SassFunction - Custom function object holding callback and cookie.
 - struct SassImport - Single import for entry point or returned by custom importer.
 - struct SassImporter - Custom importer function to be hooked into our loading.
 - struct SassImportList - Custom importers can return a list of imports.
@@ -59,23 +59,25 @@ creeped in, others were utilized deliberately. With LibSass 4.0 I took the
 decision to fully utilize whatever c++11 could offer. The main reason to
 fully embrace c++11 is the move semantics it brings. Earlier we also tried
 to support compilers that only had partial c++11 support (e.g. gnu++0x).
+With LibSass 4.0 we don't really support this target anymore, as any compiler
+not older than 5 years should support the c++11 syntax we use.
 
-With LibSass 4.0 we don't really support this target anymore!
-
-Note: currently the LibSass 4.0 release is on going, the target
-compiler should be gcc 4.8 as it should fully support c++11.
+Note: currently the LibSass 4.0 release is on going and the final
+target compiler is  gcc 4.8, as it should fully support c++11.
 
 ## Binary distributions in linkage issues
 
 LibSass itself does not have any official binary distribution. The main reason for
 this is because it is nearly impossible to do so reliably for each and every
 thinkable operating system. Since LibSass is written in c++ we e.g. depend on the
-compilers c++ runtime library. On windows this problem is a bit less problematic,
+compiler c++ runtime library. On windows this problem is a bit less problematic,
 and there is a semi-official installer for it. But on Linux this e.g. is also
 depending on the used libc library. Since linux offers a choice here, a binary
-distribution made with glibc may not be compatible on a system that use musl.
+distribution compiled with glibc may not be compatible on a system that uses musl,
+or a compilation with latest glibc may not be compatible with older glibc versions.
 
 By now LibSass is readily available on a lot of linux systems by their
 internal packet managers, so please try to install it that way. Alternatively
 try to install a recent compiler (e.g. gcc or clang) and compile it from source,
-preferably via the autotools way to ensure correct linkage of your external tool.
+preferably via the autotools way, to ensure correct linkage with tools that link
+against system wide installed LibSass.

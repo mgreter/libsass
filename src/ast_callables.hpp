@@ -132,6 +132,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // ToDo: this could be struct SassFunction!?
   class ExternalCallable final : public Callable
   {
   private:
@@ -142,6 +143,8 @@ namespace Sass {
     ADD_CONSTREF(ArgumentDeclarationObj, declaration);
     // The attached external callback reference
     ADD_PROPERTY(SassFunctionLambda, lambda);
+    // The attached external data cookie
+    ADD_PROPERTY(void*, cookie);
 
   public:
 

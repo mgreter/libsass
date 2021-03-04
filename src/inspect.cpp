@@ -50,13 +50,13 @@ namespace Sass {
       uint8_t chr = text[i];
       switch (chr) {
       case $lf:
-        append_char($space);
+        append_mandatory_space();
         afterNewline = true;
         break;
 
       case $space:
         if (!afterNewline) {
-          append_char($space);
+          append_mandatory_space();
         }
         break;
 

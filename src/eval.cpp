@@ -474,7 +474,7 @@ namespace Sass {
 
     // Now invoke the function of the callback object
     struct SassValue* c_val = (*lambda)(
-      c_args, compiler.wrap());
+      c_args, compiler.wrap(), callable->cookie());
     // It may not return anything at all
     if (c_val == nullptr) return nullptr;
     // Unwrap the result into C++ object
@@ -1274,7 +1274,7 @@ namespace Sass {
     struct SassValue* c_args = sass_make_list(SASS_COMMA, false);
     sass_list_push(c_args, Value::wrap(message));
     struct SassValue* c_val = lambda(
-      c_args, compiler.wrap());
+      c_args, compiler.wrap(), def->cookie());
     sass_delete_value(c_args);
     sass_delete_value(c_val);
   }

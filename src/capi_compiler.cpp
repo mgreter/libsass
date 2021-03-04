@@ -147,6 +147,12 @@ namespace Sass {
   }
   // EO __sass_compiler_render
 
+  void __sass_compiler_add_custom_function(Compiler& compiler, struct SassFunction* function)
+  {
+    compiler.registerCustomFunction(function);
+  }
+  // EO __sass_compiler_add_custom_function
+
   /////////////////////////////////////////////////////////////////////////
   // On windows we can improve the error handling by also catching
   // structured exceptions. In order for this to work we need a few
@@ -248,6 +254,21 @@ namespace Sass {
     #endif
   }
 
+  // Wrap Structured Exceptions for MSVC
+  void _sass_compiler_add_custom_function(Compiler& compiler, struct SassFunction* function)
+  {
+    #ifdef _MSC_VER
+    __try {
+    #endif
+      __sass_compiler_add_custom_function(compiler, function);
+    #ifdef _MSC_VER
+    }
+    __except (filter(GetExceptionCode(), GetExceptionInformation())) {
+      throw std::runtime_error(seException(GetExceptionCode()));
+    }
+    #endif
+  }
+
   // Main entry point (wrap try/catch then MSVC)
   void sass_compiler_parse(Compiler& compiler)
   {
@@ -271,6 +292,14 @@ namespace Sass {
   {
     Logger& logger(compiler);
     try { _sass_compiler_render(compiler); }
+    catch (...) { handle_errors(compiler); }
+    compiler.warnings = logger.logstrm.str();
+  }
+
+  void sass_compiler_add_custom_function(Compiler& compiler, struct SassFunction* function)
+  {
+    Logger& logger(compiler);
+    try { _sass_compiler_add_custom_function(compiler, function); }
     catch (...) { handle_errors(compiler); }
     compiler.warnings = logger.logstrm.str();
   }
@@ -370,9 +399,11 @@ extern "C" {
   // Add a custom function that will be executed when the corresponding function call is
   // requested from any sass code. This is useful to provide custom functions in your code.
   // For more please check https://github.com/sass/libsass/blob/master/docs/api-function.md
+  // Note: since we need to parse the function signature this may throw an error!
   void ADDCALL sass_compiler_add_custom_function(struct SassCompiler* compiler, struct SassFunction* function)
   {
-    Compiler::unwrap(compiler).registerCustomFunction(function);
+    // Wrap to correctly trap errors and to fill the error object if needed
+    sass_compiler_add_custom_function(Compiler::unwrap(compiler), function);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -517,6 +548,12 @@ extern "C" {
   const struct SassImport* ADDCALL sass_compiler_get_last_import(struct SassCompiler* compiler)
   {
     return Compiler::unwrap(compiler).import_stack.back()->wrap();
+  }
+
+  // Returns status code for compiler (0 meaning success, anything else is an error)
+  const int ADDCALL sass_compiler_get_status(struct SassCompiler* compiler)
+  {
+    return Compiler::unwrap(compiler).error.status;
   }
 
   // Returns pointer to error object associated with compiler.

@@ -15,7 +15,7 @@ extern "C" {
 
   // Type definition for custom functions
   typedef struct SassValue* (*SassFunctionLambda)(
-    struct SassValue*, struct SassCompiler* compiler);
+    struct SassValue*, struct SassCompiler* compiler, void* cookie);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

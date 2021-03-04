@@ -601,6 +601,7 @@ namespace Sass {
     ExternalCallable* callable =
       parser.parseExternalCallable();
     callable->lambda(function->lambda);
+    callable->cookie(function->cookie);
     auto& functions(varRoot.intFunction);
     uint32_t offset((uint32_t)functions.size());
     varRoot.intFunction.push_back(callable);

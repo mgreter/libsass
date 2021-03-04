@@ -18,8 +18,8 @@ namespace Sass {
     scheduled_space(0),
     scheduled_linefeed(0),
     scheduled_delimiter(false),
-    scheduled_crutch(0),
-    scheduled_mapping(0),
+    scheduled_crutch(nullptr),
+    scheduled_mapping(nullptr),
     in_custom_property(false),
     in_declaration(true),
     separators(),
@@ -91,7 +91,7 @@ namespace Sass {
       for (size_t i = 0; i < scheduled_linefeed; i++)
         linefeeds += opt.linefeed;
       scheduled_space = false;
-      scheduled_linefeed = false;
+      scheduled_linefeed = 0;
       if (scheduled_delimiter) {
         scheduled_delimiter = false;
         write_char(';');
@@ -215,7 +215,7 @@ namespace Sass {
     // this is pretty ugly indeed
     if (scheduled_crutch) {
       add_open_mapping(scheduled_crutch);
-      scheduled_crutch = 0;
+      scheduled_crutch = nullptr;
     }
     write_string(text);
     add_close_mapping(node);
@@ -258,7 +258,9 @@ namespace Sass {
   {
     scheduled_space = false;
     append_char(':');
-    if (!in_custom_property) append_optional_space();
+    if (!in_custom_property) {
+      append_optional_space();
+    }
   }
 
   void Emitter::append_mandatory_space()
@@ -266,22 +268,16 @@ namespace Sass {
     if (buffer().empty()) {
       scheduled_space = true;
     }
-    else {
-      unsigned char lst = buffer().at(buffer().length() - 1);
-      if (!isspace(lst)) {
-        scheduled_space = true;
-      }
+    else if (!isspace(buffer().back())) {
+      scheduled_space = true;
     }
   }
 
   void Emitter::append_optional_space()
   {
     if ((output_style() != SASS_STYLE_COMPRESSED) && wbuf.buffer.size()) {
-      unsigned char lst = buffer().at(buffer().length() - 1);
-      if (!isspace(lst) || scheduled_delimiter) {
-        // if (last_char() != '(') {
-          append_mandatory_space();
-        // }
+      if (scheduled_delimiter || !isspace(buffer().back())) {
+        append_mandatory_space();
       }
     }
   }
@@ -309,8 +305,7 @@ namespace Sass {
   {
     if (output_style() != SASS_STYLE_COMPRESSED) {
       scheduled_linefeed = 1;
-      scheduled_space = 0;
-      // flush_schedules();
+      scheduled_space = false;
     }
   }
 
@@ -322,7 +317,6 @@ namespace Sass {
     if (node) add_open_mapping(node);
     write_char('{');
     append_optional_linefeed();
-    // append_optional_space();
     ++ indentation;
   }
   void Emitter::append_scope_closer(AstNode* node)
@@ -331,7 +325,7 @@ namespace Sass {
     scheduled_linefeed = 0;
     if (last_char() == '{') {
       scheduled_space = false;
-      scheduled_linefeed = false;
+      scheduled_linefeed = 0;
     }
     else {
       if (output_style() == SASS_STYLE_COMPRESSED)

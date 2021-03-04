@@ -14,8 +14,8 @@ The regular life-time of a compiler will mostly look like this:
 - Process the results
 
 The split between parse, compile and render is done because there
-are certain cases where we might want to omit certain phases. One
-example would be the init phase for a watcher to get all includes.
+are cases where we might want to omit certain phases. One example
+would be the init phase for a watcher to get all includes first.
 
 ### Sass Compiler API
 
