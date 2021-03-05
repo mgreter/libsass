@@ -722,6 +722,24 @@ namespace Sass {
         break;
       case Interpolant::ExpressionInterpolant:
         value = static_cast<Expression*>(itpl)->accept(this);
+        if (warnForColor) {
+          if (Color* color = value->isaColor()) {
+            ColorRgbaObj rgba = color->toRGBA();
+            double numval = rgba->r() * 0x10000
+              + rgba->g() * 0x100 + rgba->b();
+            if (const char* disp = color_to_name(numval)) {
+              sass::sstream msg;
+              msg << "You probably don't mean to use the color value ";
+              msg << disp << " in interpolation here.\nIt may end up represented ";
+              msg << "as " << rgba->inspect() <<", which will likely produce invalid ";
+              msg << "CSS. Always quote color names when using them as strings or map ";
+              msg << "keys (for example, \"" << disp << "\"). If you really want to ";
+              msg << "use the color value, append it to an empty string first to avoid ";
+              msg << "this warning (for example, '\"\" + " << disp << "').";
+              logger456.addWarning(msg.str(), itpl->pstate());
+            }
+          }
+        }
         value->accept(&cssize);
         break;
       }
@@ -760,7 +778,7 @@ namespace Sass {
   SelectorListObj Eval::interpolationToSelector(Interpolation* itpl, bool plainCss, bool allowParent)
   {
     // Create a new source data object from the evaluated interpolation
-    SourceDataObj synthetic = interpolationToSource(itpl, false, true);
+    SourceDataObj synthetic = interpolationToSource(itpl, true, true);
     // Everything parsed, will be parsed from perspective of local content
     // Pass the source-map in for the interpolation, so the scanner can
     // update the positions according to previous source-positions
