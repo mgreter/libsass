@@ -294,17 +294,17 @@ namespace Sass {
     sass::vector<CallableObj> intFunction;
     sass::vector<CallableObj> intMixin;
     sass::vector<ValueObj> intVariables;
-  public:
+
     // Last private accessible item
     uint32_t privateVarOffset = 0;
     uint32_t privateMixOffset = 0;
     uint32_t privateFnOffset = 0;
-  private:
+
     // All created runtime variable objects.
     // Needed to track the memory allocations
     // And useful to resolve parents indirectly
     // Access it by absolute `frameOffset`
-    sass::vector<EnvRefs*> scopes3;
+    sass::vector<EnvRefs*> scopes;
 
   public:
 
@@ -316,7 +316,7 @@ namespace Sass {
       // Pop from stack
       stack.pop_back();
       // Take care of scope pointers
-      for (EnvRefs* idx : scopes3) {
+      for (EnvRefs* idx : scopes) {
         delete idx;
       }
       // Delete our env
@@ -344,8 +344,9 @@ namespace Sass {
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
     void setVariable(const EnvRef& vidx, Value* value, bool guarded);
+
+
     void setModVar(const uint32_t offset, Value* value, bool guarded, const SourceSpan& pstate);
-    EnvRef setModVar2(const EnvKey& name, const sass::string& ns, Value* value, bool guraded, const SourceSpan& pstate);
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning

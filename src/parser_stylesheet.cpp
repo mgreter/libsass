@@ -52,8 +52,8 @@ namespace Sass {
     Offset start(scanner.offset);
 
     RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
-    root->idxs = context.varRoot.stack.back();
-    context.varRoot.stack.back()->module = root;
+    root->idxs = compiler.varRoot.stack.back();
+    compiler.varRoot.stack.back()->module = root;
 
     LOCAL_PTR(Root, chroot77, root);
 
@@ -63,9 +63,9 @@ namespace Sass {
     // std::cerr << "Parsing " << scanner.sourceUrl << "\n";
 
     // Check seems a bit esoteric but works
-    if (context.included_sources.size() == 1) {
+    if (compiler.included_sources.size() == 1) {
       // Apply headers only on very first include
-      context.applyCustomHeaders(children,
+      compiler.applyCustomHeaders(children,
         scanner.relevantSpanFrom(start));
     }
 
@@ -187,7 +187,7 @@ namespace Sass {
       }
 
       SourceSpan pstate(scanner.relevantSpanFrom(start));
-      if (!context.callCustomImporters(url, pstate, rule)) {
+      if (!compiler.callCustomImporters(url, pstate, rule)) {
         rule->append(SASS_MEMORY_NEW(IncludeImport62,
           pstate, scanner.sourceUrl, url, nullptr));
       }
@@ -255,7 +255,7 @@ namespace Sass {
   // Assumes [identifier] is a valid Sass identifier.
   bool isPrivate(const sass::string& identifier)
   {
-    return identifier[0] == $dash ||
+    return identifier[0] == $minus ||
       identifier[0] == $underscore;
   }
 
@@ -284,7 +284,7 @@ namespace Sass {
       itpl->concat(readStyleRule); readStyleRule = itpl;
       readStyleRule->pstate(scanner.relevantSpanFrom(itpl->pstate().position));
     }
-    EnvFrame local(context, false);
+    EnvFrame local(compiler, false);
 
     Offset start(scanner.offset);
     StyleRuleObj styles = withChildren<StyleRule>(
@@ -292,7 +292,7 @@ namespace Sass {
       start, readStyleRule.ptr(), local.idxs);
 
     if (isIndented() && styles->empty()) {
-      context.addWarning(
+      compiler.addWarning(
         "This selector doesn't have any properties and won't be rendered.",
         itpl->pstate());
     }
@@ -362,14 +362,14 @@ namespace Sass {
         scanner.relevantSpan());
     }
 
-    EnvFrame local(context, true);
+    EnvFrame local(compiler, true);
     InterpolationObj itpl = buffer.getInterpolation(
       scanner.relevantSpanFrom(start));
     StyleRuleObj rule = withChildren<StyleRule>(
       &StylesheetParser::readChildStatement,
       start, itpl.ptr(), local.idxs);
     if (isIndented() && rule->empty()) {
-      context.addWarning(
+      compiler.addWarning(
         "This selector doesn't have any properties and won't be rendered.",
         selectorPstate);
     }
@@ -851,7 +851,7 @@ namespace Sass {
   AtRootRule* StylesheetParser::readAtRootRule(Offset start)
   {
 
-    EnvFrame local(context, false);
+    EnvFrame local(compiler, false);
 
     if (scanner.peekChar() == $lparen) {
       InterpolationObj query = readAtRootQuery();
@@ -963,7 +963,7 @@ namespace Sass {
     LOCAL_FLAG(inControlDirective, true);
     LOCAL_FLAG(inLoopDirective, true);
     sass::vector<EnvKey> variables;
-    EnvFrame local(context, true);
+    EnvFrame local(compiler, true);
     variables.emplace_back(variableName());
     local.idxs->createVariable(variables.back());
     scanWhitespace();
@@ -1011,7 +1011,7 @@ namespace Sass {
   {
     LOCAL_FLAG(inControlDirective, true);
     LOCAL_FLAG(inLoopDirective, true);
-    EnvFrame local(context, true);
+    EnvFrame local(compiler, true);
     sass::string variable = variableName();
     local.idxs->createVariable(variable);
     scanWhitespace();
@@ -1042,7 +1042,7 @@ namespace Sass {
     IfRuleObj cur;
 
     /* create anonymous lexical scope */ {
-      EnvFrame local(context, true);
+      EnvFrame local(compiler, true);
       StatementVector children(
         readChildren(child));
       cur = root = SASS_MEMORY_NEW(IfRule,
@@ -1065,7 +1065,7 @@ namespace Sass {
         ExpressionObj predicate = readExpression();
         start = scanner.offset;
 
-        EnvFrame local(context, true);
+        EnvFrame local(compiler, true);
         StatementVector children(
           readChildren(child));
         IfRule* alternative = SASS_MEMORY_NEW(IfRule,
@@ -1077,7 +1077,7 @@ namespace Sass {
       // scanned a pure else
       else {
 
-        EnvFrame local(context, true);
+        EnvFrame local(compiler, true);
 
         start = scanner.offset;
         StatementVector children(
@@ -1119,7 +1119,7 @@ namespace Sass {
 
     std::set<EnvKey> seen;
 
-    // if (context.withConfig) {
+    // if (compiler.withConfig) {
     //   std::cerr << "must merge";
     // }
 
@@ -1260,19 +1260,19 @@ namespace Sass {
 
     // Check if name is valid identifier
     if (url.empty() || isDigit(url[0])) {
-      callStackFrame csf(context, state);
-      throw Exception::InvalidSassIdentifier(context, url);
+      callStackFrame csf(compiler, state);
+      throw Exception::InvalidSassIdentifier(compiler, url);
     }
 
     sass::vector<WithConfigVar> config;
     bool hasWith(readWithConfiguration(config, false));
-    LOCAL_FLAG(implicitWithConfig, implicitWithConfig || hasWith);
+    // LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@use rule");
 
     if (isUseAllowed == false) {
-      callStackFrame csf(context, state);
+      callStackFrame csf(compiler, state);
       throw Exception::TardyAtRule(
-        context, Strings::useRule);
+        compiler, Strings::useRule);
     }
 
     UseRuleObj rule = SASS_MEMORY_NEW(UseRule,
@@ -1282,15 +1282,15 @@ namespace Sass {
 
     LOCAL_PTR(WithConfig, wconfig, rule);
 
-    // EnvRefs* current(context.getCurrentFrame());
-    // EnvRefs* modFrame(context.getCurrentModule());
+    // EnvRefs* current(compiler.getCurrentFrame());
+    // EnvRefs* modFrame(compiler.getCurrentModule());
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
       if (hasWith) {
-        callStackFrame csf(context, rule->pstate());
-        throw Exception::RuntimeException(context,
+        callStackFrame csf(compiler, rule->pstate());
+        throw Exception::RuntimeException(compiler,
           "Built-in modules can't be configured.");
       }
 
@@ -1298,11 +1298,11 @@ namespace Sass {
       if (ns.empty()) ns = name;
       rule->ns(ns == "*" ? "" : ns);
 
-      BuiltInMod* module(context.getModule(name));
+      BuiltInMod* module(compiler.getModule(name));
 
       if (module == nullptr) {
-        callStackFrame csf(context, rule->pstate());
-        throw Exception::RuntimeException(context,
+        callStackFrame csf(compiler, rule->pstate());
+        throw Exception::RuntimeException(compiler,
           "Invalid internal module requested.");
       }
 
@@ -1358,13 +1358,13 @@ namespace Sass {
 
     sass::vector<WithConfigVar> config;
     bool hasWith(readWithConfiguration(config, true));
-    LOCAL_FLAG(implicitWithConfig, implicitWithConfig || hasWith);
+    // LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@forward rule");
 
     if (isUseAllowed == false) {
       SourceSpan state(scanner.relevantSpanFrom(start));
-      callStackFrame csf(context, state);
-      throw Exception::ParserException(context,
+      callStackFrame csf(compiler, state);
+      throw Exception::ParserException(compiler,
         "@forward rules must be written before any other rules.");
     }
 
@@ -1382,19 +1382,19 @@ namespace Sass {
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
       if (hasWith) {
-        callStackFrame csf(context, rule->pstate());
-        throw Exception::RuntimeException(context,
+        callStackFrame csf(compiler, rule->pstate());
+        throw Exception::RuntimeException(compiler,
           "Built-in modules can't be configured.");
       }
 
       sass::string name(url.substr(5));
-      if (BuiltInMod* module = context.getModule(name)) {
+      if (BuiltInMod* module = compiler.getModule(name)) {
         rule->module(module);
         rule->root(nullptr);
       }
       else {
-        callStackFrame csf(context, rule->pstate());
-        throw Exception::RuntimeException(context,
+        callStackFrame csf(compiler, rule->pstate());
+        throw Exception::RuntimeException(compiler,
           "Invalid internal module requested.");
       }
 
@@ -1422,7 +1422,7 @@ namespace Sass {
     }
     scanWhitespace();
 
-    EnvFrame local(context, true);
+    EnvFrame local(compiler, true);
 
     ArgumentDeclarationObj contentArguments;
     if (scanIdentifier("using")) {
@@ -1446,7 +1446,7 @@ namespace Sass {
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
       LOCAL_FLAG(inContentBlock, true);
-      // EnvFrame inner(context.varRoot.stack);
+      // EnvFrame inner(compiler.varRoot.stack);
       if (contentArguments.isNull()) {
         // Dart-sass creates this one too
         contentArguments = SASS_MEMORY_NEW(
@@ -1477,7 +1477,7 @@ namespace Sass {
   // [start] should point before the `@`.
   MediaRule* StylesheetParser::readMediaRule(Offset start)
   {
-    EnvFrame local(context, false);
+    EnvFrame local(compiler, false);
     InterpolationObj query = readMediaQueryList();
     return withChildren<MediaRule>(
       &StylesheetParser::readChildStatement,
@@ -1495,7 +1495,7 @@ namespace Sass {
     Offset valueStart(scanner.offset);
     InterpolationBuffer buffer(scanner);
     bool needsDeprecationWarning = false;
-    EnvFrame local(context, true);
+    EnvFrame local(compiler, true);
 
     while (true) {
 
@@ -1566,7 +1566,7 @@ namespace Sass {
 
     if (needsDeprecationWarning) {
 
-      context.addDeprecation(
+      compiler.addDeprecation(
         "@-moz-document is deprecated and support will be removed from Sass "
         "in a future release. For details, see http://bit.ly/moz-document.",
         atRule->pstate());
@@ -1593,7 +1593,7 @@ namespace Sass {
   {
     auto condition = readSupportsCondition();
     scanWhitespace();
-    EnvFrame local(context, true);
+    EnvFrame local(compiler, true);
     return withChildren<SupportsRule>(
       &StylesheetParser::readChildStatement,
       start, condition, local.idxs);
@@ -1629,7 +1629,7 @@ namespace Sass {
   {
     LOCAL_FLAG(inControlDirective, true);
     LOCAL_FLAG(inLoopDirective, true);
-    EnvFrame local(context, true);
+    EnvFrame local(compiler, true);
     ExpressionObj condition(readExpression());
     return withChildren<WhileRule>(child,
       start, condition.ptr(), local.idxs);
@@ -1641,7 +1641,7 @@ namespace Sass {
   AtRule* StylesheetParser::readAnyAtRule(Offset start, Interpolation* name)
   {
     LOCAL_FLAG(inUnknownAtRule, true);
-    EnvFrame local(context, false);
+    EnvFrame local(compiler, false);
 
     InterpolationObj value;
     uint8_t next = scanner.peekChar();
@@ -1701,13 +1701,13 @@ namespace Sass {
         restArgument = name;
         // Defer adding variable until we parsed expression
         // Just in case the same variable is mentioned again
-        context.varRoot.stack.back()->createVariable(norm);
+        compiler.varRoot.stack.back()->createVariable(norm);
         break;
       }
 
       // Defer adding variable until we parsed expression
       // Just in case the same variable is mentioned again
-      context.varRoot.stack.back()->createVariable(norm);
+      compiler.varRoot.stack.back()->createVariable(norm);
 
       arguments.emplace_back(SASS_MEMORY_NEW(Argument,
         scanner.relevantSpanFrom(variableStart), name, defaultValue));
@@ -1866,8 +1866,8 @@ namespace Sass {
         ep.addSingleExpression(readParentExpression());
         break;
 
-      case $single_quote:
-      case $double_quote:
+      case $apos:
+      case $quote:
         ep.addSingleExpression(readInterpolatedString());
         break;
 
@@ -1906,13 +1906,13 @@ namespace Sass {
         }
         break;
 
-      case $langle:
+      case $lt:
         scanner.readChar();
         ep.addOperator(scanner.scanChar($equal)
           ? SassOperator::LTE : SassOperator::LT, beforeToken);
         break;
 
-      case $rangle:
+      case $gt:
         scanner.readChar();
         ep.addOperator(scanner.scanChar($equal)
           ? SassOperator::GTE : SassOperator::GT, beforeToken);
@@ -2183,8 +2183,8 @@ namespace Sass {
     case $ampersand:
       return readParentExpression();
 
-    case $single_quote:
-    case $double_quote:
+    case $apos:
+    case $quote:
       return readInterpolatedString();
 
     case $hash:
@@ -2587,7 +2587,7 @@ namespace Sass {
     }
     else if (lookingAtIdentifier() &&
       // Disallow units beginning with `--`.
-      (scanner.peekChar() != $dash || scanner.peekChar(1) != $dash)) {
+      (scanner.peekChar() != $minus || scanner.peekChar(1) != $minus)) {
       unit = readIdentifier(true);
     }
 
@@ -2662,7 +2662,7 @@ namespace Sass {
     if (next == $plus || next == $minus) scanner.readChar();
     if (!isDigit(scanner.peekChar())) {
       SourceSpan span(scanner.relevantSpan());
-      callStackFrame frame(context,
+      callStackFrame frame(compiler,
         BackTrace(span));
       error(
         "Expected digit.",
@@ -2747,8 +2747,8 @@ namespace Sass {
 
     if (!ns.empty()) {
       auto pstate(scanner.relevantSpanFrom(start));
-      callStackFrame csf(context, pstate);
-      throw Exception::ParserException(context,
+      callStackFrame csf(compiler, pstate);
+      throw Exception::ParserException(compiler,
         "Variable namespaces not supported!");
     }
 
@@ -2774,7 +2774,7 @@ namespace Sass {
     scanner.expectChar($ampersand);
 
     if (scanner.scanChar($ampersand)) {
-      context.addWarning(
+      compiler.addWarning(
         "In Sass, \"&&\" means two copies of the parent selector. You "
         "probably want to use \"and\" instead.",
         scanner.relevantSpanFrom(start));
@@ -2797,7 +2797,7 @@ namespace Sass {
     uint8_t quote = scanner.readChar();
     uint8_t next = 0, second = 0;
 
-    if (quote != $single_quote && quote != $double_quote) {
+    if (quote != $apos && quote != $quote) {
       error("Expected string.",
         scanner.relevantSpanFrom(start));
     }
@@ -2925,8 +2925,8 @@ namespace Sass {
           name, inLoopDirective, plain);
 
         if (isPrivate(name)) {
-          callStackFrame csf(context, expression->pstate());
-          throw Exception::ParserException(context,
+          callStackFrame csf(compiler, expression->pstate());
+          throw Exception::ParserException(compiler,
             "Private members can't be accessed "
             "from outside their modules.");
         }
@@ -3315,8 +3315,8 @@ namespace Sass {
         buffer.write(scanner.readChar());
         break;
 
-      case $double_quote:
-      case $single_quote:
+      case $apos:
+      case $quote:
         strex = readInterpolatedString();
         buffer.addInterpolation(strex->getAsInterpolation());
         break;
@@ -3423,8 +3423,8 @@ namespace Sass {
         wroteNewline = false;
         break;
 
-      case $double_quote:
-      case $single_quote:
+      case $apos:
+      case $quote:
         strex = readInterpolatedString();
         itpl = strex->getAsInterpolation();
         buffer.addInterpolation(itpl);
@@ -3558,10 +3558,10 @@ namespace Sass {
     InterpolationBuffer buffer(scanner);
     Offset start(scanner.offset);
 
-    if (scanner.scanChar($dash)) {
-      buffer.writeCharCode($dash);
-      if (scanner.scanChar($dash)) {
-        buffer.writeCharCode($dash);
+    if (scanner.scanChar($minus)) {
+      buffer.writeCharCode($minus);
+      if (scanner.scanChar($minus)) {
+        buffer.writeCharCode($minus);
         consumeInterpolatedIdentifierBody(buffer);
         return buffer.getInterpolation(scanner.relevantSpanFrom(start));
       }
@@ -3601,7 +3601,7 @@ namespace Sass {
         break;
       }
       else if (next == $underscore ||
-          next == $dash ||
+          next == $minus ||
           isAlphanumeric(next) ||
           next >= 0x0080) {
         buffer.write(scanner.readChar());
@@ -3730,7 +3730,7 @@ namespace Sass {
     }
     else {
       uint8_t next = scanner.peekChar();
-      bool isAngle = next == $langle || next == $rangle;
+      bool isAngle = next == $lt || next == $gt;
       if (isAngle || next == $equal) {
         buffer.write($space);
         buffer.write(scanner.readChar());
@@ -3770,7 +3770,7 @@ namespace Sass {
   {
     uint8_t next = scanner.peekChar();
     if (next == $equal) return scanner.peekChar(1) != $equal;
-    return next == $langle || next == $rangle;
+    return next == $lt || next == $gt;
   }
   // lookingAtExpressionEnd
 
@@ -4006,14 +4006,14 @@ namespace Sass {
     if (isNameStart(first) || first == $backslash) return true;
     if (first == $hash) return scanner.peekChar(1) == $lbrace;
 
-    if (first != $dash) return false;
+    if (first != $minus) return false;
     uint8_t second = scanner.peekChar(1);
     if (second == $nul) return false;
     // if (isNameStart(second)) return true;
     // if (second == $backslash) return true;
 
     if (second == $hash) return scanner.peekChar(2) == $lbrace;
-    // if (second != $dash) return false;
+    // if (second != $minus) return false;
 
     // uint8_t third = scanner.peekChar(2);
     // if (third == $nul) return false;
@@ -4022,7 +4022,7 @@ namespace Sass {
 
     return isNameStart(second)
       || second == $backslash
-      || second == $dash;
+      || second == $minus;
   }
   // EO lookingAtInterpolatedIdentifier
 
@@ -4058,8 +4058,8 @@ namespace Sass {
     return character == $lparen
       || character == $slash
       || character == $lbracket
-      || character == $single_quote
-      || character == $double_quote
+      || character == $apos
+      || character == $quote
       || character == $hash
       || character == $plus
       || character == $minus
@@ -4078,7 +4078,7 @@ namespace Sass {
     auto result = readIdentifier();
 
     uint8_t first = result[0];
-    if (first == $dash || first == $underscore) {
+    if (first == $minus || first == $underscore) {
       error("Private members can't be accessed from outside their modules.",
         scanner.rawSpanFrom(start));
     }

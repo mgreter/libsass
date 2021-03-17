@@ -252,7 +252,7 @@ namespace Sass {
     // Returns whether this is a private selector.
     // That is, whether it begins with `-` or `_`.
     bool isPrivate() const {
-      return name_[0] == Character::$dash
+      return name_[0] == Character::$minus
         || name_[0] == Character::$underscore;
     }
 

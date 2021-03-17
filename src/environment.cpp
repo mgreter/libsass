@@ -57,11 +57,11 @@ namespace Sass {
   Value* Eval::visitAssignRule(AssignRule* a)
   {
 
-    if (a->vidx2().isValid()) {
-      assigne = &compiler.varRoot.getVariable(a->vidx2());
+    if (a->vidx().isValid()) {
+      assigne = &compiler.varRoot.getVariable(a->vidx());
       ValueObj result = a->value()->accept(this);
       compiler.varRoot.setVariable(
-        a->vidx2(),
+        a->vidx(),
         result,
         false);
       assigne = nullptr;
@@ -153,12 +153,12 @@ namespace Sass {
 
     if (a->ns().empty()) {
 
-      a->vidx2(compiler.varRoot.findVarIdx(
+      a->vidx(compiler.varRoot.findVarIdx(
         a->variable(), a->ns(), a->is_global()));
-      assigne = &compiler.varRoot.getVariable(a->vidx2());
+      assigne = &compiler.varRoot.getVariable(a->vidx());
       if (!result) result = a->value()->accept(this);
       compiler.varRoot.setVariable(
-        a->vidx2(),
+        a->vidx(),
         result,
         a->is_default());
       assigne = nullptr;
@@ -180,15 +180,22 @@ namespace Sass {
 
       if (!result) result = a->value()->accept(this);
 
-      a->vidx2(compiler.varRoot.setModVar2(
-        a->variable(), a->ns(),
-        result,
-        a->is_default(),
-        a->pstate()));
+
+      if (auto frame = compiler.getCurrentFrame()) {
+        a->vidx(frame->setModVar(
+          a->variable(), a->ns(),
+          result,
+          a->is_default(),
+          a->pstate()));
+      }
+
+      // if (compiler.stack().empty()) return nullidx;
+
+
 
     }
 
-    if (!a->vidx2().isValid())
+    if (!a->vidx().isValid())
     {
       if (compiler.varRoot.stack.back()->hasNameSpace(a->ns(), a->variable())) {
         callStackFrame frame(traces, a->pstate());
@@ -258,8 +265,8 @@ namespace Sass {
 
     // Skip to optional global scope
     EnvRefs* frame = global ?
-      context.varRoot.stack.front() :
-      context.varRoot.stack.back();
+      compiler.varRoot.stack.front() :
+      compiler.varRoot.stack.back();
 
     SourceSpan pstate(scanner.relevantSpanFrom(start));
 
@@ -297,9 +304,9 @@ namespace Sass {
   MixinRule* StylesheetParser::readMixinRule(Offset start)
   {
 
-    EnvRefs* frame = context.getCurrentFrame();
+    EnvRefs* frame = compiler.getCurrentFrame();
 
-    EnvFrame local(context, false);
+    EnvFrame local(compiler, false);
     // Create space for optional content callable
     // ToDo: check if this can be conditionally done?
     local.idxs->createMixin(Keys::contentRule);
@@ -350,8 +357,8 @@ namespace Sass {
   FunctionRule* StylesheetParser::readFunctionRule(Offset start)
   {
     // Variables should not be hoisted through
-    EnvRefs* parent = context.varRoot.stack.back();
-    EnvFrame local(context, false);
+    EnvRefs* parent = compiler.varRoot.stack.back();
+    EnvFrame local(compiler, false);
 
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
@@ -515,7 +522,7 @@ namespace Sass {
 
     // Error if no file to import was found
     if (resolved.empty()) {
-      throw Exception::UnknwonImport(compiler);
+      throw Exception::UnknownImport(compiler);
     }
     // Error if multiple files to import were found
     else if (resolved.size() > 1) {
@@ -877,7 +884,7 @@ namespace Sass {
     if (pframe->framePtr != 0xFFFFFFFF) {
 
       if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
-        << compiler.implicitWithConfig << "\n";
+        << compiler.hasWithConfig << "\n";
 
       cidxs->module = rule->root();
       pframe->forwards.insert(
@@ -927,14 +934,14 @@ namespace Sass {
     callStackFrame cframe(logger456, trace);
 
     if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
-      << rule->hasConfig << " -> " << compiler.implicitWithConfig << "\n";
+      << rule->hasConfig << " -> " << compiler.hasWithConfig << "\n";
 
     if (Root* root = loadModRule(rule)) {
       compiler.chroot77->upstream.push_back(root);
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
-        LocalOption<bool> scoped(compiler.implicitWithConfig,
-          compiler.implicitWithConfig || rule->hasConfig);
+        LocalOption<bool> scoped(compiler.hasWithConfig,
+          compiler.hasWithConfig || rule->hasConfig);
         LOCAL_PTR(WithConfig, wconfig, rule);
         compileModule(root);
         rule->finalize(compiler);
@@ -963,20 +970,20 @@ namespace Sass {
     callStackFrame frame333(logger456, trace);
 
     if (udbg) std::cerr << "Visit forward rule '" << rule->url() << "' "
-      << rule->hasConfig << " -> " << compiler.implicitWithConfig << "\n";
+      << rule->hasConfig << " -> " << compiler.hasWithConfig << "\n";
 
     if (Root* root = loadModRule(rule)) {
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
-        LocalOption<bool> scoped(compiler.implicitWithConfig,
-          compiler.implicitWithConfig || rule->hasConfig);
+        LocalOption<bool> scoped(compiler.hasWithConfig,
+          compiler.hasWithConfig || rule->hasConfig);
         LOCAL_PTR(WithConfig, wconfig, rule);
         compileModule(root);
         rule->finalize(compiler);
         if (udbg) std::cerr << "Compiled forward rule '" << rule->url() << "'\n";
         insertModule(root);
       }
-      else if (compiler.implicitWithConfig || rule->hasConfig) {
+      else if (compiler.hasWithConfig || rule->hasConfig) {
         throw Exception::ParserException(compiler,
           "This module was already loaded, so it "
           "can't be configured using \"with\".");
@@ -1003,7 +1010,7 @@ namespace Sass {
         bool hasWith = withMap && !withMap->empty();
 
         if (udbg) std::cerr << "Visit load-css '" << url->value() << "' "
-          << hasWith << " -> " << compiler.implicitWithConfig << "\n";
+          << hasWith << " -> " << compiler.hasWithConfig << "\n";
 
         EnvKeyFlatMap<ValueObj> config;
         sass::vector<WithConfigVar> withConfigs;
@@ -1049,12 +1056,12 @@ namespace Sass {
           prev, url->value(), false)) {
           if (!sheet->isCompiled) {
             ImportStackFrame iframe(compiler, sheet->import);
-            LocalOption<bool> scoped(compiler.implicitWithConfig,
-              compiler.implicitWithConfig || hasWith);
+            LocalOption<bool> scoped(compiler.hasWithConfig,
+              compiler.hasWithConfig || hasWith);
             eval.compileModule(sheet);
             wconfig.finalize(compiler);
           }
-          else if (compiler.implicitWithConfig || hasWith) {
+          else if (compiler.hasWithConfig || hasWith) {
             throw Exception::ParserException(compiler,
               sass::string(sheet->pstate().getImpPath())
               + " was already loaded, so it "

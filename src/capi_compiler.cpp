@@ -115,14 +115,16 @@ namespace Sass {
     compiler.content = std::move(output.buffer);
 
     // Create options to render source map and footer.
-    SrcMapOptions options(compiler.srcmap_options);
+    SrcMapOptions& options(compiler.srcmap_options);
     // Deduct some options always from original values.
     // ToDo: is there really any need to customize this?
     if (options.origin.empty() || options.origin == "stream://stdout") {
       options.origin = compiler.getOutputPath();
     }
     if (options.path.empty() || options.path == "stream://stdout") {
-      options.path = options.origin + ".map";
+      if (!options.origin.empty() && options.origin != "stream://stdout") {
+        options.path = options.origin + ".map";
+      }
     }
 
     switch (options.mode) {
@@ -505,6 +507,16 @@ extern "C" {
   void ADDCALL sass_compiler_set_srcmap_path(struct SassCompiler* compiler, const char* path)
   {
     Compiler::unwrap(compiler).srcmap_options.path = path;
+  }
+
+  // Getter for source-map path (where to store the source-mapping).
+  // Note: if path is not explicitly given, we will deduct one from input path.
+  // Note: the value will only be deducted after the main render phase is completed.
+  // Note: LibSass does not write the file, implementers should write to this path.
+  const char* ADDCALL sass_compiler_get_srcmap_path(struct SassCompiler* compiler)
+  {
+    const sass::string& path(Compiler::unwrap(compiler).srcmap_options.path);
+    return path.empty() ? nullptr : path.c_str();
   }
 
   // Setter for source-map root (simply passed to the resulting srcmap info).

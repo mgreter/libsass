@@ -748,14 +748,11 @@ namespace Sass {
   class AssignRule final : public Statement
   {
   private:
+    ADD_REF(EnvRef, vidx);
     ADD_CONSTREF(EnvKey, variable);
     ADD_CONSTREF(sass::string, ns);
     ADD_CONSTREF(ExpressionObj, value);
-    ADD_REF(sass::vector<EnvRef>, vidxs);
-
-    ADD_REF(EnvRef, vidx2);
     ADD_PROPERTY(bool, withinLoop);
-
     ADD_CONSTREF(bool, is_default); // ToDO rename
     ADD_CONSTREF(bool, is_global); // ToDO rename
   public:

@@ -1,5 +1,5 @@
-#ifndef SASS_DART_HELPERS_H
-#define SASS_DART_HELPERS_H
+#ifndef SASS_DART_HELPERS_HPP
+#define SASS_DART_HELPERS_HPP
 
 #include <vector>
 #include <utility>

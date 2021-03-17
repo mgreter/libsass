@@ -106,12 +106,12 @@ namespace Sass {
       if (auto str = item->isaString()) { // Ex
         auto& value = str->value();
         for (size_t i = 0; i < value.size(); i++) {
-          if (value[i] == $single_quote) return $double_quote;
-          if (value[i] == $double_quote) containsDoubleQuote = true;
+          if (value[i] == $apos) return $quote;
+          if (value[i] == $quote) containsDoubleQuote = true;
         }
       }
     }
-    return containsDoubleQuote ? $single_quote : $double_quote;
+    return containsDoubleQuote ? $apos : $quote;
   }
 
   PlainCssCallable2::PlainCssCallable2(

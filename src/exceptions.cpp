@@ -377,7 +377,7 @@ namespace Sass {
       " \"" + name + "\"")
   {}
 
-  UnknwonImport::UnknwonImport(
+  UnknownImport::UnknownImport(
     BackTraces traces) :
     RuntimeException(traces,
       "Can't find stylesheet to import.")

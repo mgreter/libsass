@@ -1,8 +1,8 @@
 #ifndef SASS_ENVIRONMENT_KEY_HPP
 #define SASS_ENVIRONMENT_KEY_HPP
 
-// sass.hpp must go before all system headers to get the
-// __EXTENSIONS__ fix on Solaris.
+// sass.hpp must go before all system headers
+// to get the  __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
 namespace Sass {

@@ -100,8 +100,8 @@ namespace Sass {
       }
       break;
 
-    case $single_quote:
-    case $double_quote:
+    case $quote:
+    case $apos:
       StylesheetParser::scanImportArgument(rule);
       return;
     }
@@ -133,7 +133,7 @@ namespace Sass {
     else {
 
       SourceSpan pstate(scanner.relevantSpanFrom(start));
-      if (!context.callCustomImporters(url, pstate, rule)) {
+      if (!compiler.callCustomImporters(url, pstate, rule)) {
         rule->append(SASS_MEMORY_NEW(IncludeImport62,
           pstate, scanner.sourceUrl, url, nullptr));
       }

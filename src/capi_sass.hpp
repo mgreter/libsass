@@ -216,7 +216,7 @@ namespace Sass {
     // Init everything to false
     SrcMapOptions() :
       mode(SASS_SRCMAP_NONE),
-      embed_contents(true),
+      embed_contents(false),
       file_urls(false)
     {}
 

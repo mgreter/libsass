@@ -118,6 +118,12 @@ extern "C" {
   // Note: LibSass does not write the file, implementers should write to this path.
   ADDAPI void ADDCALL sass_compiler_set_srcmap_path(struct SassCompiler* compiler, const char* path);
 
+  // Getter for source-map path (where to store the source-mapping).
+  // Note: if path is not explicitly given, we will deduct one from input path.
+  // Note: the value will only be deducted after the main render phase is completed.
+  // Note: LibSass does not write the file, implementers should write to this path.
+  ADDAPI const char* ADDCALL sass_compiler_get_srcmap_path(struct SassCompiler* compiler);
+
   // Setter for source-map root (simply passed to the resulting srcmap info).
   // Note: if not given, no root attribute will be added to the srcmap info object.
   ADDAPI void ADDCALL sass_compiler_set_srcmap_root(struct SassCompiler* compiler, const char* root);

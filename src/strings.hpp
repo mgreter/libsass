@@ -4,8 +4,8 @@
 #ifndef SASS_STRINGS_HPP
 #define SASS_STRINGS_HPP
 
-// sass.hpp must go before all system headers to get the
-// __EXTENSIONS__ fix on Solaris.
+// sass.hpp must go before all system headers
+// to get the  __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
 // Include normalized keys

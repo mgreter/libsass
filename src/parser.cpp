@@ -24,14 +24,14 @@ namespace Sass {
 
   // Constructor
   Parser::Parser(
-    Compiler& context,
+    Compiler& compiler,
     SourceDataObj source) :
-    context(context),
-    chroot77(context.chroot77),
-    wconfig(context.wconfig),
-    implicitWithConfig(context.implicitWithConfig),
-    scanner(context, source),
-    varStack(context.varRoot.stack),
+    compiler(compiler),
+    chroot77(compiler.chroot77),
+    wconfig(compiler.wconfig),
+    // hasWithConfig(compiler.hasWithConfig),
+    scanner(compiler, source),
+    varStack(compiler.varRoot.stack),
     lastSilentComment()
   {}
 
@@ -45,7 +45,7 @@ namespace Sass {
     try {
       auto src = SASS_MEMORY_NEW(SourceString,
         "sass:://identifier", std::move(text));
-      Parser parser(context, src);
+      Parser parser(compiler, src);
       sass::string id(parser.readIdentifier());
       return parser.scanner.isDone();
     }
@@ -109,10 +109,10 @@ namespace Sass {
 
     Offset start(scanner.offset);
     StringBuffer text;
-    if (scanner.scanChar($dash)) {
-      text.write($dash);
-      if (scanner.scanChar($dash)) {
-        text.writeCharCode($dash);
+    if (scanner.scanChar($minus)) {
+      text.write($minus);
+      if (scanner.scanChar($minus)) {
+        text.writeCharCode($minus);
         consumeIdentifierBody(text, unit);
         return text.buffer;
       }
@@ -161,7 +161,7 @@ namespace Sass {
       if (next == $nul) {
         break;
       }
-      else if (unit && next == $dash) {
+      else if (unit && next == $minus) {
         // Disallow `-` followed by a dot or a digit in units.
         uint8_t second = scanner.peekChar(1);
         if (second != $nul && (second == $dot || isDigit(second))) break;
@@ -187,7 +187,7 @@ namespace Sass {
     // Most changes here should be mirrored there.
 
     uint8_t quote = scanner.peekChar();
-    if (quote != $single_quote && quote != $double_quote) {
+    if (quote != $apos && quote != $quote) {
       error("Expected string.",
         scanner.rawSpan());
         /*,
@@ -266,8 +266,8 @@ namespace Sass {
         wroteNewline = false;
         break;
 
-      case $double_quote:
-      case $single_quote:
+      case $quote:
+      case $apos:
         buffer.write(rawText(&Parser::string));
         wroteNewline = false;
         break;
@@ -617,13 +617,13 @@ namespace Sass {
     uint8_t first, second;
     if (!scanner.peekChar(first, forward)) return false;
     if (isNameStart(first) || first == $backslash) return true;
-    if (first != $dash) return false;
+    if (first != $minus) return false;
 
     if (!scanner.peekChar(second, forward + 1)) return false;
 
     return isNameStart(second)
       || second == $backslash
-      || second == $dash;
+      || second == $minus;
   }
   // EO lookingAtIdentifier
 
@@ -677,8 +677,8 @@ namespace Sass {
   
   // Throws an error associated with [pstate].
   void Parser::error(sass::string message, SourceSpan pstate) {
-    callStackFrame frame(context, BackTrace(pstate));
-    throw Exception::ParserException(context, message);
+    callStackFrame frame(compiler, BackTrace(pstate));
+    throw Exception::ParserException(compiler, message);
   }
 
   /////////////////////////////////////////////////////////////////////////

@@ -74,14 +74,14 @@ namespace Sass {
     // Scan the string first, dart-sass seems to do some fancy
     // trick by calling itself recursively when it encounters a
     // conflicting quote during the output, throwing away buffers.
-    bool includesSingleQuote = text.find($single_quote) != sass::string::npos;
-    bool includesDoubleQuote = text.find($double_quote) != sass::string::npos;
+    bool includesSingleQuote = text.find($apos) != sass::string::npos;
+    bool includesDoubleQuote = text.find($quote) != sass::string::npos;
 
     // If both quotes are encountered
     if (quotes == $nul) {
-      if (includesSingleQuote) quotes = $double_quote;
-      else if (includesDoubleQuote) quotes = $single_quote;
-      else quotes = $double_quote;
+      if (includesSingleQuote) quotes = $quote;
+      else if (includesDoubleQuote) quotes = $apos;
+      else quotes = $quote;
     }
 
     append_char(quotes);
@@ -90,17 +90,17 @@ namespace Sass {
     for (size_t i = 0, iL = text.size(); i < iL; i++) {
       chr = text[i];
       switch (chr) {
-      case $single_quote:
-        if (quotes == $single_quote) {
+      case $apos:
+        if (quotes == $apos) {
           append_char($backslash);
         }
-        append_char($single_quote);
+        append_char($apos);
         break;
-      case $double_quote:
-        if (quotes == $double_quote) {
+      case $quote:
+        if (quotes == $quote) {
           append_char($backslash);
         }
-        append_char($double_quote);
+        append_char($quote);
         break;
       // Write newline characters and unprintable ASCII characters as escapes.
       case $nul:

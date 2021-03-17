@@ -876,11 +876,11 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " <<" << block->variable().orig() << ">> " << block->tabs();
     std::cerr << " vidx(";
     bool join = false;
-    for (auto pidx : block->vidxs()) {
-      if (join) std::cerr << ", ";
-      std::cerr << pidx.toString();
-      join = true;
-    }
+    //for (auto pidx : block->vidxs()) {
+    //  if (join) std::cerr << ", ";
+    //  std::cerr << pidx.toString();
+    //  join = true;
+    //}
     std::cerr << ")" << std::endl; 
 
     debug_ast(block->value(), ind + "=");

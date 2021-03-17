@@ -189,8 +189,10 @@ namespace Sass {
     if (srcmap == nullptr) return nullptr;
     // Check if we output to stdout (any link would be useless)
     if (output_path.empty() || output_path == "stream://stdout") {
-      // Instead always embed the source-map on stdout
-      return renderEmbeddedSrcMap(options, source_map);
+      if (options.path.empty() || options.path == "stream://stdout") {
+        // Instead always embed the source-map on stdout
+        return renderEmbeddedSrcMap(options, source_map);
+      }
     }
     // Create resulting footer and return a copy
     return sass_copy_string("\n/*# sourceMappingURL=" +
@@ -669,7 +671,7 @@ namespace Sass {
         format = SASS_IMPORT_SCSS;
       }
       else if (abs_path != "stream://stdin") {
-        throw Exception::UnknwonImport(callStack);
+        throw Exception::UnknownImport(callStack);
       }
     }
 

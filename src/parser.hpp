@@ -28,7 +28,7 @@ namespace Sass {
   public:
 
     // Compiler context
-    Compiler& context;
+    Compiler& compiler;
 
     // Alias into context
     Root*& chroot77;
@@ -36,7 +36,7 @@ namespace Sass {
     // Alias into context
     WithConfig*& wconfig;
 
-    bool& implicitWithConfig;
+    // bool& hasWithConfig;
 
     // The scanner that scans through the text being parsed.
     StringScanner scanner;

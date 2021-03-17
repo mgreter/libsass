@@ -44,13 +44,13 @@ namespace Sass {
     }
 
     // Returns whether [character] is
-    // starting a utf8 multibyte sequence.
+    // starting a utf8 multi-byte sequence.
     inline bool isUtf8StartByte(uint8_t character) {
       return (character & 192) == 192;
     }
 
     // Returns whether [character] is
-    // part of a utf8 multibyte sequence.
+    // part of a utf8 multi-byte sequence.
     inline bool isUtf8Continuation(uint8_t character) {
       return (character & 192) == 128;
     }

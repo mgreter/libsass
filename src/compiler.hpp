@@ -159,7 +159,8 @@ namespace Sass {
     }
 
 
-    bool implicitWithConfig = false;
+    // Flag if we currently have a with-config
+    bool hasWithConfig = false;
 
     // Stack of environment frames. New frames are appended
     // when parser encounters a new environment scoping.

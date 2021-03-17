@@ -34,14 +34,14 @@ namespace Sass {
       false))
   {
     varStack.reserve(256);
-    fnStack.reserve(256);
     mixStack.reserve(128);
+    fnStack.reserve(256);
     varStackPtr.reserve(256);
     mixStackPtr.reserve(128);
     fnStackPtr.reserve(256);
     intVariables.reserve(256);
-    intFunction.reserve(256);
     intMixin.reserve(128);
+    intFunction.reserve(256);
     // Push onto our stack
     stack.push_back(this->idxs);
   }
@@ -80,7 +80,7 @@ namespace Sass {
     // Push onto our stack
     stack.push_back(this->idxs);
     // Account for allocated memory
-    idxs->root.scopes3.push_back(idxs);
+    idxs->root.scopes.push_back(idxs);
   }
   // EO EnvFrame ctor
   /////////////////////////////////////////////////////////////////////////
@@ -620,15 +620,6 @@ namespace Sass {
   {
     if (stack.empty()) return;
     stack.back()->findVarIdxs(vidxs, name);
-  }
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  EnvRef EnvRoot::setModVar2(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
-  {
-    if (stack.empty()) return nullidx;
-    return stack.back()->setModVar(name, ns, value, guarded, pstate);
   }
 
   /////////////////////////////////////////////////////////////////////////

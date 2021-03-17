@@ -42,9 +42,6 @@ namespace Sass {
     const uint8_t $bs = 0x08;
 
     // "Horizontal Tab" control character.
-    const uint8_t $ht = 0x09;
-
-    // "Horizontal Tab" control character, common name.
     const uint8_t $tab = 0x09;
 
     // "Line feed" control character.
@@ -126,23 +123,11 @@ namespace Sass {
     // Character '!'.
     const uint8_t $exclamation = 0x21;
 
-    // Character '"', short name.
-    const uint8_t $quot = 0x22;
-
     // Character '"'.
     const uint8_t $quote = 0x22;
 
-    // Character '"'.
-    const uint8_t $double_quote = 0x22;
-
-    // Character '"'.
-    const uint8_t $quotation = 0x22;
-
     // Character '#'.
     const uint8_t $hash = 0x23;
-
-    // Character '$'.
-    const uint8_t $$ = 0x24;
 
     // Character '$'.
     const uint8_t $dollar = 0x24;
@@ -150,38 +135,17 @@ namespace Sass {
     // Character '%'.
     const uint8_t $percent = 0x25;
 
-    // Character '&', short name.
-    const uint8_t $amp = 0x26;
-
     // Character '&'.
     const uint8_t $ampersand = 0x26;
 
     // Character "'".
     const uint8_t $apos = 0x27;
 
-    // Character '''.
-    const uint8_t $apostrophe = 0x27;
-
-    // Character '''.
-    const uint8_t $single_quote = 0x27;
-
     // Character '('.
     const uint8_t $lparen = 0x28;
 
-    // Character '('.
-    const uint8_t $open_paren = 0x28;
-
-    // Character '('.
-    const uint8_t $open_parenthesis = 0x28;
-
     // Character ')'.
     const uint8_t $rparen = 0x29;
-
-    // Character ')'.
-    const uint8_t $close_paren = 0x29;
-
-    // Character ')'.
-    const uint8_t $close_parenthesis = 0x29;
 
     // Character '*'.
     const uint8_t $asterisk = 0x2A;
@@ -195,23 +159,11 @@ namespace Sass {
     // Character '-'.
     const uint8_t $minus = 0x2D;
 
-    // Character '-'.
-    const uint8_t $dash = 0x2D;
-
     // Character '.'.
     const uint8_t $dot = 0x2E;
 
-    // Character '.'.
-    const uint8_t $fullstop = 0x2E;
-
     // Character '/'.
     const uint8_t $slash = 0x2F;
-
-    // Character '/'.
-    const uint8_t $solidus = 0x2F;
-
-    // Character '/'.
-    const uint8_t $division = 0x2F;
 
     // Character '0'.
     const uint8_t $0 = 0x30;
@@ -252,29 +204,11 @@ namespace Sass {
     // Character '<'.
     const uint8_t $lt = 0x3C;
 
-    // Character '<'.
-    const uint8_t $less_than = 0x3C;
-
-    // Character '<'.
-    const uint8_t $langle = 0x3C;
-
-    // Character '<'.
-    const uint8_t $open_angle = 0x3C;
-
     // Character '='.
     const uint8_t $equal = 0x3D;
 
     // Character '>'.
     const uint8_t $gt = 0x3E;
-
-    // Character '>'.
-    const uint8_t $greater_than = 0x3E;
-
-    // Character '>'.
-    const uint8_t $rangle = 0x3E;
-
-    // Character '>'.
-    const uint8_t $close_angle = 0x3E;
 
     // Character '?'.
     const uint8_t $question = 0x3F;
@@ -363,17 +297,11 @@ namespace Sass {
     // Character '['.
     const uint8_t $lbracket = 0x5B;
 
-    // Character '['.
-    const uint8_t $open_bracket = 0x5B;
-
     // Character '\'.
     const uint8_t $backslash = 0x5C;
 
     // Character ']'.
     const uint8_t $rbracket = 0x5D;
-
-    // Character ']'.
-    const uint8_t $close_bracket = 0x5D;
 
     // Character '^'.
     const uint8_t $circumflex = 0x5E;
@@ -480,9 +408,6 @@ namespace Sass {
     // Character '{'.
     const uint8_t $lbrace = 0x7B;
 
-    // Character '{'.
-    const uint8_t $open_brace = 0x7B;
-
     // Character '|'.
     const uint8_t $pipe = 0x7C;
 
@@ -491,9 +416,6 @@ namespace Sass {
 
     // Character '}'.
     const uint8_t $rbrace = 0x7D;
-
-    // Character '}'.
-    const uint8_t $close_brace = 0x7D;
 
     // Character '~'.
     const uint8_t $tilde = 0x7E;

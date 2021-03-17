@@ -141,7 +141,7 @@ namespace Sass {
   {
     if (!scanChar(character)) {
       if (name.empty()) {
-        if (character == $double_quote) {
+        if (character == $quote) {
           _fail("\"\\\"\"");
         }
         else {

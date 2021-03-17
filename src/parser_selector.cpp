@@ -162,7 +162,7 @@ namespace Sass {
     CompoundSelectorObj compound = SASS_MEMORY_NEW(CompoundSelector,
       scanner.relevantSpan());
 
-    if (scanner.scanChar($amp)) {
+    if (scanner.scanChar($ampersand)) {
       if (!allowParent) {
         error(
           "Parent selectors aren't allowed here.",
@@ -261,7 +261,7 @@ namespace Sass {
     sass::string value;
     uint8_t next = scanner.peekChar();
     // Check if we are looking at an unquoted text
-    if (next != $single_quote && next != $double_quote) {
+    if (next != $quote && next != $apos) {
       value = readIdentifier();
     }
     else {
