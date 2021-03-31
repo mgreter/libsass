@@ -92,9 +92,9 @@ namespace Sass {
     Logger(enum SassLoggerStyle style = SASS_LOGGER_ASCII_MONO,
       int precision = SassDefaultPrecision, size_t columns = NPOS);
 
-    void setLogPrecision(int precision);
+    void setLogStyle(enum SassLoggerStyle style, size_t columns = NPOS);
 
-    void setLogStyle(enum SassLoggerStyle style);
+    void setLogPrecision(int precision);
 
     void addWarning(const sass::string& message);
 

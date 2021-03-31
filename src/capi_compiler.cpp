@@ -23,13 +23,14 @@ namespace Sass {
     formatted << "Error: ";
     // Add message and ensure it is
     // added with a final line-feed.
-    if (what != nullptr) {
-      formatted << what;
-      while (*what) {
+    const char* msg = what;
+    if (msg != nullptr) {
+      formatted << msg;
+      while (*msg) {
         has_final_lf =
-          *what == '\r' ||
-          *what == '\n';
-        ++what;
+          *msg == '\r' ||
+          *msg == '\n';
+        ++msg;
       }
       if (!has_final_lf) {
         formatted << STRMLF;
@@ -563,7 +564,7 @@ extern "C" {
   }
 
   // Returns status code for compiler (0 meaning success, anything else is an error)
-  const int ADDCALL sass_compiler_get_status(struct SassCompiler* compiler)
+  int ADDCALL sass_compiler_get_status(struct SassCompiler* compiler)
   {
     return Compiler::unwrap(compiler).error.status;
   }

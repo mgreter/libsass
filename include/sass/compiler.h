@@ -154,7 +154,7 @@ extern "C" {
   ADDAPI const struct SassError* ADDCALL sass_compiler_get_error(struct SassCompiler* compiler);
 
   // Returns status code for compiler (0 meaning success, anything else is an error)
-  ADDAPI const int ADDCALL sass_compiler_get_status(struct SassCompiler* compiler);
+  ADDAPI int ADDCALL sass_compiler_get_status(struct SassCompiler* compiler);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

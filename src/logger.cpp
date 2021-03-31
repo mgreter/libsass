@@ -16,14 +16,14 @@ namespace Sass {
     columns(columns),
     style(style)
   {
-    setLogStyle(style);
+    setLogStyle(style, columns);
   }
 
-  void Logger::setLogStyle(enum SassLoggerStyle style)
+  void Logger::setLogStyle(enum SassLoggerStyle style, size_t columns)
   {
     // This auto-detection is experimental
     // We do our best but hard to make portable
-    if (this->style == SASS_LOGGER_AUTO) {
+    if (style == SASS_LOGGER_AUTO) {
       auto colors = Terminal::hasColorSupport(true);
       bool unicode = Terminal::hasUnicodeSupport(true);
       if (colors && unicode) { this->style = SASS_LOGGER_UNICODE_COLOR; }
@@ -31,9 +31,15 @@ namespace Sass {
       else if (colors) { this->style = SASS_LOGGER_ASCII_COLOR; }
       else { this->style = SASS_LOGGER_ASCII_MONO; }
     }
+    else {
+      this->style = style;
+    }
     // Auto-detect available columns
     if (columns == NPOS) {
       this->columns = Terminal::getColumns(true);
+    }
+    else {
+      this->columns = columns;
     }
     // Clamp into a sensible range
     if (columns > 800) { columns = 800; }
