@@ -91,7 +91,7 @@ By default, mingw64 dll will depends on "​m​i​n​g​w​m​1​0​.​
 ``` bash
 lib/libsass.dll: $(COBJECTS) $(OBJECTS) $(RCOBJECTS)
 	$(MKDIR) lib
-	$(CXX) -shared $(LDFLAGS) -o $@ $(COBJECTS) $(OBJECTS) $(RCOBJECTS) $(LDLIBS) -s -static -Wl,--subsystem,windows,--out-implib,lib/libsass.a
+	$(CXX) -shared $(LDFLAGS) -o $@ $(COBJECTS) $(OBJECTS) $(RCOBJECTS) $(LDLIBS) -s -static -Wl,--subsystem,windows,--out-implib,lib/libsass.dll.a
 ```
 
 Compile the library

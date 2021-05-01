@@ -231,8 +231,8 @@ lib/libsass.dylib: $(COBJECTS) $(OBJECTS) | lib
 	-install_name @rpath/libsass.dylib
 
 lib/libsass.dll: $(COBJECTS) $(OBJECTS) $(RCOBJECTS) | lib
-	$(CXX) -shared $(LDFLAGS) -o $@ $(COBJECTS) $(OBJECTS) $(RCOBJECTS) $(LDLIBS) \
-	-s -Wl,--subsystem,windows,--out-implib,lib/libsass.a
+	$(CXX) $(LDFLAGS) $(COBJECTS) $(OBJECTS) $(RCOBJECTS) $(LDLIBS) -shared -o $@ \
+	-Wl,--subsystem,windows,--out-implib,lib/libsass.dll.a,--output-def,lib/libsass.dll.def
 
 $(RCOBJECTS): %.o: %.rc
 	$(WINDRES) -i $< -o $@
