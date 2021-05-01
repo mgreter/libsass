@@ -55,7 +55,7 @@ namespace Sass {
     root->idxs = compiler.varRoot.stack.back();
     compiler.varRoot.stack.back()->module = root;
 
-    LOCAL_PTR(Root, chroot77, root);
+    LOCAL_PTR(Root, modctx, root);
 
     // The parsed children
     StatementVector& children(root->elements());

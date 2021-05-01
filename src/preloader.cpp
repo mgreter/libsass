@@ -15,7 +15,7 @@ namespace Sass {
     eval(eval),
     root(root),
     compiler(eval.compiler),
-    chroot77(eval.chroot77),
+    modctx(eval.modctx),
     wconfig(eval.wconfig),
     idxs(root->idxs)
   {}
@@ -31,7 +31,7 @@ namespace Sass {
   void Preloader::acceptRoot(Root* sheet)
   {
     if (sheet && !sheet->empty()) {
-      LOCAL_PTR(Root, chroot77, sheet);
+      LOCAL_PTR(Root, modctx, sheet);
       LOCAL_PTR(EnvRefs, idxs, sheet->idxs);
       ImportStackFrame isf(compiler, sheet->import);
       compiler.varRoot.stack.push_back(sheet->idxs);

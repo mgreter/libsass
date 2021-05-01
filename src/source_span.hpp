@@ -24,7 +24,7 @@ namespace Sass {
 							 const Offset& position = Offset(),
 							 const Offset& span = Offset());
 
-    static SourceSpan tmp(const char* path);
+    static SourceSpan internal(const char* path);
 
 		// Offset size
 		Offset span;

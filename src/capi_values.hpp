@@ -8,4 +8,6 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+// No private C-API implementation details yet
+
 #endif

@@ -163,7 +163,7 @@ namespace Sass
 
 	namespace Colors
 	{
-		const SourceSpan color_table(SourceSpan::tmp("[COLOR TABLE]"));
+		const SourceSpan color_table(SourceSpan::internal("[COLOR TABLE]"));
 		const ColorRgba aliceblue(color_table, 240, 248, 255, 1);
 		const ColorRgba antiquewhite(color_table, 250, 235, 215, 1);
 		const ColorRgba cyan(color_table, 0, 255, 255, 1);

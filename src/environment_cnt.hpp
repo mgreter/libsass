@@ -37,7 +37,7 @@ namespace Sass {
   >;
 
   template<typename T>
-  // Performance comparisons on MSVC and bolt-bench:
+  // Performance comparison on MSVC and bolt-bench:
   // tsl::hopscotch_map is 10% slower than Sass::FlatMap
   // std::unordered_map a bit faster than tsl::hopscotch_map
   // Sass::FlapMap is 10% faster than any other container

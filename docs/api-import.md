@@ -3,7 +3,7 @@
 
 Imports on the C-API side can either be compilation entry points or imports
 returned from custom importers. Overall they behave very similarly, but entry
-points are a bit more strict, as we know better what to expect. Import from
+points are a bit more strict, as we know better what to expect. Imports from
 custom importers can be more versatile. An import can either have a path,
 some loaded content or both. Custom importer can return imports in either
 of that state, while with entry points we know what to expect.

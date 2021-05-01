@@ -2,9 +2,9 @@
 
 ```C:data.c
 #include <stdio.h>
-#include <sass/context.h>
+#include <sass.h>
 
-int main( int argc, const char* argv[] )
+int main(int argc, const char* argv[])
 {
 
   // LibSass will take control of data you pass in
@@ -15,22 +15,47 @@ int main( int argc, const char* argv[] )
   // then fill it with data you load from disk or somewhere else.
 
   // create the data context and get all related structs
-  struct Sass_Data_Context* data_ctx = sass_make_data_context(text);
-  struct Sass_Context* ctx = sass_data_context_get_context(data_ctx);
-  struct Sass_Options* ctx_opt = sass_context_get_options(ctx);
+  struct SassCompiler* compiler = sass_make_compiler();
+  struct SassImport* data = sass_make_content_import(text, "styles");
+  sass_compiler_set_entry_point(compiler, data);
+  // everything you make you must delete
+  sass_delete_import(data); // passed away
 
-  // configure some options ...
-  sass_option_set_precision(ctx_opt, 10);
+  // Execute all three phases
+  sass_compiler_parse(compiler);
+  sass_compiler_compile(compiler);
+  sass_compiler_render(compiler);
 
-  // context is set up, call the compile step now
-  int status = sass_compile_data_context(data_ctx);
+  // Print any warning to console
+  if (sass_compiler_get_warn_string(compiler)) {
+    sass_print_stderr(sass_compiler_get_warn_string(compiler));
+  }
 
-  // print the result or the error to the stdout
-  if (status == 0) puts(sass_context_get_output_string(ctx));
-  else puts(sass_context_get_error_message(ctx));
+  // Print error message if we have an error
+  if (sass_compiler_get_status(compiler) != 0) {
+    const struct SassError* error = sass_compiler_get_error(compiler);
+    sass_print_stderr(sass_error_get_string(error));
+  }
 
-  // release allocated memory
-  sass_delete_data_context(data_ctx);
+  // Get result code after all compilation steps
+  int status = sass_compiler_get_status(compiler);
+
+  // Write to output if no errors occurred
+  if (status == 0) {
+
+    // Paths where to write stuff to (might be `stream://stdout`)
+    const char* outfile = sass_compiler_get_output_path(compiler);
+    const char* mapfile = sass_compiler_get_srcmap_path(compiler);
+    // Get the parts to be added to the output file (or stdout)
+    const char* content = sass_compiler_get_output_string(compiler);
+    const char* footer = sass_compiler_get_footer_string(compiler);
+    const char* srcmap = sass_compiler_get_srcmap_string(compiler);
+
+    // Output all results
+    if (content) puts(content);
+    if (footer) puts(footer);
+
+  }
 
   // exit status
   return status;
@@ -51,31 +76,60 @@ echo "foo { margin: 21px * 2; }" > foo.scss
 
 ```C:file.c
 #include <stdio.h>
-#include "sass/context.h"
+#include <sass.h>
 
-int main( int argc, const char* argv[] )
+int main(int argc, const char* argv[])
 {
 
-  // get the input file from first argument or use default
-  const char* input = argc > 1 ? argv[1] : "styles.scss";
+  // LibSass will take control of data you pass in
+  // Therefore we need to make a copy of static data
+  char* text = sass_copy_c_string("a{b:c;}");
+  // Normally you'll load data into a buffer from i.e. the disk.
+  // Use `sass_alloc_memory` to get a buffer to pass to LibSass
+  // then fill it with data you load from disk or somewhere else.
 
-  // create the file context and get all related structs
-  struct Sass_File_Context* file_ctx = sass_make_file_context(input);
-  struct Sass_Context* ctx = sass_file_context_get_context(file_ctx);
-  struct Sass_Options* ctx_opt = sass_context_get_options(ctx);
+  // create the data context and get all related structs
+  struct SassCompiler* compiler = sass_make_compiler();
+  struct SassImport* data = sass_make_file_import("foo.scss");
+  sass_compiler_set_entry_point(compiler, data);
+  // everything you make you must delete
+  sass_delete_import(data); // passed away
 
-  // configure some options ...
-  sass_option_set_precision(ctx_opt, 10);
+  // Execute all three phases
+  sass_compiler_parse(compiler);
+  sass_compiler_compile(compiler);
+  sass_compiler_render(compiler);
 
-  // context is set up, call the compile step now
-  int status = sass_compile_file_context(file_ctx);
+  // Print any warning to console
+  if (sass_compiler_get_warn_string(compiler)) {
+    sass_print_stderr(sass_compiler_get_warn_string(compiler));
+  }
 
-  // print the result or the error to the stdout
-  if (status == 0) puts(sass_context_get_output_string(ctx));
-  else puts(sass_context_get_error_message(ctx));
+  // Print error message if we have an error
+  if (sass_compiler_get_status(compiler) != 0) {
+    const struct SassError* error = sass_compiler_get_error(compiler);
+    sass_print_stderr(sass_error_get_string(error));
+  }
 
-  // release allocated memory
-  sass_delete_file_context(file_ctx);
+  // Get result code after all compilation steps
+  int status = sass_compiler_get_status(compiler);
+
+  // Write to output if no errors occurred
+  if (status == 0) {
+
+    // Paths where to write stuff to (might be `stream://stdout`)
+    const char* outfile = sass_compiler_get_output_path(compiler);
+    const char* mapfile = sass_compiler_get_srcmap_path(compiler);
+    // Get the parts to be added to the output file (or stdout)
+    const char* content = sass_compiler_get_output_string(compiler);
+    const char* footer = sass_compiler_get_footer_string(compiler);
+    const char* srcmap = sass_compiler_get_srcmap_string(compiler);
+
+    // Output all results
+    if (content) puts(content);
+    if (footer) puts(footer);
+
+  }
 
   // exit status
   return status;

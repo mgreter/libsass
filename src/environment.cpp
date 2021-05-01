@@ -747,7 +747,7 @@ namespace Sass {
     auto oldCurrent = current;
     current = root->compiled;
 
-    LOCAL_PTR(Root, chroot77, root);
+    LOCAL_PTR(Root, modctx, root);
     EnvRefs* idxs = root->idxs;
 
     EnvRefs* mframe(compiler.getCurrentModule());
@@ -775,7 +775,7 @@ namespace Sass {
     if (rule->wasMerged()) return;
     rule->wasMerged(true);
 
-    mergeForwards(rule->module()->idxs, chroot77, rule, compiler);
+    mergeForwards(rule->module()->idxs, modctx, rule, compiler);
 
   }
 
@@ -917,7 +917,7 @@ namespace Sass {
     if (Root* root = loadModRule(rule)) {
       ImportStackFrame iframe(compiler, root->import);
       EnvScope scoped(compiler.varRoot, root->idxs);
-      LOCAL_PTR(Root, chroot77, root);
+      LOCAL_PTR(Root, modctx, root);
       LOCAL_FLAG(inImport, true);
       exposeImpRule(rule);
       // Imports are always executed again
@@ -937,7 +937,7 @@ namespace Sass {
       << rule->hasConfig << " -> " << compiler.hasWithConfig << "\n";
 
     if (Root* root = loadModRule(rule)) {
-      compiler.chroot77->upstream.push_back(root);
+      compiler.modctx->upstream.push_back(root);
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.hasWithConfig,

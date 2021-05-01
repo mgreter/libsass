@@ -111,11 +111,6 @@ namespace Sass {
     MidxEnvKeyMap mixIdxs;
     FidxEnvKeyMap fnIdxs;
 
-    // Special set with global assignments
-    // Needed for imports within style-rules
-    // ToDo: not really tested via specs yet?
-    // EnvKeySet globals;
-
     // Any import may add forwarded entities to current scope
     // Since those scopes are dynamic and not global, we can't
     // simply insert our references. Therefore we must have the
@@ -175,6 +170,8 @@ namespace Sass {
     // But also for content blocks
     EnvRef createMixin(const EnvKey& name);
 
+    void findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& name) const;
+
     // Get a mixin associated with the under [name].
     // Will lookup from the last runtime stack scope.
     // We will move up the runtime stack until we either
@@ -192,12 +189,19 @@ namespace Sass {
     // We will move up the runtime stack until we either find a 
     // defined variable with a value or run out of parent scopes.
 
-    void findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& name) const;
 
+    // Get reference of entity with [name] under namespace [ns].
+    // Namespaced entities can only be exported by actual modules.
+    // Will process all parent scopes, skipping any imports as they are not
+    // "real" modules, until a module is found that exports into given [ns].
+    // Continues until a corresponding variable with [name] is found under [ns].
     EnvRef findVarIdx(const EnvKey& name, const sass::string& ns) const;
-    EnvRef findFnIdx22(const EnvKey& name, const sass::string& ns) const;
-    EnvRef findMixIdx22(const EnvKey& name, const sass::string& ns) const;
+    EnvRef findFnIdx(const EnvKey& name, const sass::string& ns) const;
+    EnvRef findMixIdx(const EnvKey& name, const sass::string& ns) const;
 
+    // Get reference of entity with [name] without any namespace.
+    // Non-namespaced entities are either directly declared in the root
+    // stylesheet or via forwarded module entities into star "*" namespace.
     EnvRef findVarIdx(const EnvKey& name) const;
     EnvRef findFnIdx(const EnvKey& name) const;
     EnvRef findMixIdx(const EnvKey& name) const;

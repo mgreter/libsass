@@ -12,4 +12,5 @@ namespace Sass {
   Root::Root(const SourceSpan& pstate, StatementVector&& vec)
     : AstNode(pstate), Vectorized<Statement>(std::move(vec)), Module(nullptr)
   {}
+
 }

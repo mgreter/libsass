@@ -38,24 +38,24 @@ compilers should catch the case when arguments mismatch on the C-API side.
 
 ### List of anonymous structures
 
-These structs have no real implementation are only passed around as pointers.
-Internally in LibSass those pointers represent mostly different c++ objects.
+These structs have no real implementation and are only passed around as pointers.
+Internally in LibSass these pointers represent mostly different c++ objects.
 
-- struct SassError - An error object to get further information
-- struct SassTrace - An single stack-trace object to get further information
+- struct SassError - An error object holding further information
+- struct SassTrace - An single stack-trace object holding further information
 - struct SassSource - Imported source with associated import and resolved path.
 - struct SassSrcSpan - Parser state for column, line and source information.
 - struct SassCompiler - Main object to hold state for whole compilation phase.
 - struct SassFunction - Custom function object holding callback and cookie.
 - struct SassImport - Single import for entry point or returned by custom importer.
 - struct SassImporter - Custom importer function to be hooked into our loading.
-- struct SassImportList - Custom importers can return a list of imports.
+- struct SassImportList - Custom importers can return a SassImport list.
 - struct SassMapIterator - Object to support iteration API over map objects.
 
 ## Why using c++11 (or gcc4.4 compatibility)
 
 Since LibSass 3.0 we started to use more and more c++11 features. Some just
-creeped in, others were utilized deliberately. With LibSass 4.0 I took the
+crept in, others were utilized deliberately. With LibSass 4.0 I took the
 decision to fully utilize whatever c++11 could offer. The main reason to
 fully embrace c++11 is the move semantics it brings. Earlier we also tried
 to support compilers that only had partial c++11 support (e.g. gnu++0x).
@@ -63,9 +63,10 @@ With LibSass 4.0 we don't really support this target anymore, as any compiler
 not older than 5 years should support the c++11 syntax we use.
 
 Note: currently the LibSass 4.0 release is on going and the final
-target compiler is  gcc 4.8, as it should fully support c++11.
+target compiler is gcc 4.8, as it should fully support c++11.
+More testing and tuning needs to be done after a 4.0 release!
 
-## Binary distributions in linkage issues
+## Binary distributions and linkage issues
 
 LibSass itself does not have any official binary distribution. The main reason for
 this is because it is nearly impossible to do so reliably for each and every

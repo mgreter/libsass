@@ -31,7 +31,7 @@ namespace Sass {
     logger456(logger),
     compiler(compiler),
     traces(logger),
-    chroot77(compiler.chroot77),
+    modctx(compiler.modctx),
     wconfig(compiler.wconfig),
     extender(
       Extender::NORMAL,
@@ -48,8 +48,8 @@ namespace Sass {
     selectorStack.push_back({});
     originalStack.push_back({});
 
-    bool_true = SASS_MEMORY_NEW(Boolean, SourceSpan::tmp("[TRUE]"), true);
-    bool_false = SASS_MEMORY_NEW(Boolean, SourceSpan::tmp("[FALSE]"), false);
+    bool_true = SASS_MEMORY_NEW(Boolean, SourceSpan::internal("[TRUE]"), true);
+    bool_false = SASS_MEMORY_NEW(Boolean, SourceSpan::internal("[FALSE]"), false);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -620,7 +620,6 @@ namespace Sass {
     }
 
     // Collect named args by evaluating input arguments
-    // named.reserve(arguments->named().size() + 4);
     for (const auto& kv : arguments->named()) {
       named.insert(std::make_pair(kv.first, kv.second->accept(this)));
     }
@@ -668,13 +667,10 @@ namespace Sass {
       results.separator(separator);
       return results;
     }
-    else {
-      callStackFrame csf(logger456, keywordRest->pstate());
-      throw Exception::RuntimeException(traces,
-        "Variable keyword arguments must be a map (was $keywordRest).");
-    }
 
-    throw std::runtime_error("thrown before");
+    callStackFrame csf(logger456, keywordRest->pstate());
+    throw Exception::RuntimeException(traces,
+      "Variable keyword arguments must be a map (was $keywordRest).");
 
   }
 
@@ -1476,7 +1472,7 @@ namespace Sass {
     LOCAL_PTR(CssParentNode, current, css);
     root->isCompiled = true;
 
-    LOCAL_PTR(Root, chroot77, root);
+    LOCAL_PTR(Root, modctx, root);
 
     ImportStackFrame iframe(compiler, root->import);
 
@@ -1486,21 +1482,6 @@ namespace Sass {
     }
     return css.detach();
   }
-
-  /*
-
-  /// Whether this node has a visible sibling after it.
-  bool get hasFollowingSibling {
-    if (_parent == null) return false;
-    var siblings = _parent.children;
-    for (var i = _indexInParent + 1; i < siblings.size; i++) {
-      var sibling = siblings[i];
-      if (!_isInvisible(sibling)) return true;
-    }
-    return false;
-  }
-
-  */
 
   CssParentNode* Eval::hoistStyleRule(CssParentNode* node)
   {
@@ -1529,8 +1510,6 @@ namespace Sass {
       node->elements());
     return nullptr;
   }
-
-
 
   CssParentNode* Eval::_trimIncluded(CssParentVector& nodes)
   {
@@ -1790,24 +1769,12 @@ namespace Sass {
     return nullptr;
   }
 
-  /// Calls `value.toCss()` and wraps a [SassScriptException] to associate
-/// it with [nodeWithSpan]'s source span.
-///
-/// This takes an [AstNode] rather than a [FileSpan] so it can avoid calling
-/// [AstNode.span] if the span isn't required, since some nodes need to do
-/// real work to manufacture a source span.
-//  sass::string Eval::_serialize(Expression* value, bool quote)
-//  {
-//    // _addExceptionSpan(nodeWithSpan, () = > value.toCss(quote: quote));
-//    return value->to_css(logger456, false);
-//  }
 
-
-/// parentheses if necessary.
-///
-/// If [operator] is passed, it's the operator for the surrounding
-/// [SupportsOperation], and is used to determine whether parentheses are
-/// necessary if [condition] is also a [SupportsOperation].
+  /// Add parentheses if necessary.
+  ///
+  /// If [operator] is passed, it's the operator for the surrounding
+  /// [SupportsOperation], and is used to determine whether parentheses are
+  /// necessary if [condition] is also a [SupportsOperation].
   sass::string Eval::_parenthesize(SupportsCondition* condition) {
     SupportsNegation* negation = condition->isaSupportsNegation();
     SupportsOperation* operation = condition->isaSupportsOperation();

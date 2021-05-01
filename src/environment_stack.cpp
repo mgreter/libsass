@@ -540,7 +540,7 @@ namespace Sass {
   }
 
 
-  EnvRef EnvRefs::findMixIdx22(const EnvKey& name, const sass::string& ns) const
+  EnvRef EnvRefs::findMixIdx(const EnvKey& name, const sass::string& ns) const
   {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
@@ -565,7 +565,7 @@ namespace Sass {
     return nullidx;
   }
 
-  EnvRef EnvRefs::findFnIdx22(const EnvKey& name, const sass::string& ns) const
+  EnvRef EnvRefs::findFnIdx(const EnvKey& name, const sass::string& ns) const
   {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
@@ -604,7 +604,7 @@ namespace Sass {
   {
     if (stack.empty()) return nullidx;
     if (ns.empty()) return stack.back()->findFnIdx(name);
-    else return stack.back()->findFnIdx22(name, ns);
+    else return stack.back()->findFnIdx(name, ns);
   }
 
   // Find a function reference for [name] within the current scope stack.
@@ -613,7 +613,7 @@ namespace Sass {
   {
     if (stack.empty()) return nullidx;
     if (ns.empty()) return stack.back()->findMixIdx(name);
-    else return stack.back()->findMixIdx22(name, ns);
+    else return stack.back()->findMixIdx(name, ns);
   }
 
   void EnvRoot::findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& name) const

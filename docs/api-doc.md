@@ -26,14 +26,14 @@ First you will need to include the header file!
 This will automatically load all other headers too!
 
 ```C
-#include "sass/context.h"
+#include <sass.h>
 ```
 
 ## Basic C Example
 
 ```C
 #include <stdio.h>
-#include "sass/context.h"
+#include <sass.h>
 
 int main() {
   puts(libsass_version());
@@ -54,61 +54,59 @@ gcc -Wall version.c -lsass -o version && ./version
 
 ## Compiling your code
 
-The most important is your sass file (or string of sass code). With this, you
-will want to start a LibSass compiler. Here is some pseudocode describing the
-process. The compiler has two different modes: direct input as a string with
-`Sass_Data_Context` or LibSass will do file reading for you by using
-`Sass_File_Context`. See the code for a list of options available
-[Sass_Options](https://github.com/sass/libsass/blob/36feef0/include/sass/interface.h#L18)
+LibSass parsing starts with some entry point, which can either be a
+file or some code you provide directly. Further relative includes are
+resolved against CWD. In order to tell LibSass the entry point, there
+are two main ways, either defining the content directly or let LibSass
+load a file.
 
-The general rule is if the API takes `const char*` it will make a copy,
-but where the API is `char*` it will take over memory ownership, so make sure to pass
-in memory that is allocated via `sass_copy_c_string` or `sass_alloc_memory`.
+`struct SassImport* data = sass_make_content_import(text, "styles.scss");`
+`struct SassImport* data = sass_make_file_import("styles.scss");`
 
-**Building a file compiler**
+**Building a compiler**
 
-    context = sass_make_file_context("file.scss")
-    options = sass_file_context_get_options(context)
-    sass_option_set_precision(options, 1)
-    sass_option_set_source_comments(options, true)
+  sass_compiler_set_entry_point(compiler, entrypoint);
+  // everything you make you must delete
+  sass_delete_import(data); // passed away
 
-    sass_file_context_set_options(context, options)
+  // Execute all three phases
+  sass_compiler_parse(compiler);
+  sass_compiler_compile(compiler);
+  sass_compiler_render(compiler);
 
-    compiler = sass_make_file_compiler(sass_context)
-    sass_compiler_parse(compiler)
-    sass_compiler_execute(compiler)
+  // Print any warning to console
+  if (sass_compiler_get_warn_string(compiler)) {
+    sass_print_stderr(sass_compiler_get_warn_string(compiler));
+  }
 
-    output = sass_context_get_output_string(context)
-    // Retrieve errors during compilation
-    error_status = sass_context_get_error_status(context)
-    json_error = sass_context_get_error_json(context)
-    // Release memory dedicated to the C compiler
-    sass_delete_compiler(compiler)
+  // Print error message if we have an error
+  if (sass_compiler_get_status(compiler) != 0) {
+    const struct SassError* error = sass_compiler_get_error(compiler);
+    sass_print_stderr(sass_error_get_string(error));
+  }
 
-**Building a data compiler**
+  // Get result code after all compilation steps
+  int status = sass_compiler_get_status(compiler);
 
-    // LibSass takes over memory owenership, make sure to allocate
-    // a buffer via `sass_alloc_memory` or `sass_copy_c_string`.
-    buffer = sass_copy_c_string("div { a { color: blue; } }")
+  // Write to output if no errors occurred
+  if (status == 0) {
 
-    context = sass_make_data_context(buffer)
-    options = sass_data_context_get_options(context)
-    sass_option_set_precision(options, 1)
-    sass_option_set_source_comments(options, true)
+    // Paths where to write stuff to (might be `stream://stdout`)
+    const char* outfile = sass_compiler_get_output_path(compiler);
+    const char* mapfile = sass_compiler_get_srcmap_path(compiler);
+    // Get the parts to be added to the output file (or stdout)
+    const char* content = sass_compiler_get_output_string(compiler);
+    const char* footer = sass_compiler_get_footer_string(compiler);
+    const char* srcmap = sass_compiler_get_srcmap_string(compiler);
 
-    sass_data_context_set_options(context, options)
+    // Output all results
+    if (content) puts(content);
+    if (footer) puts(footer);
 
-    compiler = sass_make_data_compiler(context)
-    sass_compiler_parse(compiler)
-    sass_compiler_execute(compiler)
+  }
 
-    output = sass_context_get_output_string(context)
-    // div a { color: blue; }
-    // Retrieve errors during compilation
-    error_status = sass_context_get_error_status(context)
-    json_error = sass_context_get_error_json(context)
-    // Release memory dedicated to the C compiler
-    sass_delete_compiler(compiler)
+  // exit status
+  return status;
 
 ## Sass Context Internals
 

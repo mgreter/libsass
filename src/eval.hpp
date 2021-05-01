@@ -34,7 +34,7 @@ namespace Sass {
     BackTraces& traces;
 
     // Alias into context
-    Root*& chroot77;
+    Root*& modctx;
 
     // Alias into context
     WithConfig*& wconfig;

@@ -420,13 +420,13 @@ namespace Sass {
 	    {
         BuiltInMod& module(ctx.createModule("math"));
         module.addVariable(key_e, ctx.createBuiltInVariable(key_e,
-          SASS_MEMORY_NEW(Number, SourceSpan::tmp("[sass:math]"),
+          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
             2.71828182845904523536028747135266249775724709369995)));
         module.addVariable(key_pi, ctx.createBuiltInVariable(key_pi,
-          SASS_MEMORY_NEW(Number, SourceSpan::tmp("[sass:math]"),
+          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
             3.14159265358979323846264338327950288419716939937510)));
         module.addVariable(key_tau, ctx.createBuiltInVariable(key_tau,
-          SASS_MEMORY_NEW(Number, SourceSpan::tmp("[sass:math]"),
+          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
             3.14159265358979323846264338327950288419716939937510 * 2.0)));
 
         module.addFunction(key_ceil, ctx.registerBuiltInFunction(key_ceil, "$number", ceil));

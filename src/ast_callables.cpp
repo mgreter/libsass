@@ -24,7 +24,7 @@ namespace Sass {
     const EnvKey& envkey,
     ArgumentDeclaration* parameters,
     const SassFnSig& callback) :
-    Callable(SourceSpan::tmp("[BUILTIN]")),
+    Callable(SourceSpan::internal("[BUILTIN]")),
     envkey_(envkey),
     // Create a single entry in overloaded function
     function_(SassFnPair{ parameters, callback })
@@ -54,7 +54,7 @@ namespace Sass {
   BuiltInCallables::BuiltInCallables(
     const EnvKey& envkey,
     const SassFnPairs& overloads) :
-    Callable(SourceSpan::tmp("[BUILTINS]")),
+    Callable(SourceSpan::internal("[BUILTINS]")),
     envkey_(envkey),
     overloads_(overloads)
   {
@@ -121,7 +121,7 @@ namespace Sass {
     const EnvKey& fname,
     ArgumentDeclaration* parameters,
     SassFunctionLambda lambda) :
-    Callable(SourceSpan::tmp("[EXTERNAL]")),
+    Callable(SourceSpan::internal("[EXTERNAL]")),
     envkey_(fname),
     declaration_(parameters),
     lambda_(lambda)

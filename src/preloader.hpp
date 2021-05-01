@@ -29,7 +29,7 @@ namespace Sass {
     Compiler& compiler;
 
     // Alias into context
-    Root*& chroot77;
+    Root*& modctx;
 
     // Alias into context
     WithConfig*& wconfig;

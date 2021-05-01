@@ -16,10 +16,10 @@ namespace Sass {
     span(span)
   {}
 
-  SourceSpan SourceSpan::tmp(const char* label)
+  SourceSpan SourceSpan::internal(const char* label)
   {
     return SourceSpan(SASS_MEMORY_NEW(
-      SourceString, "sass://phony", label),
+      SourceString, "sass://internal", label),
     {},
     {}
     );
