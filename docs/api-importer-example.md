@@ -56,8 +56,8 @@ int main( int argc, const char* argv[] )
 Compile importer.c
 
 ```bash
-gcc -c importer.c -o importer.o
-gcc -o importer importer.o -lsass
+gcc -c importer.c -o importer.o -Iinclude
+g++ -o importer importer.o -lsass -Llib
 echo "@import 'foobar';" > importer.scss
 ./importer importer.scss
 ```

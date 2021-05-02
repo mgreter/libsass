@@ -16,10 +16,15 @@ int main(int argc, const char* argv[])
 
   // create the data context and get all related structs
   struct SassCompiler* compiler = sass_make_compiler();
+  // we've set the input name to "styles" here, which means ...
   struct SassImport* data = sass_make_content_import(text, "styles");
+  // ... we can't deduct the type automatically from the extension.
+  sass_import_set_syntax(data, SASS_IMPORT_SCSS);
+  // each compiler must have exactly one entry point
   sass_compiler_set_entry_point(compiler, data);
-  // everything you make you must delete
-  sass_delete_import(data); // passed away
+  // entry point now passed to compiler, so its reference count was increased
+  // in order to not leak memory we must release our own usage (usage after is UB)
+  sass_delete_import(data); // decrease ref-count
 
   // Execute all three phases
   sass_compiler_parse(compiler);
@@ -81,19 +86,15 @@ echo "foo { margin: 21px * 2; }" > foo.scss
 int main(int argc, const char* argv[])
 {
 
-  // LibSass will take control of data you pass in
-  // Therefore we need to make a copy of static data
-  char* text = sass_copy_c_string("a{b:c;}");
-  // Normally you'll load data into a buffer from i.e. the disk.
-  // Use `sass_alloc_memory` to get a buffer to pass to LibSass
-  // then fill it with data you load from disk or somewhere else.
-
   // create the data context and get all related structs
   struct SassCompiler* compiler = sass_make_compiler();
+  // set input name with extension so we can deduct type from it
   struct SassImport* data = sass_make_file_import("foo.scss");
+  // each compiler must have exactly one entry point
   sass_compiler_set_entry_point(compiler, data);
-  // everything you make you must delete
-  sass_delete_import(data); // passed away
+  // entry point now passed to compiler, so its reference count was increased
+  // in order to not leak memory we must release our own usage (usage after is UB)
+  sass_delete_import(data); // decrease ref-count
 
   // Execute all three phases
   sass_compiler_parse(compiler);

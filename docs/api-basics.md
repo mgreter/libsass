@@ -1,9 +1,10 @@
 ## API documentation basics
 
-LibSass as a C-API comes with multiple headers and a shared library.
-The complete API surface is covered by functions and by passing around
-anonymous structures. The implementor does not know any implementation
-detail about the pointers passed around.
+LibSass is C library, written in C++ with a C-API to link against.
+It can either be statically included are linked against a system
+wide installed shared library. The complete C-API surface is implemented
+via functions and by passing around anonymous structures. The implementor
+does not know any implementation detail about the objects passed around.
 
 ### C-API headers
 
@@ -32,7 +33,7 @@ details, we forward declare named structs (e.g. `SassCompiler`), but never
 provide any implementation for it. LibSass will simply cast a pointer from
 the c++ side to the anonymous struct and relies on the C-API to pass it
 back as expected to the corresponding functions. There the pointer will
-be statically casted back to the actual implementation. Since we provide
+be statically cast back to the actual implementation. Since we provide
 a unique anonymous struct for every internal type, this should be safe as
 compilers should catch the case when arguments mismatch on the C-API side.
 
@@ -72,13 +73,15 @@ LibSass itself does not have any official binary distribution. The main reason f
 this is because it is nearly impossible to do so reliably for each and every
 thinkable operating system. Since LibSass is written in c++ we e.g. depend on the
 compiler c++ runtime library. On windows this problem is a bit less problematic,
-and there is a semi-official installer for it. But on Linux this e.g. is also
+and there is a [semi-official installer][1] for it. But on Linux this e.g. is also
 depending on the used libc library. Since linux offers a choice here, a binary
 distribution compiled with glibc may not be compatible on a system that uses musl,
 or a compilation with latest glibc may not be compatible with older glibc versions.
 
-By now LibSass is readily available on a lot of linux systems by their
-internal packet managers, so please try to install it that way. Alternatively
-try to install a recent compiler (e.g. gcc or clang) and compile it from source,
-preferably via the autotools way, to ensure correct linkage with tools that link
-against system wide installed LibSass.
+By now LibSass is readily available on a lot of linux systems by their internal
+packet managers, so please try to install it that way. Alternatively try to install
+a recent compiler (e.g. gcc or clang) and compile it from source, preferably via the
+autotools way, to ensure correct linkage with tools that link against system wide
+installed LibSass (GNU coding style).
+
+[1]: http://libsass.ocbnet.ch/installer/

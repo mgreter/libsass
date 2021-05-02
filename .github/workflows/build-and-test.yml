@@ -32,17 +32,17 @@ jobs:
           - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-fsanitize=address'}
           - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11', cflags: '-fsanitize=address'}
           - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11', cflags: '-fsanitize=address'}
-          - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11'}
-          - {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11'}
-          - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11'}
-          - {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11'}
-          - {os: macOS-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11'}
-          - {os: macOS-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11'}
+          - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
+          - {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
+          - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
+          - {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
+          - {os: macOS-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
+          - {os: macOS-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
           - {os: macOS-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11'}
           - {os: macOS-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11'}
 
     env:
-      ASAN_OPTIONS: detect_odr_violation=0
+      ASAN_OPTIONS: ${{ matrix.config.asan }}
       AUTOTOOLS: ${{ matrix.config.autotools }}
       EXTRA_CFLAGS: ${{ matrix.config.cflags }}
       EXTRA_CXXFLAGS: ${{ matrix.config.cflags }}
@@ -166,6 +166,7 @@ jobs:
     - name: Compile libsass ${{ matrix.config.build }} build for ${{ matrix.config.platform }}
       run: msbuild /m:4 /p:"Configuration=${{ matrix.config.build }};Platform=${{ matrix.config.platform }}" sassc\win\sassc.sln
     - name: Execute spec test runner
+      if: matrix.config.build != 'Debug'
       run: ruby sass-spec/sass-spec.rb --probe-todo --impl libsass -c sassc/bin/sassc.exe -s sass-spec/spec
 
   windows-mingw:

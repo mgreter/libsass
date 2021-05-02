@@ -1,8 +1,8 @@
 ## Sass Compiler API
 
-Sass Compiler is the main object to facilitate the Sass compilation process.
-It keeps state between different stages of the process, which is split in
-three main stages: parsing, compiling and rendering.
+Sass Compiler is the main object for the Sass compilation process.
+It keeps the state between different stages of the process, which is
+split in three main stages: parsing, compiling and rendering.
 
 The regular life-time of a compiler will mostly look like this:
 - Create new compiler object
@@ -14,8 +14,8 @@ The regular life-time of a compiler will mostly look like this:
 - Process the results
 
 The split between parse, compile and render is done because there
-are cases where we might want to omit certain phases. One example
-would be the init phase for a watcher to get all includes first.
+are cases where we might want to omit certain phases. One
+example would be the init phase for a watcher to get all includes.
 
 ### Sass Compiler API
 

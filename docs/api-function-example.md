@@ -80,7 +80,7 @@ int main(int argc, const char* argv[])
 
 ```bash
 gcc -c main.c -o main.o
-gcc -o sample main.o -lsass
+g++ -o sample main.o -lsass
 echo "foo { margin: foo(); }" > foo.scss
 ./sample foo.scss => "foo { margin: 42px }"
 ```

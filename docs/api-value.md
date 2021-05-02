@@ -1,7 +1,7 @@
 ## LibSass C-API for sass values
 
-`SassValue` is the base type to exchange sass values between implementors
-and LibSass. Sass knows various different value types (including nested arrays
+`SassValue` is the base type to exchange sass values between implementors and
+LibSass. Sass knows various different value types (including nested arrays
 and hash-maps). If you implement a binding to another programming language, you
 have to find a way to [marshal][1] (convert) a `SassValue` between the target
 language and C. `SassValue` is currently only used by custom functions, but
@@ -16,7 +16,7 @@ nested `SassValue` objects. They have different implementations to iterate
 over the existing values. The `SassList` acts like any regular array, so you
 can get the size and access every item by offset. The `SassMap` has a specific
 iterator you need to allocate first in order to iterate over it via `next`.
-You also have to make sure to release the memory associated to the iterator.
+You also have to make sure to release the memory associated with the iterator.
 
 #### Iterating over `SassList`
 
@@ -43,7 +43,7 @@ sass_map_delete_iterator(it);
 Custom functions may fail for any reason and in order to communicate this state
 back to LibSass, any custom function can return a `SassError`, which is a special
 type of `SassValue`, solely existing for this purpose. If a custom function returns
-this special type, it will throw an error.
+this special type, it will throw an error further down.
 
 Note: `SassWarning` is currently handled in the same way, but warning should ultimately
 be a C-API function on its own, as we might want to emit multiple warnings, but still

@@ -119,6 +119,8 @@ struct Sass_File_context : Sass_Context;
 struct Sass_Data_context : Sass_Context;
 ```
 
+Needs rewrite for LibSass 4.0!
+
 This mirrors very well how `libsass` uses these structures.
 
 - `Sass_Options` holds everything you feed in before the compilation. It also hosts
@@ -131,6 +133,8 @@ relative links in source-maps. The `input_path` is shared with `Sass_File_Contex
 Structs can be down-casted to access `context` or `options`!
 
 ## Memory handling and life-cycles
+
+Needs rewrite for LibSass 4.0!
 
 We keep memory around for as long as the main [context](api-context.md) object
 is not destroyed (`sass_delete_context`). LibSass will create copies of most
