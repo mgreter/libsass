@@ -12,35 +12,39 @@
 
 namespace Sass {
 
-	// ParseState is SourceSpan
-	class SourceSpan : public SourceState
-	{
+  // ParseState is now SourceSpan
+  class SourceSpan : public SourceState
+  {
 
-	public:
+  public:
 
+    // Offset size
+    Offset span;
+
+    // Empty constructor
     SourceSpan() {}
 
+    // Regular value constructor
     SourceSpan(SourceDataObj source,
-							 const Offset& position = Offset(),
-							 const Offset& span = Offset());
+      const Offset& position = Offset(),
+      const Offset& span = Offset());
 
+    // Create SourceSpan for internal things
     static SourceSpan internal(const char* path);
 
-		// Offset size
-		Offset span;
+    // Create span between `lhs.start` and `rhs.end` (must be same source)
+    static SourceSpan delta(const SourceSpan& lhs, const SourceSpan& rhs);
 
-		// Create span between `lhs.start` and `rhs.end` (must be same source)
-		static SourceSpan delta(const SourceSpan& lhs, const SourceSpan& rhs);
-
-		static SourceSpan delta(AstNode* lhs, AstNode* rhs);
+    // Create span between two ast-node source-spans
+    static SourceSpan delta(AstNode* lhs, AstNode* rhs);
 
     bool operator==(const SourceSpan& rhs) const;
 
-	public: // down casts
+  public: // down casts
 
     CAPI_WRAPPER(SourceSpan, SassSrcSpan);
 
-	};
+  };
 
 } // namespace Sass
 

@@ -1,5 +1,3 @@
-bool udbg = false;
-
 #include "fn_meta.hpp"
 
 #include "eval.hpp"
@@ -44,8 +42,6 @@ bool udbg = false;
 #include "ast_statements.hpp"
 #include "ast_expressions.hpp"
 #include "parser_expression.hpp"
-
-#include "debugger.hpp"
 
 namespace Sass {
 
@@ -883,9 +879,6 @@ namespace Sass {
 
     if (pframe->framePtr != 0xFFFFFFFF) {
 
-      if (udbg) std::cerr << "Importing into parent frame '" << rule->url() << "' "
-        << compiler.hasWithConfig << "\n";
-
       cidxs->module = rule->root();
       pframe->forwards.insert(
         pframe->forwards.begin(),
@@ -933,9 +926,6 @@ namespace Sass {
     BackTrace trace(rule->pstate(), Strings::useRule);
     callStackFrame cframe(logger456, trace);
 
-    if (udbg) std::cerr << "Visit use rule '" << rule->url() << "' "
-      << rule->hasConfig << " -> " << compiler.hasWithConfig << "\n";
-
     if (Root* root = loadModRule(rule)) {
       compiler.modctx->upstream.push_back(root);
       if (!root->isCompiled) {
@@ -945,7 +935,6 @@ namespace Sass {
         LOCAL_PTR(WithConfig, wconfig, rule);
         compileModule(root);
         rule->finalize(compiler);
-        if (udbg) std::cerr << "Compiled use rule '" << rule->url() << "'\n";
         insertModule(root);
       }
       else if (inImport) {
@@ -969,9 +958,6 @@ namespace Sass {
     BackTrace trace(rule->pstate(), Strings::forwardRule, false);
     callStackFrame frame333(logger456, trace);
 
-    if (udbg) std::cerr << "Visit forward rule '" << rule->url() << "' "
-      << rule->hasConfig << " -> " << compiler.hasWithConfig << "\n";
-
     if (Root* root = loadModRule(rule)) {
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
@@ -980,7 +966,6 @@ namespace Sass {
         LOCAL_PTR(WithConfig, wconfig, rule);
         compileModule(root);
         rule->finalize(compiler);
-        if (udbg) std::cerr << "Compiled forward rule '" << rule->url() << "'\n";
         insertModule(root);
       }
       else if (compiler.hasWithConfig || rule->hasConfig) {
@@ -1001,77 +986,6 @@ namespace Sass {
 
     namespace Meta {
 
-
-      BUILT_IN_FN(loadCss)
-      {
-        String* url = arguments[0]->assertStringOrNull(compiler, Strings::url);
-        MapObj withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
-
-        bool hasWith = withMap && !withMap->empty();
-
-        if (udbg) std::cerr << "Visit load-css '" << url->value() << "' "
-          << hasWith << " -> " << compiler.hasWithConfig << "\n";
-
-        EnvKeyFlatMap<ValueObj> config;
-        sass::vector<WithConfigVar> withConfigs;
-
-        if (hasWith) {
-          for (auto& kv : withMap->elements()) {
-            String* name = kv.first->assertString(compiler, "with key");
-            EnvKey kname(name->value());
-            WithConfigVar kvar;
-            kvar.name = name->value();
-            kvar.value = kv.second;
-            kvar.isGuarded = false;
-            kvar.wasUsed = false;
-            kvar.pstate2 = name->pstate();
-            kvar.isNull = !kv.second || kv.second->isaNull();
-            withConfigs.push_back(kvar);
-            if (config.count(kname) == 1) {
-              throw Exception::RuntimeException(compiler,
-                "The variable $" + kname.norm() + " was configured twice.");
-            }
-            config[name->value()] = kv.second;
-          }
-        }
-
-
-        if (StringUtils::startsWith(url->value(), "sass:", 5)) {
-
-          if (hasWith) {
-            throw Exception::RuntimeException(compiler, "Built-in "
-              "module " + url->value() + " can't be configured.");
-          }
-
-          return SASS_MEMORY_NEW(Null, pstate);
-        }
-
-        WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
-
-        WithConfig*& pwconfig(compiler.wconfig);
-        LOCAL_PTR(WithConfig, pwconfig, &wconfig);
-
-        sass::string prev(pstate.getAbsPath());
-        if (Root* sheet = eval.loadModule(
-          prev, url->value(), false)) {
-          if (!sheet->isCompiled) {
-            ImportStackFrame iframe(compiler, sheet->import);
-            LocalOption<bool> scoped(compiler.hasWithConfig,
-              compiler.hasWithConfig || hasWith);
-            eval.compileModule(sheet);
-            wconfig.finalize(compiler);
-          }
-          else if (compiler.hasWithConfig || hasWith) {
-            throw Exception::ParserException(compiler,
-              sass::string(sheet->pstate().getImpPath())
-              + " was already loaded, so it "
-              "can't be configured using \"with\".");
-          }
-          eval.insertModule(sheet);
-        }
-
-        return SASS_MEMORY_NEW(Null, pstate);
-      }
 
     }
   }

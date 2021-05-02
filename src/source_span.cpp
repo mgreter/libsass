@@ -8,6 +8,7 @@
 
 namespace Sass {
 
+  // Regular value constructor
   SourceSpan::SourceSpan(
     SourceDataObj source,
     const Offset& position,
@@ -16,16 +17,15 @@ namespace Sass {
     span(span)
   {}
 
+  // Create SourceSpan for internal things
   SourceSpan SourceSpan::internal(const char* label)
   {
     return SourceSpan(SASS_MEMORY_NEW(
       SourceString, "sass://internal", label),
-    {},
-    {}
-    );
-
+      Offset{}, Offset{});
   }
 
+  // Create span between `lhs.start` and `rhs.end` (must be same source)
   SourceSpan SourceSpan::delta(const SourceSpan& lhs, const SourceSpan& rhs)
   {
     return SourceSpan(
@@ -34,6 +34,7 @@ namespace Sass {
         rhs.position + rhs.span));
   }
 
+  // Create span between two ast-node source-spans
   SourceSpan SourceSpan::delta(AstNode* lhs, AstNode* rhs)
   {
     return SourceSpan::delta(
