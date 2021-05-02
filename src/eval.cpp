@@ -28,14 +28,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Eval::Eval(Compiler& compiler, Logger& logger, bool plainCss) :
-    logger456(logger),
+    logger(logger),
     compiler(compiler),
     traces(logger),
     modctx(compiler.modctx),
     wconfig(compiler.wconfig),
     extender(
       Extender::NORMAL,
-      logger456),
+      logger),
     plainCss(plainCss),
     inMixin(false),
     inFunction(false),
@@ -93,7 +93,7 @@ namespace Sass {
       if (it != named.end()) {
         // Raise error since it's ambiguous
         throw Exception::ArgumentGivenTwice(
-          logger456, name);
+          logger, name);
       }
       // Return the positional value
       return positional[idx];
@@ -104,7 +104,7 @@ namespace Sass {
     }
     // Raise error since nothing was found
     throw Exception::MissingArgument(
-      logger456, name);
+      logger, name);
   }
 
   // Fetch evaluated positional argument (optionally by name)
@@ -122,7 +122,7 @@ namespace Sass {
       if (it != results.named().end()) {
         // Raise error since it's ambiguous
         throw Exception::ArgumentGivenTwice(
-          logger456, arg->name());
+          logger, arg->name());
       }
       // Return the positional value
       return results.positional()[idx];
@@ -145,7 +145,7 @@ namespace Sass {
     }
     // Raise error since nothing was found
     throw Exception::MissingArgument(
-      logger456, arg->name());
+      logger, arg->name());
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -245,7 +245,7 @@ namespace Sass {
 
       // Check that all positional arguments are consumed
       if (positional.size() > parameters.size()) {
-        throw Exception::TooManyArguments(logger456,
+        throw Exception::TooManyArguments(logger,
           positional.size(), prototype->maxArgs());
       }
 
@@ -257,7 +257,7 @@ namespace Sass {
       // Check that all named arguments are consumed
       if (results.named().empty() == false) {
         throw Exception::TooManyArguments(
-          logger456, results.named());
+          logger, results.named());
       }
 
     }
@@ -274,7 +274,7 @@ namespace Sass {
     if (restargs->hasAllKeywordsConsumed()) return result.detach();
 
     // Throw error since not all named arguments were consumed
-    throw Exception::TooManyArguments(logger456, restargs->keywords());
+    throw Exception::TooManyArguments(logger, restargs->keywords());
 
   }
 
@@ -355,14 +355,14 @@ namespace Sass {
 
       // Check that all positional arguments are consumed
       if (positional.size() > parameters.size()) {
-        throw Exception::TooManyArguments(logger456,
+        throw Exception::TooManyArguments(logger,
           positional.size(), parameters.size());
       }
 
       // Check that all named arguments are consumed
       if (results.named().empty() == false) {
         throw Exception::TooManyArguments(
-          logger456, results.named());
+          logger, results.named());
       }
 
     }
@@ -382,7 +382,7 @@ namespace Sass {
     if (restargs->hasAllKeywordsConsumed()) return result.detach();
 
     // Throw error since not all named arguments were consumed
-    throw Exception::TooManyArguments(logger456, restargs->keywords());
+    throw Exception::TooManyArguments(logger, restargs->keywords());
 
   }
   // EO _runUserDefinedCallable
@@ -498,7 +498,7 @@ namespace Sass {
       // warn->pstate(pstate);
       sass_delete_value(c_args);
       sass_delete_value(c_val);
-      logger456.addWarning(message);
+      logger.addWarning(message);
     }
     sass_delete_value(c_val);
     sass_delete_value(c_args);
@@ -510,7 +510,7 @@ namespace Sass {
     if (restargs->hasAllKeywordsConsumed()) return value.detach();
 
     // Throw error since not all named arguments were consumed
-    throw Exception::TooManyArguments(logger456, restargs->keywords());
+    throw Exception::TooManyArguments(logger, restargs->keywords());
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -526,11 +526,11 @@ namespace Sass {
   {
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
-    callStackFrame frame(logger456, trace);
+    callStackFrame frame(logger, trace);
     ValueObj rv = _runBuiltInCallable(
       arguments, callable, pstate);
     if (rv.isNull()) {
-      throw Exception::RuntimeException(logger456,
+      throw Exception::RuntimeException(logger,
         "Function finished without @return.");
     }
     rv = rv->withoutSlash();
@@ -547,11 +547,11 @@ namespace Sass {
   {
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
-    callStackFrame frame(logger456, trace);
+    callStackFrame frame(logger, trace);
     ValueObj rv = _runBuiltInCallables(arguments,
       callable, pstate);
     if (rv.isNull()) {
-      throw Exception::RuntimeException(logger456,
+      throw Exception::RuntimeException(logger,
         "Function finished without @return.");
     }
     rv = rv->withoutSlash();
@@ -570,11 +570,11 @@ namespace Sass {
     LOCAL_FLAG(inMixin, false);
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
-    callStackFrame frame(logger456, trace);
+    callStackFrame frame(logger, trace);
     ValueObj rv = _runUserDefinedCallable(
       arguments, callable, pstate);
     if (rv.isNull()) {
-      throw Exception::RuntimeException(logger456,
+      throw Exception::RuntimeException(logger,
         "Function finished without @return.");
     }
     rv = rv->withoutSlash();
@@ -591,11 +591,11 @@ namespace Sass {
   {
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
-    callStackFrame frame(logger456, trace);
+    callStackFrame frame(logger, trace);
     ValueObj rv = _runExternalCallable(
       arguments, callable, pstate);
     if (rv.isNull()) {
-      throw Exception::RuntimeException(logger456,
+      throw Exception::RuntimeException(logger,
         "Function finished without @return.");
     }
     rv = rv->withoutSlash();
@@ -668,7 +668,7 @@ namespace Sass {
       return results;
     }
 
-    callStackFrame csf(logger456, keywordRest->pstate());
+    callStackFrame csf(logger, keywordRest->pstate());
     throw Exception::RuntimeException(traces,
       "Variable keyword arguments must be a map (was $keywordRest).");
 
@@ -681,7 +681,7 @@ namespace Sass {
   sass::string Eval::toCss(Expression* expression, bool quote)
   {
     ValueObj value = expression->accept(this);
-    return value->toCss(logger456, quote);
+    return value->toCss(logger, quote);
   }
 
   /// Evaluates [interpolation] into a serialized string.
@@ -732,7 +732,7 @@ namespace Sass {
               msg << "keys (for example, \"" << disp << "\"). If you really want to ";
               msg << "use the color value, append it to an empty string first to avoid ";
               msg << "this warning (for example, '\"\" + " << disp << "').";
-              logger456.addWarning(msg.str(), itpl->pstate());
+              logger.addWarning(msg.str(), itpl->pstate());
             }
           }
         }
@@ -835,7 +835,7 @@ namespace Sass {
       return;
     }
 
-    throw Exception::RuntimeException(logger456,
+    throw Exception::RuntimeException(logger,
       "Variable keyword arguments must be a map (was $keywordRest).");
 
   }
@@ -932,7 +932,7 @@ namespace Sass {
           strings.emplace_back(lit->value());
         }
         else if (!result->isNull()) {
-          strings.emplace_back(result->toCss(logger456, false));
+          strings.emplace_back(result->toCss(logger, false));
         }
       }
     }
@@ -968,9 +968,9 @@ namespace Sass {
     }
 
     if (callable == nullptr) {
-      callStackFrame csf(logger456, node->pstate());
+      callStackFrame csf(logger, node->pstate());
       throw Exception::RuntimeException(
-        logger456, "Undefined mixin.");
+        logger, "Undefined mixin.");
     }
 
     // node->cached(callable);
@@ -989,15 +989,15 @@ namespace Sass {
         MixinRule* rule = mixin->declaration()->isaMixinRule();
         if (!rule || !rule->hasContent()) {
           SourceSpan span(node->content()->pstate());
-          callStackFrame frame(logger456, span);
-          throw Exception::RuntimeException(logger456,
+          callStackFrame frame(logger, span);
+          throw Exception::RuntimeException(logger,
             "Mixin doesn't accept a content block.");
         }
       }
 
       LOCAL_FLAG(inMixin, true);
 
-      callStackFrame frame(logger456,
+      callStackFrame frame(logger,
         BackTrace(node->pstate(), mixin->envkey().orig(), true));
 
       LOCAL_PTR(UserDefinedCallable, content88, cmixin);
@@ -1057,7 +1057,7 @@ namespace Sass {
     case SassOperator::IESEQ:
       right = rhs->accept(this);
       return left->singleEquals(
-        right, logger456, node->pstate());
+        right, logger, node->pstate());
     case SassOperator::OR:
       if (left->isTruthy()) {
         return left.detach();
@@ -1079,44 +1079,44 @@ namespace Sass {
     case SassOperator::GT:
       right = rhs->accept(this);
       return left->greaterThan(right,
-        logger456, node->pstate())
+        logger, node->pstate())
         ? bool_true : bool_false;
     case SassOperator::GTE:
       right = rhs->accept(this);
       return left->greaterThanOrEquals(right,
-        logger456, node->pstate())
+        logger, node->pstate())
         ? bool_true : bool_false;
     case SassOperator::LT:
       right = rhs->accept(this);
       return left->lessThan(right,
-        logger456, node->pstate())
+        logger, node->pstate())
         ? bool_true : bool_false;
     case SassOperator::LTE:
       right = rhs->accept(this);
       return left->lessThanOrEquals(right,
-        logger456, node->pstate())
+        logger, node->pstate())
         ? bool_true : bool_false;
     case SassOperator::ADD:
       right = rhs->accept(this);
       return left->plus(right,
-        logger456, node->pstate());
+        logger, node->pstate());
     case SassOperator::SUB:
       right = rhs->accept(this);
       return left->minus(right,
-        logger456, node->pstate());
+        logger, node->pstate());
     case SassOperator::MUL:
       right = rhs->accept(this);
       return left->times(right,
-        logger456, node->pstate());
+        logger, node->pstate());
     case SassOperator::DIV:
       right = rhs->accept(this);
       return doDivision(left, right,
         node->allowsSlash(),
-        logger456, node->pstate());
+        logger, node->pstate());
     case SassOperator::MOD:
       right = rhs->accept(this);
       return left->modulo(right,
-        logger456, node->pstate());
+        logger, node->pstate());
     }
     // Satisfy compiler
     return nullptr;
@@ -1127,13 +1127,13 @@ namespace Sass {
     ValueObj operand = node->operand()->accept(this);
     switch (node->optype()) {
     case UnaryOpType::PLUS:
-      return operand->unaryPlus(logger456, node->pstate());
+      return operand->unaryPlus(logger, node->pstate());
     case UnaryOpType::MINUS:
-      return operand->unaryMinus(logger456, node->pstate());
+      return operand->unaryMinus(logger, node->pstate());
     case UnaryOpType::NOT:
-      return operand->unaryNot(logger456, node->pstate());
+      return operand->unaryNot(logger, node->pstate());
     case UnaryOpType::SLASH:
-      return operand->unaryDivide(logger456, node->pstate());
+      return operand->unaryDivide(logger, node->pstate());
     }
     // Satisfy compiler
     return nullptr;
@@ -1143,7 +1143,7 @@ namespace Sass {
   Value* Eval::visitIfExpression(IfExpression* node)
   {
     ArgumentInvocation* arguments = node->arguments();
-    callStackFrame frame(logger456, node->pstate());
+    callStackFrame frame(logger, node->pstate());
     // We need to make copies here to preserve originals
     // We could optimize this further, but impact is slim
     ExpressionFlatMap named(arguments->named());
@@ -1156,10 +1156,10 @@ namespace Sass {
     ExpressionObj ifFalse = getArgument(positional, named, 2, Keys::ifFalse);
     if (positional.size() > 3) {
       throw Exception::TooManyArguments(
-        logger456, positional.size(), 3);
+        logger, positional.size(), 3);
     }
     if (positional.size() + named.size() > 3) {
-      throw Exception::TooManyArguments(logger456, named,
+      throw Exception::TooManyArguments(logger, named,
         { Keys::condition, Keys::ifTrue, Keys::ifFalse });
     }
 
@@ -1192,13 +1192,13 @@ namespace Sass {
     if (!args->named().empty()) {
       callStackFrame frame(traces,
         args->pstate());
-      throw Exception::RuntimeException(logger456,
+      throw Exception::RuntimeException(logger,
         "Plain CSS functions don't support keyword arguments.");
     }
     if (args->kwdRest() != nullptr) {
       callStackFrame frame(traces,
         args->kwdRest()->pstate());
-      throw Exception::RuntimeException(logger456,
+      throw Exception::RuntimeException(logger,
         "Plain CSS functions don't support keyword arguments.");
     }
     bool addComma = false;
@@ -1302,7 +1302,7 @@ namespace Sass {
       callExternalMessageOverloadFunction(fn, message);
     }
     else {
-      logger456.addDebug(message->
+      logger.addDebug(message->
         inspect(compiler.precision, false),
         node->pstate());
     }
@@ -1318,9 +1318,9 @@ namespace Sass {
       callExternalMessageOverloadFunction(fn, message);
     }
     else {
-      sass::string result(message->toCss(logger456, false));
-      callStackFrame frame(logger456, BackTrace(node->pstate()));
-      logger456.addWarning(result);
+      sass::string result(message->toCss(logger, false));
+      callStackFrame frame(logger, BackTrace(node->pstate()));
+      logger.addWarning(result);
     }
     return nullptr;
   }
@@ -1384,7 +1384,7 @@ namespace Sass {
     UserDefinedCallable* content = content88;
     LOCAL_FLAG(inMixin, false);
 
-    callStackFrame frame(logger456,
+    callStackFrame frame(logger,
       BackTrace(c->pstate(), Strings::contentRule));
 
     LOCAL_PTR(UserDefinedCallable, content88, content88->content());
@@ -1851,8 +1851,8 @@ namespace Sass {
         values.insert(std::make_pair(str->value(), kv.second));
       }
       else {
-        callStackFrame frame(logger456, pstate);
-        throw Exception::RuntimeException(logger456,
+        callStackFrame frame(logger, pstate);
+        throw Exception::RuntimeException(logger,
           "Variable keyword argument map must have string keys.\n" +
           kv.first->inspect() + " is not a string in " +
           map->inspect() + ".");
@@ -1870,8 +1870,8 @@ namespace Sass {
           ValueExpression, map->pstate(), kv.second)));
       }
       else {
-        callStackFrame frame(logger456, pstate);
-        throw Exception::RuntimeException(logger456,
+        callStackFrame frame(logger, pstate);
+        throw Exception::RuntimeException(logger,
           "Variable keyword argument map must have string keys.\n" +
           kv.first->inspect() + " is not a string in " +
           map->inspect() + ".");
@@ -1900,7 +1900,7 @@ namespace Sass {
   {
 
     if (!isInStyleRule() && !inUnknownAtRule && !inKeyframes) {
-      callStackFrame csf(logger456, node->pstate());
+      callStackFrame csf(logger, node->pstate());
       throw Exception::RuntimeException(traces,
         "Declarations may only be used within style rules.");
     }
@@ -1928,8 +1928,8 @@ namespace Sass {
         node->pstate(), name, cssValue, is_custom_property));
     }
     else if (is_custom_property) {
-      callStackFrame frame(logger456, node->value()->pstate());
-      throw Exception::RuntimeException(logger456,
+      callStackFrame frame(logger, node->value()->pstate());
+      throw Exception::RuntimeException(logger,
         "Custom property values may not be empty.");
     }
 
@@ -1987,18 +1987,18 @@ namespace Sass {
     EnvScope scoped(compiler.varRoot, f->idxs);
     ValueObj low = f->lower_bound()->accept(this);
     ValueObj high = f->upper_bound()->accept(this);
-    NumberObj sass_start = low->assertNumber(logger456, "");
-    NumberObj sass_end = high->assertNumber(logger456, "");
+    NumberObj sass_start = low->assertNumber(logger, "");
+    NumberObj sass_end = high->assertNumber(logger, "");
     // Support compatible unit types (e.g. cm to mm)
-    sass_end = sass_end->coerce(logger456, sass_start);
+    sass_end = sass_end->coerce(logger, sass_start);
     // Can only use integer ranges
-    sass_start->assertInt(logger456);
-    sass_end->assertInt(logger456);
+    sass_start->assertInt(logger);
+    sass_end->assertInt(logger);
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
-      callStackFrame csf(logger456, f->pstate());
+      callStackFrame csf(logger, f->pstate());
       throw Exception::UnitMismatch(
-        logger456, sass_start, sass_end);
+        logger, sass_start, sass_end);
     }
     double start = sass_start->value();
     double end = sass_end->value();
@@ -2029,7 +2029,7 @@ namespace Sass {
   {
 
     if (!isInStyleRule() /* || !declarationName.empty() */) {
-      callStackFrame csf(logger456, e->pstate());
+      callStackFrame csf(logger, e->pstate());
       throw Exception::RuntimeException(traces,
         "@extend may only be used within style rules.");
     }
@@ -2042,7 +2042,7 @@ namespace Sass {
       for (const auto& complex : slist->elements()) {
 
         if (complex->size() != 1) {
-          callStackFrame csf(logger456, complex->pstate());
+          callStackFrame csf(logger, complex->pstate());
           throw Exception::RuntimeException(traces,
             "complex selectors may not be extended.");
         }
@@ -2060,10 +2060,10 @@ namespace Sass {
             }
             sels << "` instead.\nSee http://bit.ly/ExtendCompound for details.";
             #if SassRestrictCompoundExtending
-            callStackFrame csf(logger456, compound->pstate());
+            callStackFrame csf(logger, compound->pstate());
             throw Exception::RuntimeException(traces, sels.str());
             #else
-            logger456.addDeprecation(sels.str(), compound->pstate());
+            logger.addDeprecation(sels.str(), compound->pstate());
             #endif
 
             // Make this an error once deprecation is over
@@ -2080,7 +2080,7 @@ namespace Sass {
 
         }
         else {
-          callStackFrame csf(logger456, complex->pstate());
+          callStackFrame csf(logger, complex->pstate());
           throw Exception::RuntimeException(traces,
             "complex selectors may not be extended.");
         }

@@ -29,7 +29,7 @@ namespace Sass {
     void exposeImpRule(IncludeImport* rule);
 
     // Some references
-    Logger& logger456;
+    Logger& logger;
     Compiler& compiler;
     BackTraces& traces;
 

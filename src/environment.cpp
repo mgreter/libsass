@@ -130,14 +130,14 @@ namespace Sass {
 
         // Check if we are at the global scope
         if (compiler.varRoot.isGlobal()) {
-          logger456.addDeprecation(
+          logger.addDeprecation(
             "As of LibSass 4.1, !global assignments won't be able to declare new"
             " variables. Since this assignment is at the root of the stylesheet,"
             " the !global flag is unnecessary and can safely be removed.",
             a->pstate());
         }
         else {
-          logger456.addDeprecation(
+          logger.addDeprecation(
             "As of LibSass 4.1, !global assignments won't be able to declare new variables."
             " Consider adding `$" + a->variable().orig() + ": null` at the root of the stylesheet.",
             a->pstate());
@@ -906,7 +906,7 @@ namespace Sass {
   void Eval::acceptIncludeImport(IncludeImport* rule)
   {
     BackTrace trace(rule->pstate(), Strings::importRule);
-    callStackFrame cframe(logger456, trace);
+    callStackFrame cframe(logger, trace);
     if (Root* root = loadModRule(rule)) {
       ImportStackFrame iframe(compiler, root->import);
       EnvScope scoped(compiler.varRoot, root->idxs);
@@ -924,7 +924,7 @@ namespace Sass {
   {
 
     BackTrace trace(rule->pstate(), Strings::useRule);
-    callStackFrame cframe(logger456, trace);
+    callStackFrame cframe(logger, trace);
 
     if (Root* root = loadModRule(rule)) {
       compiler.modctx->upstream.push_back(root);
@@ -956,7 +956,7 @@ namespace Sass {
   {
 
     BackTrace trace(rule->pstate(), Strings::forwardRule, false);
-    callStackFrame frame333(logger456, trace);
+    callStackFrame frame333(logger, trace);
 
     if (Root* root = loadModRule(rule)) {
       if (!root->isCompiled) {
