@@ -97,6 +97,9 @@ extern "C" {
   // This is hard-coded with the library on compilation!
   ADDAPI const char* ADDCALL libsass_language_version(void);
 
+  // Return implemented sass language version
+  ADDAPI const char* ADDCALL sass2scss_version(void);
+
 #ifdef __cplusplus
 } // __cplusplus defined.
 #endif
