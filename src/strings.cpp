@@ -6,7 +6,6 @@
 namespace Sass
 {
 
-
   const sass::string empty("");
 
   // For list functions

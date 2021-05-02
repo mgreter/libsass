@@ -45,11 +45,13 @@ namespace Sass {
 
   public:
 
+    // Value move constructor
     SourceWithPath(
       sass::string&& imp_path,
       sass::string&& abs_path,
       size_t idx = sass::string::npos);
 
+    // Value copy constructor
     SourceWithPath(
       const sass::string& imp_path,
       const sass::string& abs_path,
@@ -115,6 +117,9 @@ namespace Sass {
 
   public:
 
+    // Value copy/move constructor
+    // Copied: imp_path and abs_path
+    // Moved: content and srcmaps data
     SourceFile(
       const char* imp_path, // copy
       const char* abs_path, // copy
@@ -154,13 +159,13 @@ namespace Sass {
 
   public:
 
-    // For built-ins
+    // Value move constructor without srcmaps
+    // ToDo: should we try to parse srcmaps?
     SourceString(
       const char* path,
       sass::string&& data);
 
-    // This is for interpolations
-    // Take details from its parent
+    // Value move constructor with srcmaps
     SourceString(
       const char* imp_path,
       const char* abs_path,

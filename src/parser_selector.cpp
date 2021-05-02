@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+/* Implementations are mostly a direct code-port from dart-sass.             */
+/*****************************************************************************/
 #include "parser_selector.hpp"
 
 #include "charcode.hpp"
@@ -25,6 +27,7 @@ namespace Sass {
     }
     return selector.detach();
   }
+  // EO parseSelectorList
 
   // Parse content into compound selector
   // Throws if not everything is consumed
@@ -37,6 +40,7 @@ namespace Sass {
     }
     return compound.detach();
   }
+  // EO parseCompoundSelector
 
   // Parse content into simple selector
   // Throws if not everything is consumed
@@ -49,6 +53,7 @@ namespace Sass {
     }
     return simple.detach();
   }
+  // EO parseSimpleSelector
 
   // Consumes a selector list.
   SelectorList* SelectorParser::readSelectorList()
@@ -74,6 +79,7 @@ namespace Sass {
     return SASS_MEMORY_NEW(SelectorList,
       scanner.relevantSpanFrom(start), std::move(items));
   }
+  // EO readSelectorList
 
   // Consumes a complex selector.
   ComplexSelector* SelectorParser::readComplexSelector(bool lineBreak)
@@ -288,6 +294,7 @@ namespace Sass {
   }
   // EO readAttributeSelector
 
+  // Consumes an attribute name.
   struct QualifiedName SelectorParser::readAttributeName()
   {
 

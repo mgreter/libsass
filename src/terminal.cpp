@@ -29,6 +29,7 @@ namespace Terminal {
     return 80;
 #endif
   }
+  // EO getColumns
 
   // Check if we are actually printing to the console
   // In all other cases we want monochrome ASCII output
@@ -47,6 +48,7 @@ namespace Terminal {
     return false;
 #endif
   }
+  // EO isConsoleAttached
 
   // Check that we print to a terminal with unicode support
   bool hasUnicodeSupport(bool error)
@@ -59,6 +61,7 @@ namespace Terminal {
     return false;
 #endif
   }
+  // EO hasUnicodeSupport
 
   // Check that we print to a terminal with color support
   bool hasColorSupport(bool error)
@@ -69,6 +72,7 @@ namespace Terminal {
     return false;
 #endif
   }
+  // EO hasColorSupport
 
   // This function is able to print a line with colors
   // It translates the ANSI terminal codes to windows

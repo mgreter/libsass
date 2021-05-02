@@ -21,6 +21,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Base class constructor
   SourceData::SourceData()
     : RefCounted()
   {}
@@ -28,6 +29,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Value move constructor
   SourceWithPath::SourceWithPath(
     sass::string&& imp_path,
     sass::string&& abs_path,
@@ -40,6 +42,7 @@ namespace Sass {
     lfs()
   {}
 
+  // Value copy constructor
   SourceWithPath::SourceWithPath(
     const sass::string& imp_path,
     const sass::string& abs_path,
@@ -52,6 +55,8 @@ namespace Sass {
     lfs()
   {}
 
+  // Returns the number of lines. On first call
+  // it will calculate the linefeed lookup table.
   // Standard implementation for raw char API
   size_t SourceWithPath::countLines()
   {
@@ -71,6 +76,9 @@ namespace Sass {
     return lfs.size() - 1;
   }
 
+  // Returns the requested line. Will take interpolations into
+  // account to show more accurate debug messages. Calling this
+  // can be rather expensive, so only use it for debugging.
   // Standard implementation for raw char API
   sass::string SourceWithPath::getLine(size_t line)
   {
@@ -91,6 +99,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Value copy/move constructor
+  // Copied: imp_path and abs_path
+  // Moved: content and srcmaps data
   SourceFile::SourceFile(
     const char* imp_path,
     const char* abs_path,
@@ -122,6 +133,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Value move constructor without srcmaps
+  // ToDo: should we try to parse srcmaps?
   SourceString::SourceString(
     const char* abs_path,
     sass::string&& content) :
@@ -135,6 +148,7 @@ namespace Sass {
     len_content = _content.length();
   }
 
+  // Value move constructor with srcmaps
   SourceString::SourceString(
     const char* imp_path,
     const char* abs_path,
@@ -156,6 +170,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Create a synthetic interpolated source. The `data` is the
+  // evaluated interpolation, while `around` is the original source
+  // where the actual interpolation was given at `pstate` position.
   SourceItpl::SourceItpl(SourceSpan pstate,
     sass::string&& data) :
     SourceString(
@@ -167,6 +184,10 @@ namespace Sass {
   {
   }
 
+  // Returns adjusted source span with interpolation in mind.
+  // The input `pstate` is relative to the interpolation, will
+  // return a source span with absolute position in regard of
+  // the original document with the interpolation inserted.
   SourceSpan SourceItpl::adjustSourceSpan(SourceSpan& pstate) const
   {
     pstate.position =
@@ -175,6 +196,7 @@ namespace Sass {
     return pstate;
   }
 
+  // Account additional lines if needed.
   size_t SourceItpl::countLines()
   {
     return pstate.getSource()->countLines()
@@ -184,6 +206,8 @@ namespace Sass {
       + SourceString::countLines();
   }
 
+  // Returns source with this interpolation inserted.
+  // Call is quite expensive, so only use for reporting
   sass::string SourceItpl::getLine(size_t line)
   {
     SourceData* source(pstate.getSource());
@@ -268,16 +292,18 @@ namespace Sass {
     }
     return sass::string();
   }
+  // EO getLine
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-
-  // Returns adjusted source span regarding interpolation.
-
+  // Returns adjusted source span regarding interpolation (nothing to do).
   SourceSpan SourceData::adjustSourceSpan(SourceSpan& pstate) const {
     return pstate;
   }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }
 

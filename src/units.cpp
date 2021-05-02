@@ -312,6 +312,7 @@ namespace Sass {
     // return for conversion
     return factor;
   }
+  // EO normalize
 
   // Cancel out all compatible unit classes
   // E.g. `1000ms/s` will be reduced to `1`
@@ -369,6 +370,7 @@ namespace Sass {
     return factor;
 
   }
+  // EO reduce
 
   // Reset unit without conversion factor
   void Units::unit(const sass::string& u)
@@ -399,6 +401,7 @@ namespace Sass {
       }
     }
   }
+  // EO unit
 
   // Convert units to string
   const sass::string& Units::unit() const
@@ -433,6 +436,7 @@ namespace Sass {
     }
     return stringified;
   }
+  // EO unit
 
   // Returns true if we only have given numerator
   bool Units::isOnlyOfUnit(sass::string unit) const
@@ -441,6 +445,7 @@ namespace Sass {
       denominators.empty() &&
       numerators[0] == unit;
   }
+  // EO isOnlyOfUnit
 
   // Returns true if empty
   bool Units::isUnitless() const
@@ -448,6 +453,7 @@ namespace Sass {
     return numerators.empty() &&
            denominators.empty();
   }
+  // EO isUnitless
 
   // Returns true if valid for css
   bool Units::isValidCssUnit() const
@@ -455,6 +461,7 @@ namespace Sass {
     return numerators.size() <= 1 &&
            denominators.size() == 0;
   }
+  // EO isValidCssUnit
 
   // Return factor to convert into passed units
   double Units::getUnitConversionFactor(const Units& r) const
@@ -566,6 +573,7 @@ namespace Sass {
 
     return factor;
   }
+  // EO getUnitConversionFactor
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

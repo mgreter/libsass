@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+/* Implementations are mostly a direct code-port from dart-sass.             */
+/*****************************************************************************/
 #include "parser_css.hpp"
 
 #include "character.hpp"

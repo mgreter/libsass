@@ -13,6 +13,7 @@
 namespace Sass {
   namespace StringUtils {
 
+    // Standard string utility functions (names are self-explanatory)
     bool endsWith(const sass::string& str, const sass::string& suffix);
     bool startsWith(const sass::string& str, const sass::string& prefix);
     bool equalsIgnoreCase(const sass::string& a, const sass::string& b);

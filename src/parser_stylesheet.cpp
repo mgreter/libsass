@@ -1,3 +1,8 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+/* Implementations are mostly a direct code-port from dart-sass.             */
+/*****************************************************************************/
 #include "parser_stylesheet.hpp"
 
 #include <cstring>
@@ -13,8 +18,6 @@
 #include "ast_statements.hpp"
 #include "ast_expressions.hpp"
 #include "parser_expression.hpp"
-
-#include "debugger.hpp"
 
 namespace Sass {
 
@@ -38,7 +41,7 @@ namespace Sass {
     }
     return callable.detach();
   }
-
+  // EO parseExternalCallable
 
   // Parse stylesheet root block
   Root* StylesheetParser::parseRoot()
@@ -51,16 +54,18 @@ namespace Sass {
     // Create initial states
     Offset start(scanner.offset);
 
+    // Create new root object and setup all states
     RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
+    // Get pointer to variables of current context
     root->idxs = compiler.varRoot.stack.back();
+    // Assign new module to the current context
     compiler.varRoot.stack.back()->module = root;
 
+    // Set the current module context
     LOCAL_PTR(Root, modctx, root);
 
-    // The parsed children
+    // Get reference to (not yet) parsed children
     StatementVector& children(root->elements());
-
-    // std::cerr << "Parsing " << scanner.sourceUrl << "\n";
 
     // Check seems a bit esoteric but works
     if (compiler.included_sources.size() == 1) {
@@ -69,7 +74,7 @@ namespace Sass {
         scanner.relevantSpanFrom(start));
     }
 
-    // Parse nested root statements
+    // Parse nested root statements now
     StatementVector parsed(readStatements(
       &StylesheetParser::readRootStatement));
     
@@ -78,13 +83,13 @@ namespace Sass {
       std::make_move_iterator(parsed.begin()),
       std::make_move_iterator(parsed.end()));
 
-    // make sure everything is parsed
+    // Ensure everything is parsed
     scanner.expectDone();
 
-    // Update the parser state at the end
+    // Update parser state after we are done
     root->pstate(scanner.relevantSpanFrom(start));
 
-    // Return the new root object
+    // Return root object
     return root.detach();
   }
   // EO parseRoot
@@ -130,6 +135,8 @@ namespace Sass {
   }
   // EO readStatement
 
+  // Consumes an `@import` rule.
+  // [start] should point before the `@`.
   ImportRule* StylesheetParser::readImportRule(Offset start)
   {
     ImportRuleObj rule = SASS_MEMORY_NEW(
@@ -144,8 +151,10 @@ namespace Sass {
     expectStatementSeparator("@import rule");
     return rule.detach();
   }
+  // EO readImportRule
 
-
+  // Consumes an argument to an `@import` rule.
+  // If anything is found it will be added to [rule].
   void StylesheetParser::scanImportArgument(ImportRule* rule)
   {
     const char* startpos = scanner.position;
@@ -195,6 +204,7 @@ namespace Sass {
     }
 
   }
+  // EO scanImportArgument
 
 
   // Tries to parse a name-spaced [VariableDeclaration], and returns the value
@@ -239,7 +249,6 @@ namespace Sass {
       return true;
     }
 
-
     return false;
   }
 
@@ -258,6 +267,7 @@ namespace Sass {
     return identifier[0] == $minus ||
       identifier[0] == $underscore;
   }
+  // EO isPrivate
 
   // Throws an error if [identifier] isn't public.
   void StylesheetParser::assertPublicIdentifier(
@@ -267,7 +277,7 @@ namespace Sass {
     error("Private members can't be accessed from outside their modules.",
       scanner.relevantSpanFrom(start));
   }
-
+  // EO assertPublicIdentifier
 
   // Consumes a style rule.
   StyleRule* StylesheetParser::readStyleRule(Interpolation* itpl)
