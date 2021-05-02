@@ -69,7 +69,8 @@ namespace Sass
 		// Either return path relative to cwd if path is
 		// inside cwd, otherwise return absolute path.
 		sass::string getDebugPath() const;
-	};
+
+  };
 
 }
 

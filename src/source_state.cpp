@@ -62,7 +62,7 @@ namespace Sass
   {
     const char* path = getAbsPath();
     sass::string rel_path(File::abs2rel(path, CWD(), CWD()));
-    return File::rel2dbg(rel_path, path);
+    return rel_path.substr(0, 3) == "../" ? path : rel_path;
   }
 
   /////////////////////////////////////////////////////////////////////////

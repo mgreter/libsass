@@ -23,15 +23,13 @@ namespace Sass {
 
   public:
 
+    // Value constructor
     StringScanner(
       Logger& logger,
       SourceDataObj source);
 
     // The source associated with this scanner
     SourceDataObj source;
-
-    // Next source mapping
-    size_t nextMap;
 
     // The string being scanned through.
     const char* startpos;
@@ -59,8 +57,6 @@ namespace Sass {
 
     // Attached logger
     Logger& logger;
-
-  public:
 
     // Whether the scanner has completely consumed [string].
     bool isDone() const;

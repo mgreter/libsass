@@ -67,7 +67,7 @@ namespace Sass {
   OutputBuffer Output::getBuffer(void)
   {
     // Create an identical rendered for the hoisted part
-    Inspect inspect(opt, wbuf.smap ? true : false);
+    Inspect inspect(opt, wbuf.srcmap ? true : false);
 
     // Render the hoisted imports with comments
     for (size_t i = 0; i < imports.size(); i++) {

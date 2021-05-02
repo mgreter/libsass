@@ -1436,6 +1436,8 @@ namespace Sass {
         return mixColors(color1, color2, weight, pstate, compiler);
       }
 
+      /*******************************************************************/
+
       void registerFunctions(Compiler& ctx)
       {
 
@@ -1632,6 +1634,8 @@ namespace Sass {
 
     }
 
+    /*******************************************************************/
+
     Value* rgbFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       Value* _r = arguments[0];
@@ -1665,6 +1669,8 @@ namespace Sass {
         _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0);
 
     }
+
+    /*******************************************************************/
 
     Value* hwbFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
@@ -1702,6 +1708,8 @@ namespace Sass {
 
     }
 
+    /*******************************************************************/
+
     Value* hslFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       Value* _h = arguments[0];
@@ -1738,6 +1746,8 @@ namespace Sass {
         clamp(l->value(), 0.0, 100.0),
         _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0);
     }
+
+    /*******************************************************************/
 
   }
 

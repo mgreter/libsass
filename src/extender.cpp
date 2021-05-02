@@ -449,8 +449,6 @@ namespace Sass {
         continue;
       }
 
-      // ToDo: "catch" error from extend
-
       bool first = false, containsExtension =
         ObjEqualityFn(selectors.front(), extension.extender);
       for (const ComplexSelectorObj& complex : selectors) {

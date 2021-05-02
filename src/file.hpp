@@ -54,10 +54,6 @@ namespace Sass {
     // but only if right side is not absolute yet
     sass::string join_paths(sass::string root, sass::string name);
 
-    // if the relative path is outside of the cwd we want
-    // to show the absolute path in console messages
-    sass::string rel2dbg(const sass::string& rel_path, const sass::string& orig_path);
-
     // create an absolute path by resolving relative paths with cwd
     sass::string rel2abs(const sass::string& path, const sass::string& base = Sass::CWD(), const sass::string& CWD = Sass::CWD());
 
@@ -81,7 +77,11 @@ namespace Sass {
     // returned memory must be freed
     char* slurp_file(const sass::string& file, const sass::string& CWD);
 
-    Import* read_file(const ResolvedImport& import);
+    // Read and return resolved import
+    Import* read_import(const ResolvedImport& import);
+
+    sass::vector<ResolvedImport> resolve_includes(const sass::string& root, const sass::string& file, const sass::string& CWD, bool forImport,
+      std::unordered_map<sass::string, bool>& cache, const std::vector<sass::string>& exts = { ".sass", ".scss", ".css" });
 
   }
 
@@ -169,25 +169,6 @@ namespace Sass {
 
     CAPI_WRAPPER(Import, SassImport);
   };
-
-  // Error thrown by certain file functions
-  class AmbiguousImport : public std::exception {
-  public:
-    sass::vector<ResolvedImport> imports;
-    AmbiguousImport(sass::vector<ResolvedImport> imports)
-      : imports(imports)
-    {}
-  };
-
-  // Error thrown by certain file functions
-  class ImportNotFound : public std::exception {};
-  class ImportReadFailed : public std::exception {};
-
-
-  namespace File {
-    sass::vector<ResolvedImport> resolve_includes(const sass::string& root, const sass::string& file, const sass::string& CWD, bool forImport,
-      std::unordered_map<sass::string, bool>& cache, const std::vector<sass::string>& exts = { ".sass", ".scss", ".css" });
-  }
 
 }
 

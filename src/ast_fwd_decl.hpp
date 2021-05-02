@@ -28,6 +28,7 @@ namespace Sass {
   class Module;
   class BuiltInMod;
   class WithConfig;
+  class OutputBuffer;
 
   class Logger;
   class Compiler;
@@ -185,7 +186,6 @@ namespace Sass {
   class SelectorList;
 
   // common classes
-  class Context;
   class Eval;
 
   class Extension;

@@ -73,7 +73,7 @@ namespace Sass {
       if (scanIdentifier("else", true)) return true;
       if (scanIdentifier("elseif", true)) {
         /*
-        logger123.warn(
+        logger.warn(
           "@elseif is deprecated and will not be supported in future Sass versions.\n"
           "Use "@else if" instead.",
           span: scanner.spanFrom(beforeAt),

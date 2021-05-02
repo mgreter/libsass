@@ -936,7 +936,7 @@ namespace Sass {
     auto cached = sources.find(import.abs_path);
     if (cached != sources.end()) return cached->second;
     // Try to read source and (ToDo) optional mappings
-    if (ImportObj loaded = File::read_file(import)) {
+    if (ImportObj loaded = File::read_import(import)) {
       sources.insert({ import.abs_path, loaded });
       return loaded.ptr();
     }

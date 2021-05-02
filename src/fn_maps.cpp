@@ -109,6 +109,8 @@ namespace Sass {
       }
 
 
+      /*******************************************************************/
+
       BUILT_IN_FN(fnMapSetThreeArgs)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
@@ -122,6 +124,8 @@ namespace Sass {
         }
         return copy;
       }
+
+      /*******************************************************************/
 
       BUILT_IN_FN(fnMapSetTwoArgs)
       {
@@ -203,6 +207,8 @@ namespace Sass {
         return copy;
       }
 
+      /*******************************************************************/
+
       BUILT_IN_FN(merge_many)
       {
         MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
@@ -250,7 +256,6 @@ namespace Sass {
           //   *cur = SASS_MEMORY_NEW(Map, )
           // }
 
-
           ++cur;
         }
 
@@ -258,8 +263,6 @@ namespace Sass {
           copy->insertOrSet(kv); }
         return map1.detach();
       }
-
-      
 
       /*******************************************************************/
 
@@ -363,6 +366,8 @@ namespace Sass {
         return SASS_MEMORY_NEW(Boolean, pstate, false);
       }
 
+      /*******************************************************************/
+
       BUILT_IN_FN(fnDeepMerge)
       {
         MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
@@ -371,6 +376,8 @@ namespace Sass {
         return result.detach();
       }
       
+      /*******************************************************************/
+
       BUILT_IN_FN(fnDeepRemove)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);

@@ -329,6 +329,8 @@ namespace Sass {
           std::cos(coerceToRad(number, compiler, Strings::number)));
       }
 
+      /*******************************************************************/
+
       BUILT_IN_FN(fnSin)
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
@@ -337,6 +339,8 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate,
           std::sin(numberValue));
       }
+
+      /*******************************************************************/
 
       BUILT_IN_FN(fnTan)
       {
@@ -355,6 +359,8 @@ namespace Sass {
         }
       }
 
+      /*******************************************************************/
+
       BUILT_IN_FN(fnACos)
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
@@ -368,6 +374,9 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate,
           std::acos(numberValue) * 180 / PI, "deg");
       }
+
+      /*******************************************************************/
+
       BUILT_IN_FN(fnASin)
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
@@ -381,6 +390,9 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate,
           std::asin(numberValue) * 180 / PI, "deg");
       }
+
+      /*******************************************************************/
+
       BUILT_IN_FN(fnATan)
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
@@ -392,6 +404,8 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate,
           std::atan(numberValue) * 180 / PI, "deg");
       }
+
+      /*******************************************************************/
 
       BUILT_IN_FN(fnATan2)
       {
@@ -418,7 +432,9 @@ namespace Sass {
 
       void registerFunctions(Compiler& ctx)
 	    {
+
         BuiltInMod& module(ctx.createModule("math"));
+
         module.addVariable(key_e, ctx.createBuiltInVariable(key_e,
           SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
             2.71828182845904523536028747135266249775724709369995)));
@@ -452,6 +468,7 @@ namespace Sass {
         module.addFunction(key_percentage, ctx.registerBuiltInFunction(key_percentage, "$number", percentage));
         module.addFunction(key_is_unitless, ctx.registerBuiltInFunction(key_unitless, "$number", isUnitless));
         module.addFunction(key_compatible, ctx.registerBuiltInFunction(key_comparable, "$number1, $number2", compatible));
+
       }
 
       /*******************************************************************/

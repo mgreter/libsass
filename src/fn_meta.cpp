@@ -52,6 +52,8 @@ namespace Sass {
           arguments[1] : arguments[0];
       }
 
+      /*******************************************************************/
+
       BUILT_IN_FN(keywords)
       {
         ArgumentList* argumentList = arguments[0]->assertArgumentList(compiler, Sass::Strings::args);
@@ -77,8 +79,8 @@ namespace Sass {
           new std::unordered_set<sass::string>{
           "global-variable-shadowing",
           "extend-selector-pseudoclass",
-          "at-error",
           "units-level-3",
+          "at-error",
           "custom-property"
         };
         sass::string name(feature->value());
@@ -149,6 +151,8 @@ namespace Sass {
         return SASS_MEMORY_NEW(Boolean, pstate, !var.isNull());
       }
 
+      /*******************************************************************/
+
       BUILT_IN_FN(functionExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
@@ -182,6 +186,8 @@ namespace Sass {
         EnvRef fidx = compiler.varRoot.findFnIdx(variable->value(), "");
         return SASS_MEMORY_NEW(Boolean, pstate, fidx.isValid());
       }
+
+      /*******************************************************************/
 
       BUILT_IN_FN(mixinExists)
       {
@@ -219,6 +225,8 @@ namespace Sass {
         return SASS_MEMORY_NEW(Boolean, pstate, fidx.isValid());
       }
 
+      /*******************************************************************/
+
       BUILT_IN_FN(contentExists)
       {
         if (!eval.isInMixin()) {
@@ -228,6 +236,8 @@ namespace Sass {
         return SASS_MEMORY_NEW(Boolean, pstate,
           eval.hasContentBlock());
       }
+
+      /*******************************************************************/
 
       BUILT_IN_FN(moduleVariables)
       {
@@ -264,6 +274,8 @@ namespace Sass {
         }
         return list.detach();
       }
+
+      /*******************************************************************/
 
       BUILT_IN_FN(moduleFunctions)
       {
@@ -302,6 +314,8 @@ namespace Sass {
         }
         return list.detach();
       }
+
+      /*******************************************************************/
 
       /// Like `_environment.findFunction`, but also returns built-in
       /// globally-available functions.
@@ -385,6 +399,8 @@ namespace Sass {
 
       }
 
+      /*******************************************************************/
+
       BUILT_IN_FN(call)
       {
 
@@ -422,7 +438,6 @@ namespace Sass {
             FunctionExpression, pstate, str->value(), invocation,
             true); // Maybe pass flag into here!?
           return eval.acceptFunctionExpression(expression);
-          // return expression->accept(&eval);
 
         }
 
@@ -442,6 +457,7 @@ namespace Sass {
 
       }
 
+      /*******************************************************************/
 
       BUILT_IN_FN(loadCss)
       {
@@ -449,9 +465,6 @@ namespace Sass {
         MapObj withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
 
         bool hasWith = withMap && !withMap->empty();
-
-        // if (udbg) std::cerr << "Visit load-css '" << url->value() << "' "
-        //   << hasWith << " -> " << compiler.hasWithConfig << "\n";
 
         EnvKeyFlatMap<ValueObj> config;
         sass::vector<WithConfigVar> withConfigs;
@@ -514,15 +527,12 @@ namespace Sass {
         return SASS_MEMORY_NEW(Null, pstate);
       }
 
+      /*******************************************************************/
 
       void registerFunctions(Compiler& compiler)
 	    {
 
         BuiltInMod& module(compiler.createModule("meta"));
-
-        // ToDo: dart-sass keeps them on the local environment scope, see below:
-        // These functions are defined in the context of the evaluator because
-        // they need access to the [_environment] or other local state.
 
         compiler.registerBuiltInFunction(key_if, "$condition, $if-true, $if-false", fnIf);
 
@@ -542,6 +552,8 @@ namespace Sass {
         module.addFunction(key_call, compiler.registerBuiltInFunction(key_call, "$function, $args...", call));
 
 	    }
+
+      /*******************************************************************/
 
     }
 

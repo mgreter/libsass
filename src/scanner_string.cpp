@@ -20,7 +20,6 @@ namespace Sass {
     Logger& logger,
     SourceDataObj source) :
     source(source),
-    nextMap(sass::string::npos),
     startpos(source->contentStart()),
     endpos(source->contentEnd()),
     position(source->contentStart()),
@@ -31,12 +30,6 @@ namespace Sass {
     logger(logger)
   {
     // consume BOM?
-
-    // Check if we have source mappings
-    // ToDo: Can we make this API better?
-    //if (source->hasMapping(0)) {
-    //  nextMap = 0;
-    //}
 
     // This can use up to 3% runtime (mostly under 1%)
     auto invalid = utf8::find_invalid(startpos, endpos);

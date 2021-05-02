@@ -11,7 +11,6 @@
 #include "ast_fwd_decl.hpp"
 
 namespace Sass {
-  class Context;
 
   class Emitter {
 
@@ -23,17 +22,16 @@ namespace Sass {
     public:
       void reserve(size_t bytes) {
         wbuf.buffer.reserve(bytes);
-        if (wbuf.smap) wbuf.smap->reserve(bytes / 20);
+        if (wbuf.srcmap) wbuf.srcmap->reserve(bytes / 20);
       }
       const sass::string& buffer(void) { return wbuf.buffer; }
       const OutputBuffer& output(void) { return wbuf; }
       // proxy methods for source maps
       void add_source_index(size_t idx);
-      void set_filename(const sass::string& str);
+      // void set_filename(const sass::string& str);
       void add_open_mapping(const AstNode* node);
       void add_close_mapping(const AstNode* node);
       void schedule_mapping(const AstNode* node);
-      SourceSpan remap(const SourceSpan& pstate);
 
     public:
       OutputOptions& opt;

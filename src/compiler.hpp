@@ -24,11 +24,8 @@ namespace Sass {
     return sass_importer_get_priority(i) > sass_importer_get_priority(j);
   }
 
-  // The split between Context and Compiler is technically not really needed.
-  // But it helps a little to organize the different aspects of the compilation.
-  // The Context mainly stores all the read-only values (e.g. settings).
+  // The main compiler context object holding config and results
   class Compiler final : public OutputOptions, public Logger {
-
 
   public:
 

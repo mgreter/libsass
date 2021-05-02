@@ -15,7 +15,6 @@
 #include "visitor_selector.hpp"
 
 namespace Sass {
-  class Context;
 
   // public SelectorVisitor<void>
 

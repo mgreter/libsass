@@ -46,10 +46,10 @@ namespace Sass {
   
   void Emitter::add_source_index(size_t idx)
   {
-    if (wbuf.smap) wbuf.smap->source_index.push_back(idx); }
+    if (wbuf.srcmap) wbuf.srcmap->addSourceIndex(idx); }
 
-  void Emitter::set_filename(const sass::string& str)
-  { if (wbuf.smap) wbuf.smap->file = str; }
+  // void Emitter::set_filename(const sass::string& str)
+  // { if (wbuf.srcmap) wbuf.srcmap->setFile(str); }
 
   void Emitter::schedule_mapping(const AstNode* node)
   {
@@ -57,15 +57,11 @@ namespace Sass {
   }
   void Emitter::add_open_mapping(const AstNode* node)
   {
-    if (wbuf.smap) wbuf.smap->add_open_mapping(node);
+    if (wbuf.srcmap) wbuf.srcmap->addOpenMapping(node);
   }
   void Emitter::add_close_mapping(const AstNode* node)
   {
-    if (wbuf.smap) wbuf.smap->add_close_mapping(node);
-  }
-  SourceSpan Emitter::remap(const SourceSpan& pstate)
-  {
-    return wbuf.smap ? wbuf.smap->remap(pstate) : pstate;
+    if (wbuf.srcmap) wbuf.srcmap->addCloseMapping(node);
   }
 
   // MAIN BUFFER MANIPULATION
@@ -117,7 +113,7 @@ namespace Sass {
   // prepend some text or token to the buffer
   void Emitter::prepend_output(const OutputBuffer& output)
   {
-    if (wbuf.smap) wbuf.smap->prepend(output);
+    if (wbuf.srcmap) wbuf.srcmap->prepend(output);
     wbuf.buffer = output.buffer + wbuf.buffer;
   }
 
@@ -127,7 +123,7 @@ namespace Sass {
     // do not adjust mappings for utf8 bom
     // seems they are not counted in any UA
     if (text.compare("\xEF\xBB\xBF") != 0) {
-      if (wbuf.smap) wbuf.smap->prepend(Offset(text));
+      if (wbuf.srcmap) wbuf.srcmap->prepend(Offset(text));
     }
     wbuf.buffer = text + wbuf.buffer;
   }
@@ -145,7 +141,7 @@ namespace Sass {
     // add to buffer
     wbuf.buffer.push_back((unsigned char) chr);
     // account for data in source-maps
-    if (wbuf.smap) wbuf.smap->append(Offset(chr));
+    if (wbuf.srcmap) wbuf.srcmap->append(Offset(chr));
   }
 
   // append a single char to the buffer
@@ -154,7 +150,7 @@ namespace Sass {
     // add to buffer
     wbuf.buffer.push_back((unsigned char)chr);
     // account for data in source-maps
-    if (wbuf.smap) wbuf.smap->append(Offset(chr));
+    if (wbuf.srcmap) wbuf.srcmap->append(Offset(chr));
   }
 
   // append some text or token to the buffer
@@ -165,7 +161,7 @@ namespace Sass {
     // add to buffer
     wbuf.buffer.append(text);
     // account for data in source-maps
-    if (wbuf.smap) wbuf.smap->append(Offset(text));
+    if (wbuf.srcmap) wbuf.srcmap->append(Offset(text));
   }
 
   // append some text or token to the buffer
@@ -174,7 +170,7 @@ namespace Sass {
     // add to buffer
     wbuf.buffer.append(text);
     // account for data in source-maps
-    if (wbuf.smap) wbuf.smap->append(Offset(text));
+    if (wbuf.srcmap) wbuf.srcmap->append(Offset(text));
   }
 
   // append some text or token to the buffer
@@ -188,7 +184,7 @@ namespace Sass {
       wbuf.buffer.append(text);
     }
     // account for data in source-maps
-    if (wbuf.smap) wbuf.smap->append(Offset(text) * (uint32_t)repeat);
+    if (wbuf.srcmap) wbuf.srcmap->append(Offset(text) * (uint32_t)repeat);
   }
 
   // append some text or token to the buffer
@@ -202,7 +198,7 @@ namespace Sass {
       wbuf.buffer.append(text);
     }
     // account for data in source-maps
-    if (wbuf.smap) wbuf.smap->append(Offset(text) * (uint32_t)repeat);
+    if (wbuf.srcmap) wbuf.srcmap->append(Offset(text) * (uint32_t)repeat);
   }
 
   // append some text or token to the buffer

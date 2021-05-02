@@ -105,7 +105,7 @@ namespace Sass {
   namespace File {
 
     // test if path exists and is a file
-    // takes a cache map to improve performance
+    // takes optional cache map to improve performance
     bool file_exists(const sass::string& path, const sass::string& CWD, std::unordered_map<sass::string, bool>& cache)
     {
       #ifdef _WIN32
@@ -119,13 +119,11 @@ namespace Sass {
         if (it != cache.end()) {
           return it->second;
         }
-        // std::cerr << "check file " << abspath << "\n";
         sass::wstring wpath(Unicode::utf8to16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
         if (rv > 32767) throw Exception::OperationError("Path is too long");
         if (rv == 0) throw Exception::OperationError("Path could not be resolved");
-        // std::cerr << "Checking " << abspath << "\n";
         DWORD dwAttrib = GetFileAttributesW(resolved); // was 3%
         bool result = (dwAttrib != INVALID_FILE_ATTRIBUTES
           && (!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
@@ -280,13 +278,6 @@ namespace Sass {
     }
     // EO join_paths
 
-    sass::string rel2dbg(const sass::string& rel_path, const sass::string& orig_path)
-    {
-      // if the file is outside this directory show the absolute path
-      return rel_path.substr(0, 3) == "../" ? orig_path : rel_path;
-    }
-    // EO rel2dbg
-
     // create an absolute path by resolving relative paths with cwd
     sass::string rel2abs(const sass::string& path, const sass::string& base, const sass::string& CWD)
     {
@@ -370,8 +361,6 @@ namespace Sass {
     }
     // EO abs2rel
 
-
-
     // Resolution order for ambiguous imports:
     // (1) filename as given
     // (2) underscore + given
@@ -379,7 +368,7 @@ namespace Sass {
     // (4) given + extension
     // (5) given + _index.scss
     // (6) given + _index.sass
-    void findFileOrPartial(
+    void find_file_or_partial(
       const sass::string& root,
       const sass::string& dirname,
       const sass::string& basename,
@@ -394,9 +383,9 @@ namespace Sass {
       sass::string absPath;
 
       if (considerImports) {
-        findFileOrPartial(root, dirname, basename + ".import",
+        find_file_or_partial(root, dirname, basename + ".import",
           ".sass", CWD, false, cache, {}, candidates);
-        findFileOrPartial(root, dirname, basename + ".import",
+        find_file_or_partial(root, dirname, basename + ".import",
           ".scss", CWD, false, cache, {}, candidates);
         if (candidates.size()) return;
       }
@@ -440,17 +429,8 @@ namespace Sass {
           candidates.push_back(import);
         }
       }
-      // if (candidates.size() > 1) {
-      //   sass::sstream msg_stream;
-      //   msg_stream << "It's not clear which file to import. Found:\n";
-      //   for (size_t i = 0, L = candidates.size(); i < L; ++i)
-      //   { msg_stream << "  " << candidates[i].imp_path << "\n"; }
-      //   throw Exception::ParserException(logger, msg_stream.str());
-      // }
-      // return candidates;
     }
 
-   
     // Resolution order for ambiguous imports:
     // (1) filename as given
     // (2) underscore + given
@@ -484,10 +464,10 @@ namespace Sass {
         }
       }
 
-      findFileOrPartial(root, base, name, suffix, CWD, forImport, cache, exts, includes);
+      find_file_or_partial(root, base, name, suffix, CWD, forImport, cache, exts, includes);
       if (includes.size()) return includes;
       sass::string subdir(join_paths(base, name));
-      findFileOrPartial(root, subdir, "index", "", CWD, forImport, cache, exts, includes);
+      find_file_or_partial(root, subdir, "index", "", CWD, forImport, cache, exts, includes);
       if (includes.size()) return includes;
 
       return includes;
@@ -585,7 +565,8 @@ namespace Sass {
     }
     // EO slurp_file
 
-    Import* read_file(const ResolvedImport& import)
+    // Read and return resolved import
+    Import* read_import(const ResolvedImport& import)
     {
       // try to read the content of the resolved file entry
       // the memory buffer returned to us must be freed by us!
@@ -602,9 +583,10 @@ namespace Sass {
       // Nothing was found
       return nullptr;
     }
-    // EO slurp_file
+    // EO read_import
 
   }
+  // EO File namespace
 
   // Entry point for top level file import
   // Don't load like other includes, we do not

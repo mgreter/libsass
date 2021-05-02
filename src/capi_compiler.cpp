@@ -139,16 +139,16 @@ namespace Sass {
       compiler.footer = nullptr;
       break;
     case SASS_SRCMAP_CREATE:
-      compiler.srcmap = compiler.renderSrcMapJson(options, *output.smap);
+      compiler.srcmap = compiler.renderSrcMapJson(options, *output.srcmap);
       compiler.footer = nullptr; // Don't add link, just create map file
       break;
     case SASS_SRCMAP_EMBED_LINK:
-      compiler.srcmap = compiler.renderSrcMapJson(options, *output.smap);
-      compiler.footer = compiler.renderSrcMapLink(options, *output.smap);
+      compiler.srcmap = compiler.renderSrcMapJson(options, *output.srcmap);
+      compiler.footer = compiler.renderSrcMapLink(options, *output.srcmap);
       break;
     case SASS_SRCMAP_EMBED_JSON:
-      compiler.srcmap = compiler.renderSrcMapJson(options, *output.smap);
-      compiler.footer = compiler.renderEmbeddedSrcMap(options, *output.smap);
+      compiler.srcmap = compiler.renderSrcMapJson(options, *output.srcmap);
+      compiler.footer = compiler.renderEmbeddedSrcMap(options, *output.srcmap);
       break;
     }
 
