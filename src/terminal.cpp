@@ -3,6 +3,15 @@
 /*****************************************************************************/
 #include "terminal.hpp"
 
+#ifndef _WIN32
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+#endif
+
 // Minimal terminal abstraction for cross compatibility.
 // Its main purpose is to let us print stuff with colors.
 namespace Terminal {
@@ -26,7 +35,13 @@ namespace Terminal {
     // csbi.srWindow.Right - csbi.srWindow.Left
     return csbi.dwMaximumWindowSize.X;
 #else
-    return 80;
+    int fd = open("/dev/tty", O_RDWR);
+    struct winsize ws;
+    if (fd < 0 || ioctl(fd, TIOCGWINSZ, &ws) < 0) {
+      return SassDefaultColumns;
+    }
+    close(fd);
+    return ws.ws_col;
 #endif
   }
   // EO getColumns
@@ -45,7 +60,7 @@ namespace Terminal {
     DWORD filetype = GetFileType(handle);
     return filetype == FILE_TYPE_CHAR;
 #else
-    return false;
+    return isatty(fileno(error ? stderr : stdout));
 #endif
   }
   // EO isConsoleAttached
@@ -67,9 +82,9 @@ namespace Terminal {
   bool hasColorSupport(bool error)
   {
 #ifdef _WIN32
-    return isConsoleAttached(true);
+    return isConsoleAttached(error);
 #else
-    return false;
+    return isConsoleAttached(error);
 #endif
   }
   // EO hasColorSupport

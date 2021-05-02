@@ -875,7 +875,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " <<" << block->variable().orig() << ">> " << block->tabs();
     std::cerr << " vidx(";
-    bool join = false;
+    //bool join = false;
     //for (auto pidx : block->vidxs()) {
     //  if (join) std::cerr << ", ";
     //  std::cerr << pidx.toString();
