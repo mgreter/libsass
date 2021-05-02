@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.config.os }}
 
     strategy:
-      fail-fast: false
+      # fail-fast: false
       matrix:
         config:
           #- {os: ubuntu-16.04, build: 'static', cc: 'gcc-4.4', cxx: 'g++-4.4', autotools: 'no', cppstd: 'gnu++0x'}
@@ -135,7 +135,7 @@ jobs:
     # if: ${{ false }}
 
     strategy:
-      fail-fast: false
+      # fail-fast: false
       matrix:
         config:
           - {build: Release, platform: Win64}
@@ -174,7 +174,7 @@ jobs:
     name: Windows MinGW build
 
     strategy:
-      fail-fast: false
+      # fail-fast: false
       matrix:
         config:
           - {build: shared, platform: x64}

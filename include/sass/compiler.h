@@ -113,6 +113,9 @@ extern "C" {
   // Getter for string containing the optional source-mapping.
   ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
 
+  // Check if implementor is expected to write a output file
+  ADDAPI bool ADDCALL sass_compiler_has_output_file(struct SassCompiler* compiler);
+
   // Check if implementor is expected to write a source-map file
   ADDAPI bool ADDCALL sass_compiler_has_srcmap_file(struct SassCompiler* compiler);
 

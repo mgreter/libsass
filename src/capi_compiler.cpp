@@ -505,6 +505,13 @@ extern "C" {
     return Compiler::unwrap(compiler).srcmap;
   }
 
+  // Check if implementor is expected to write a output file
+  bool ADDCALL sass_compiler_has_output_file(struct SassCompiler* compiler)
+  {
+    const sass::string& path = Compiler::unwrap(compiler).output_path;
+    return path.empty() || path == "stream://stdout";
+  }
+
   // Check if implementor is expected to write a source-map file
   bool ADDCALL sass_compiler_has_srcmap_file(struct SassCompiler* compiler)
   {
