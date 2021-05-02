@@ -14,7 +14,7 @@
 
 namespace Sass {
 
-  class Remove_Placeholders :
+  class RemovePlaceholders :
     public CssVisitor<void> {
 
   private:

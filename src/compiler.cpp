@@ -138,11 +138,7 @@ namespace Sass {
 
     Eval eval(*this, *this, plainCss);
 
-    // Preloader preloader(*this, root);
-    // preloader.process();
-
-    CssRootObj compiled = eval.acceptRoot(root); // 50%
-    // debug_ast(compiled);
+    CssRootObj compiled = eval.acceptRoot(root);
 
     Extension unsatisfied;
     // check that all extends were used
@@ -152,7 +148,7 @@ namespace Sass {
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
-    Remove_Placeholders remove_placeholders;
+    RemovePlaceholders remove_placeholders;
     remove_placeholders.visitCssRoot(compiled); // 3%
 
     #ifdef DEBUG_SHARED_PTR
@@ -492,9 +488,6 @@ namespace Sass {
   }
   // EO callCustomLoader
 
-
-
-
   void Compiler::applyCustomHeaders(StatementVector& statements, SourceSpan pstate)
   {
     // create a custom import to resolve headers
@@ -524,7 +517,7 @@ namespace Sass {
     uint32_t offset((uint32_t)mixins.size());
     varRoot.intMixin.push_back(callable);
     varRoot.privateMixOffset = offset;
-    return offset; // No lookup
+    return offset;
   }
 
   // Register built-in variable with the associated value
@@ -535,7 +528,7 @@ namespace Sass {
     uint32_t offset((uint32_t)variables.size());
     varRoot.intVariables.push_back(value);
     varRoot.privateVarOffset = offset;
-    return offset; // No lookup
+    return offset;
   }
 
   // Register built-in function with only one parameter list.
@@ -551,7 +544,7 @@ namespace Sass {
     uint32_t offset((uint32_t)functions.size());
     varRoot.intFunction.push_back(callable);
     varRoot.privateFnOffset = offset;
-    return offset; // No lookup
+    return offset;
   }
   // EO registerBuiltInFunction
 
@@ -722,29 +715,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  void sigHandler(int s)
-  {
-    std::cerr << "Abnormal program termination detected!\n";
-    std::cerr << "  With Signal " << s << "\n";
-    exit(EXIT_FAILURE);
-  }
-
   Root* Compiler::parseRoot(ImportObj import)
   {
-
-    // Attach signal handlers
-    signal(SIGABRT, sigHandler);
-    signal(SIGFPE, sigHandler);
-    signal(SIGILL, sigHandler);
-    signal(SIGINT, sigHandler);
-    signal(SIGSEGV, sigHandler);
-    signal(SIGTERM, sigHandler);
 
     // Insert ourself onto the sources cache
     sources.insert({ import->getAbsPath(), import });
 
-    // ImportStackFrame iframe(*this, import);
-
+    // Register all built-in functions 
     loadBuiltInFunctions();
 
     #ifdef DEBUG_SHARED_PTR
@@ -752,9 +729,8 @@ namespace Sass {
     RefCounted::taint = true;
     #endif
 
-    ImportStackFrame iframe(*this, import);
-
     // load and register import
+    ImportStackFrame iframe(*this, import);
     Root* sheet = registerImport(import);
 
     #ifdef DEBUG_SHARED_PTR
@@ -804,20 +780,12 @@ namespace Sass {
       if (i == 0) break;
     }
 
-
   }
 
   ImportStackFrame::~ImportStackFrame()
   {
     compiler.import_stack.pop_back();
-    // auto& source(compiler.import_stack.back()->source);
-    // std::cerr << "EXIT " << compiler.import_stack2.size()
-    //   << " -> " << source->getAbsPath() << "\n";
   }
-
-
-
-
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -850,10 +818,6 @@ namespace Sass {
       if (*path.rbegin() != '/') path += '/';
       plugins.load_plugins(path);
     }
-    // Take over ownership from plugin
-    // plugins.consume_headers(cHeaders);
-    // plugins.consume_importers(cImporters);
-    // plugins.consume_functions(cFunctions);
     // Sort the merged arrays by callback priorities
     sort(cHeaders.begin(), cHeaders.end(), cmpImporterPrio);
     sort(cImporters.begin(), cImporters.end(), cmpImporterPrio);

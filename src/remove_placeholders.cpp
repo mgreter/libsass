@@ -11,14 +11,14 @@ namespace Sass {
       return stmt->isInvisibleCss();
     }
 
-    void Remove_Placeholders::remove_placeholders(SimpleSelector* simple)
+    void RemovePlaceholders::remove_placeholders(SimpleSelector* simple)
     {
       if (PseudoSelector * pseudo = simple->isaPseudoSelector()) {
         if (pseudo->selector()) remove_placeholders(pseudo->selector());
       }
     }
 
-    void Remove_Placeholders::remove_placeholders(CompoundSelector* compound)
+    void RemovePlaceholders::remove_placeholders(CompoundSelector* compound)
     {
       for (size_t i = 0, L = compound->size(); i < L; ++i) {
         if (compound->get(i)) remove_placeholders(compound->get(i));
@@ -27,7 +27,7 @@ namespace Sass {
       // listEraseItemIf(compound->elements(), listIsEmpty<SimpleSelector>);
     }
 
-    void Remove_Placeholders::remove_placeholders(ComplexSelector* complex)
+    void RemovePlaceholders::remove_placeholders(ComplexSelector* complex)
     {
       for (const SelectorComponentObj& component : complex->elements()) {
         if (component->hasPlaceholder()) {
@@ -45,7 +45,7 @@ namespace Sass {
       }
     }
 
-    void Remove_Placeholders::remove_placeholders(SelectorList* sl)
+    void RemovePlaceholders::remove_placeholders(SelectorList* sl)
     {
       for(const ComplexSelectorObj& complex : sl->elements()) {
         if (complex) remove_placeholders(complex);
@@ -53,7 +53,7 @@ namespace Sass {
       listEraseItemIf(sl->elements(), listIsEmpty<ComplexSelector>);
     }
 
-    void Remove_Placeholders::visitCssRoot(CssRoot* b)
+    void RemovePlaceholders::visitCssRoot(CssRoot* b)
     {
       // Clean up all our children
       acceptCssParentNode(b);
@@ -61,7 +61,7 @@ namespace Sass {
       listEraseItemIf(b->elements(), isInvisibleCss); // QQQQQQQQQQQQHHHHHH
     }
 
-    void Remove_Placeholders::visitCssStyleRule(CssStyleRule* rule)
+    void RemovePlaceholders::visitCssStyleRule(CssStyleRule* rule)
     {
       // Clean up all our children
       acceptCssParentNode(rule);
@@ -71,7 +71,7 @@ namespace Sass {
       }
     }
 
-    void Remove_Placeholders::acceptCssParentNode(CssParentNode* m)
+    void RemovePlaceholders::acceptCssParentNode(CssParentNode* m)
     {
       for (CssNodeObj& node : m->elements()) {
         node->accept(this);
