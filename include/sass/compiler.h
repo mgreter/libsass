@@ -32,6 +32,15 @@ extern "C" {
   // Render the evaluated ast-tree to get the final output string.
   ADDAPI void ADDCALL sass_compiler_render(struct SassCompiler* compiler);
 
+  // Write or print the output to the console or the configured output path
+  ADDAPI void ADDCALL sass_compiler_write_output(struct SassCompiler* compiler);
+
+  // Write source-map to configured path if options are set accordingly
+  ADDAPI void ADDCALL sass_compiler_write_srcmap(struct SassCompiler* compiler);
+
+  // Execute all compiler steps and write/print results
+  ADDAPI int ADDCALL sass_compiler_execute(struct SassCompiler* compiler, bool quiet);
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

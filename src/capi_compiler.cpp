@@ -3,6 +3,8 @@
 /*****************************************************************************/
 #include "capi_compiler.hpp"
 
+#include <iostream>
+#include <fstream>
 #include "compiler.hpp"
 #include "exceptions.hpp"
 
@@ -88,22 +90,25 @@ namespace Sass {
   }
   // EO handle_errors
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // Main implementation (caller is wrapped in try/catch)
-  void __sass_compiler_parse(Compiler& compiler)
+  void _sass_compiler_parse(Compiler& compiler)
   {
     compiler.parse();
   }
-  // EO __sass_compiler_parse
+  // EO _sass_compiler_parse
 
   // Main implementation (caller is wrapped in try/catch)
-  void __sass_compiler_compile(Compiler& compiler)
+  void _sass_compiler_compile(Compiler& compiler)
   {
     compiler.compile();
   }
-  // EO __sass_compiler_compile
+  // EO _sass_compiler_compile
 
   // Main implementation (caller is wrapped in try/catch)
-  void __sass_compiler_render(Compiler& compiler)
+  void _sass_compiler_render(Compiler& compiler)
   {
 
     // Bail out if we had any previous errors
@@ -148,13 +153,69 @@ namespace Sass {
     }
 
   }
-  // EO __sass_compiler_render
+  // EO _sass_compiler_render
 
-  void __sass_compiler_add_custom_function(Compiler& compiler, struct SassFunction* function)
+  // Main implementation (caller is wrapped in try/catch)
+  void _sass_compiler_write_output(Compiler& compiler)
+  {
+    // Write to output only if no errors occurred
+    if (compiler.error.status != 0) return;
+
+    // ToDo: can we use the same types?
+    const char* footer = compiler.footer;
+    const char* content = compiler.content.empty() ?
+      nullptr : compiler.content.c_str();
+    const char* path = compiler.output_path.c_str();
+
+    // Check if anything is to write
+    if (content || footer) {
+      // Check where to write it to
+      if (path && compiler.hasOutputFile()) {
+        std::ofstream fh(path, std::ios::out | std::ios::binary);
+        if (!fh) throw std::runtime_error("Error opening output file");
+        // Write stuff to the output file
+        if (content) { fh << content; }
+        if (footer) { fh << content; }
+        // Close file-handle
+        fh.close();
+      }
+      else {
+        // Simply print results to stdout
+        if (content) std::cout << content;
+        if (footer) std::cout << footer;
+      }
+    }
+
+  }
+  // EO _sass_compiler_write_output
+
+  // Main implementation (caller is wrapped in try/catch)
+  void _sass_compiler_write_srcmap(Compiler& compiler)
+  {
+    // Write to srcmap only if no errors occurred
+    if (compiler.error.status != 0) return;
+
+    const char* srcmap = compiler.srcmap;
+    const char* path = compiler.srcmap_options.path.empty() ?
+      nullptr : compiler.srcmap_options.path.c_str();
+
+    // Write source-map if needed
+    if (srcmap && path && compiler.hasSrcMapFile()) {
+      std::ofstream fh(path, std::ios::out | std::ios::binary);
+      if (!fh) throw std::runtime_error("Error opening srcmap file");
+      // Write stuff to the srcmap file
+      if (srcmap) { fh << srcmap; }
+      // Close file-handle
+      fh.close();
+    }
+
+  }
+
+  void _sass_compiler_add_custom_function(Compiler& compiler, struct SassFunction* function)
   {
     compiler.registerCustomFunction(function);
   }
-  // EO __sass_compiler_add_custom_function
+  // EO _sass_compiler_add_custom_function
 
   /////////////////////////////////////////////////////////////////////////
   // On windows we can improve the error handling by also catching
@@ -212,13 +273,17 @@ namespace Sass {
   }
   #endif
 
-  // Wrap Structured Exceptions for MSVC
-  void _sass_compiler_parse(Compiler& compiler)
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Wrap Structured Exceptions for MSVC (void on no MSVC compilers)
+  template <typename ...ARGS> void sass_wrap_msvc_exception(
+    Compiler& compiler, void (*fn)(Compiler& compiler, ARGS...), ARGS... args)
   {
     #ifdef _MSC_VER
     __try {
     #endif
-      __sass_compiler_parse(compiler);
+      fn(compiler, args...);
     #ifdef _MSC_VER
     }
     __except (filter(GetExceptionCode(), GetExceptionInformation())) {
@@ -226,86 +291,18 @@ namespace Sass {
     }
     #endif
   }
+  // EO sass_wrap_msvc_exception
 
-  // Wrap Structured Exceptions for MSVC
-  void _sass_compiler_compile(Compiler& compiler)
-  {
-    #ifdef _MSC_VER
-    __try {
-    #endif
-      __sass_compiler_compile(compiler);
-    #ifdef _MSC_VER
-    }
-    __except (filter(GetExceptionCode(), GetExceptionInformation())) {
-      throw std::runtime_error(seException(GetExceptionCode()));
-    }
-    #endif
-  }
-
-  // Wrap Structured Exceptions for MSVC
-  void _sass_compiler_render(Compiler& compiler)
-  {
-    #ifdef _MSC_VER
-    __try {
-    #endif
-      __sass_compiler_render(compiler);
-    #ifdef _MSC_VER
-    }
-    __except (filter(GetExceptionCode(), GetExceptionInformation())) {
-      throw std::runtime_error(seException(GetExceptionCode()));
-    }
-    #endif
-  }
-
-  // Wrap Structured Exceptions for MSVC
-  void _sass_compiler_add_custom_function(Compiler& compiler, struct SassFunction* function)
-  {
-    #ifdef _MSC_VER
-    __try {
-    #endif
-      __sass_compiler_add_custom_function(compiler, function);
-    #ifdef _MSC_VER
-    }
-    __except (filter(GetExceptionCode(), GetExceptionInformation())) {
-      throw std::runtime_error(seException(GetExceptionCode()));
-    }
-    #endif
-  }
-
-  // Main entry point (wrap try/catch then MSVC)
-  void sass_compiler_parse(Compiler& compiler)
+  // Wrap C++ exceptions and add to logger if any occur
+  template <typename ...ARGS> void sass_wrap_exception(
+    Compiler& compiler, void (*fn)(Compiler& compiler, ARGS...), ARGS... args)
   {
     Logger& logger(compiler);
-    try { _sass_compiler_parse(compiler); }
+    try { sass_wrap_msvc_exception(compiler, fn, args...); }
     catch (...) { handle_errors(compiler); }
     compiler.warnings = logger.logstrm.str();
   }
-
-  // Main entry point (wrap try/catch then MSVC)
-  void sass_compiler_compile(Compiler& compiler)
-  {
-    Logger& logger(compiler);
-    try { _sass_compiler_compile(compiler); }
-    catch (...) { handle_errors(compiler); }
-    compiler.warnings = logger.logstrm.str();
-  }
-
-  // Main entry point (wrap try/catch then MSVC)
-  void sass_compiler_render(Compiler& compiler)
-  {
-    Logger& logger(compiler);
-    try { _sass_compiler_render(compiler); }
-    catch (...) { handle_errors(compiler); }
-    compiler.warnings = logger.logstrm.str();
-  }
-
-  void sass_compiler_add_custom_function(Compiler& compiler, struct SassFunction* function)
-  {
-    Logger& logger(compiler);
-    try { _sass_compiler_add_custom_function(compiler, function); }
-    catch (...) { handle_errors(compiler); }
-    compiler.warnings = logger.logstrm.str();
-  }
+  // EO sass_wrap_exception
 
 }
 // EO C++ helpers
@@ -344,21 +341,67 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   // Parse the entry point and potentially all imports within.
-  void ADDCALL sass_compiler_parse(struct SassCompiler* sass_compiler)
+  void ADDCALL sass_compiler_parse(struct SassCompiler* compiler)
   {
-    sass_compiler_parse(Compiler::unwrap(sass_compiler));
+    sass_wrap_exception(Compiler::unwrap(compiler), _sass_compiler_parse);
   }
 
   // Evaluate the parsed entry point and store resulting ast-tree.
-  void ADDCALL sass_compiler_compile(struct SassCompiler* sass_compiler)
+  void ADDCALL sass_compiler_compile(struct SassCompiler* compiler)
   {
-    sass_compiler_compile(Compiler::unwrap(sass_compiler));
+    sass_wrap_exception(Compiler::unwrap(compiler), _sass_compiler_compile);
   }
 
   // Render the evaluated ast-tree to get the final output string.
-  void ADDCALL sass_compiler_render(struct SassCompiler* sass_compiler)
+  void ADDCALL sass_compiler_render(struct SassCompiler* compiler)
   {
-    sass_compiler_render(Compiler::unwrap(sass_compiler));
+    sass_wrap_exception(Compiler::unwrap(compiler), _sass_compiler_render);
+  }
+
+  // Write or print the output to the console or the configured output path
+  void ADDCALL sass_compiler_write_output(struct SassCompiler* compiler)
+  {
+    sass_wrap_exception(Compiler::unwrap(compiler), _sass_compiler_write_output);
+  }
+
+  // Write source-map to configured path if options are set accordingly
+  void ADDCALL sass_compiler_write_srcmap(struct SassCompiler* compiler)
+  {
+    sass_wrap_exception(Compiler::unwrap(compiler), _sass_compiler_write_srcmap);
+  }
+
+  // Execute all compiler steps and write/print results
+  int ADDCALL sass_compiler_execute(struct SassCompiler* compiler, bool quiet)
+  {
+
+    // Execute all compiler phases
+    // Will skip steps if one errors
+    sass_compiler_parse(compiler);
+    sass_compiler_compile(compiler);
+    sass_compiler_render(compiler);
+
+    // First print all warnings and deprecation messages
+    if (!quiet && sass_compiler_get_warn_string(compiler)) {
+      sass_print_stderr(sass_compiler_get_warn_string(compiler));
+    }
+
+    // Get original compiler exit status to return
+    int result = sass_compiler_get_status(compiler);
+
+    // Check compile result
+    if (result == 0) {
+      // Write/print the results
+      sass_compiler_write_output(compiler);
+      sass_compiler_write_srcmap(compiler);
+    }
+    else {
+      // Print error message if we have an error
+      const struct SassError* error = sass_compiler_get_error(compiler);
+      if (error) sass_print_stderr(sass_error_get_formatted(error));
+    }
+
+    // Return exit status
+    return result;
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -406,7 +449,7 @@ extern "C" {
   void ADDCALL sass_compiler_add_custom_function(struct SassCompiler* compiler, struct SassFunction* function)
   {
     // Wrap to correctly trap errors and to fill the error object if needed
-    sass_compiler_add_custom_function(Compiler::unwrap(compiler), function);
+    sass_wrap_exception(Compiler::unwrap(compiler), _sass_compiler_add_custom_function, function);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -508,15 +551,13 @@ extern "C" {
   // Check if implementor is expected to write a output file
   bool ADDCALL sass_compiler_has_output_file(struct SassCompiler* compiler)
   {
-    const sass::string& path = Compiler::unwrap(compiler).output_path;
-    return !path.empty() && path != "stream://stdout";
+    return Compiler::unwrap(compiler).hasOutputFile();
   }
 
   // Check if implementor is expected to write a source-map file
   bool ADDCALL sass_compiler_has_srcmap_file(struct SassCompiler* compiler)
   {
-    enum SassSrcMapMode mode = Compiler::unwrap(compiler).srcmap_options.mode;
-    return mode == SASS_SRCMAP_CREATE || mode == SASS_SRCMAP_EMBED_LINK;
+    return Compiler::unwrap(compiler).hasSrcMapFile();
   }
   
 

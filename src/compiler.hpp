@@ -246,6 +246,12 @@ namespace Sass {
     char* renderEmbeddedSrcMap(SrcMapOptions options,
       const SourceMap& source_map);
 
+    // Check if we should write output file
+    bool hasOutputFile() const;
+
+    // Check if we should write srcmap file
+    bool hasSrcMapFile() const;
+
     /////////////////////////////////////////////////////////////////////////
     // Register built-in function with only one parameter list.
     /////////////////////////////////////////////////////////////////////////

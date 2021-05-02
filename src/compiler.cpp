@@ -94,6 +94,22 @@ namespace Sass {
   }
   // EO getOutputPath
 
+  // Check if we should write output file
+  bool Compiler::hasOutputFile() const
+  {
+    return !output_path.empty() &&
+      output_path != "stream://stdout";
+  }
+  // EO hasOutputFile
+
+  // Check if we should write srcmap file
+  bool Compiler::hasSrcMapFile() const
+  {
+    return srcmap_options.mode == SASS_SRCMAP_CREATE ||
+      srcmap_options.mode == SASS_SRCMAP_EMBED_LINK;
+  }
+  // EO hasSrcMapFile
+
   void Compiler::parse()
   {
     // Do initial loading
