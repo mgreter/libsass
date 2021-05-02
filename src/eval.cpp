@@ -1424,7 +1424,7 @@ namespace Sass {
     // Regular style rule
     else if (node->interpolation()) {
       // Check current importer context
-      Import93* imp = compiler.import_stack.back();
+      Import* imp = compiler.import_stack.back();
       bool plainCss = imp->syntax == SASS_IMPORT_CSS;
       // Evaluate the interpolation and try to parse a selector list
       SelectorListObj slist = interpolationToSelector(node->interpolation(), plainCss)->
@@ -2245,7 +2245,7 @@ namespace Sass {
   {
     for (const ImportBaseObj& import : rule->elements()) {
       if (StaticImport* stimp = import->isaStaticImport()) { acceptStaticImport(stimp); }
-      else if (IncludeImport62* stimp = import->isaIncludeImport62()) { acceptIncludeImport(stimp); }
+      else if (IncludeImport* stimp = import->isaIncludeImport()) { acceptIncludeImport(stimp); }
       else throw std::runtime_error("undefined behavior");
     }
     return nullptr;

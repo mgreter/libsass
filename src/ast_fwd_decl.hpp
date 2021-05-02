@@ -34,7 +34,7 @@ namespace Sass {
   class EnvFrame;
 
   class SourceData;
-  class Import93;
+  class Import;
   class ResolvedImport;
   class SourceFile;
   class SourceString;
@@ -114,7 +114,7 @@ namespace Sass {
   class ImportRule;
   class ImportBase;
   class StaticImport;
-  class IncludeImport62;
+  class IncludeImport;
 
   class ErrorRule;
   class DebugRule;
@@ -195,7 +195,7 @@ namespace Sass {
     typedef SharedPtr<type> type##Obj;
 
   IMPL_MEM_OBJ(SourceData);
-  IMPL_MEM_OBJ(Import93);
+  IMPL_MEM_OBJ(Import);
   IMPL_MEM_OBJ(SourceFile);
   IMPL_MEM_OBJ(SourceString);
   IMPL_MEM_OBJ(SourceWithPath);
@@ -247,7 +247,7 @@ namespace Sass {
   IMPL_MEM_OBJ(ImportRule);
   IMPL_MEM_OBJ(ImportBase);
   IMPL_MEM_OBJ(StaticImport);
-  IMPL_MEM_OBJ(IncludeImport62);
+  IMPL_MEM_OBJ(IncludeImport);
   IMPL_MEM_OBJ(WarnRule);
   IMPL_MEM_OBJ(ErrorRule);
   IMPL_MEM_OBJ(DebugRule);

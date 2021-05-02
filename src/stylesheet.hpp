@@ -23,7 +23,7 @@ namespace Sass {
 
     // Import object through which this module was loaded.
     // It also has the input type (css vs sass) attached
-    Import93Obj import;
+    ImportObj import;
 
     Root(const SourceSpan& pstate, size_t reserve = 0);
 

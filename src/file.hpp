@@ -81,7 +81,7 @@ namespace Sass {
     // returned memory must be freed
     char* slurp_file(const sass::string& file, const sass::string& CWD);
 
-    Import93* read_file(const ResolvedImport& import);
+    Import* read_file(const ResolvedImport& import);
 
   }
 
@@ -141,7 +141,7 @@ namespace Sass {
 
 
   // Base class for entry points
-  class Import93 : public RefCounted {
+  class Import : public RefCounted {
   public:
     SourceDataObj source;
     SassImportSyntax syntax;
@@ -155,19 +155,19 @@ namespace Sass {
     // Easiest way to communicate back
     const char* getErrorMsg() const;
     void setErrorMsg(const char* msg);
-    Import93(SassImportSyntax syntax = SASS_IMPORT_AUTO) :
+    Import(SassImportSyntax syntax = SASS_IMPORT_AUTO) :
       syntax(syntax)
     {}
 
-    ~Import93() {
+    ~Import() {
       sass_free_c_string(error);
     }
 
-    Import93(
+    Import(
       SourceData* source,
       SassImportSyntax syntax);
 
-    CAPI_WRAPPER(Import93, SassImport);
+    CAPI_WRAPPER(Import, SassImport);
   };
 
   // Error thrown by certain file functions

@@ -447,7 +447,7 @@ extern "C" {
   // Setter for compiler entry point (which file or data to parse first).
   void ADDCALL sass_compiler_set_entry_point(struct SassCompiler* compiler, struct SassImport* import)
   {
-    Compiler::unwrap(compiler).entry_point = &Import93::unwrap(import);
+    Compiler::unwrap(compiler).entry_point = &Import::unwrap(import);
   }
 
   // Getter for compiler output path (where to store the result)

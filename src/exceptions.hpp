@@ -231,38 +231,19 @@ namespace Sass {
         virtual const char* what() const throw() { return msg.c_str(); }
     };
 
-    class ZeroDivisionError : public OperationError {
-      public:
-        ZeroDivisionError(const Value& lhs, const Value& rhs);
-    };
-
-    //class IncompatibleUnits : public OperationError {
-    //  protected:
-    //    // const Sass::UnitType lhs;
-    //    // const Sass::UnitType rhs;
-    //  public:
-    //    IncompatibleUnits(const Units& lhs, const Units& rhs);
-    //    // virtual ~IncompatibleUnits() noexcept {};
-    //};
-
-
-
     class TopLevelParent : public Base {
     public:
       TopLevelParent(BackTraces traces, SourceSpan pstate);
-      // virtual ~TopLevelParent() noexcept {};
     };
 
     class UnsatisfiedExtend : public Base {
     public:
       UnsatisfiedExtend(BackTraces traces, Extension extension);
-      // virtual ~UnsatisfiedExtend() noexcept {};
     };
 
     class ExtendAcrossMedia : public Base {
     public:
       ExtendAcrossMedia(BackTraces traces, Extension extension);
-      // virtual ~ExtendAcrossMedia() noexcept {};
     };
 
   }

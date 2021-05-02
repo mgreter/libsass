@@ -1,7 +1,3 @@
-bool stkdbg = false;
-bool mixdbg = false;
-bool fndbg = false;
-
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
@@ -103,14 +99,12 @@ namespace Sass {
   {
     if (framePtr == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intVariables.size();
-      if (stkdbg) std::cerr << "Create global variable " << name.orig() << " at " << offset << "\n";
       root.intVariables.resize(offset + 1);
       varIdxs[name] = offset;
       return { 0xFFFFFFFF, offset };
     }
     // Get local offset to new variable
     uint32_t offset = (uint32_t)varIdxs.size();
-    if (stkdbg) std::cerr << "Create local variable " << name.orig() << " at " << offset << "\n";
     // Remember the variable name
     varIdxs[name] = offset;
     // Return stack index reference
@@ -127,14 +121,12 @@ namespace Sass {
   {
     if (framePtr == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intFunction.size();
-      if (fndbg) std::cerr << "Create global function " << name.orig() << " at " << offset << "\n";
       root.intFunction.resize(offset + 1);
       fnIdxs[name] = offset;
       return { 0xFFFFFFFF, offset };
     }
     // Get local offset to new function
     uint32_t offset = (uint32_t)fnIdxs.size();
-    if (fndbg) std::cerr << "Create local function " << name.orig() << " at " << offset << "\n";
     // Remember the function name
     fnIdxs[name] = offset;
     // Return stack index reference
@@ -151,13 +143,11 @@ namespace Sass {
     if (framePtr == 0xFFFFFFFF) {
       uint32_t offset = (uint32_t)root.intMixin.size();
       root.intMixin.resize(offset + 1);
-      if (mixdbg) std::cerr << "Create global mixin " << name.orig() << " at " << offset << "\n";
       mixIdxs[name] = offset;
       return { 0xFFFFFFFF, offset };
     }
     // Get local offset to new mixin
     uint32_t offset = (uint32_t)mixIdxs.size();
-    if (mixdbg) std::cerr << "Create local mixin " << name.orig() << " at " << offset << "\n";
     // Remember the mixin name
     mixIdxs[name] = offset;
     // Return stack index reference
@@ -174,11 +164,9 @@ namespace Sass {
   ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
   {
     if (vidx.frame == 0xFFFFFFFF) {
-      // if (stkdbg) std::cerr << "Get global variable " << vidx.offset << "\n";
       return intVariables[vidx.offset];
     }
     else {
-      // if (stkdbg) std::cerr << "Get variable " << vidx.toString() << "\n";
       return varStack[size_t(varStackPtr[vidx.frame]) + vidx.offset];
     }
   }
@@ -226,11 +214,9 @@ namespace Sass {
   CallableObj& EnvRoot::getMixin(const EnvRef& midx)
   {
     if (midx.frame == 0xFFFFFFFF) {
-      if (mixdbg) std::cerr << "Get global mixin " << midx.offset << "\n";
       return intMixin[midx.offset];
     }
     else {
-      if (mixdbg) std::cerr << "Get mixin " << midx.toString() << "\n";
       return mixStack[size_t(mixStackPtr[midx.frame]) + midx.offset];
     }
   }
@@ -245,13 +231,7 @@ namespace Sass {
     }
     ValueObj& slot(intVariables[offset]);
     if (!guarded || !slot || slot->isaNull()) {
-      if (stkdbg) std::cerr << "Set global variable " << offset
-        << " - " << value->inspect() << "\n";
       slot = value;
-    }
-    else {
-      if (stkdbg) std::cerr << "Guarded global variable " << offset
-        << " - " << value->inspect() << "\n";
     }
   }
 
@@ -262,15 +242,10 @@ namespace Sass {
     if (vidx.frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[vidx.offset]);
       if (!guarded || !slot || slot->isaNull()) {
-        if (stkdbg) std::cerr << "Set global variable " << vidx.offset << " - " << value->inspect() << "\n";
         slot = value;
-      }
-      else {
-        if (stkdbg) std::cerr << "Guarded global variable " << vidx.offset << " - " << value->inspect() << "\n";
       }
     }
     else {
-      if (stkdbg) std::cerr << "Set variable " << vidx.toString() << " - " << value->inspect() << "\n";
       ValueObj& slot(varStack[size_t(varStackPtr[vidx.frame]) + vidx.offset]);
       if (slot == nullptr || guarded == false) slot = value;
     }
@@ -283,12 +258,10 @@ namespace Sass {
   {
     if (frame == 0xFFFFFFFF) {
       ValueObj& slot(intVariables[offset]);
-      if (stkdbg) std::cerr << "Set global variable " << offset << " - " << value->inspect() << "\n";
       if (!guarded || !slot || slot->isaNull())
         intVariables[offset] = value;
     }
     else {
-      if (stkdbg) std::cerr << "Set variable " << frame << ":" << offset << " - " << value->inspect() << "\n";
       ValueObj& slot(varStack[size_t(varStackPtr[frame]) + offset]);
       if (!guarded || !slot || slot->isaNull()) slot = value;
     }

@@ -134,7 +134,7 @@ namespace Sass {
 
       SourceSpan pstate(scanner.relevantSpanFrom(start));
       if (!compiler.callCustomImporters(url, pstate, rule)) {
-        rule->append(SASS_MEMORY_NEW(IncludeImport62,
+        rule->append(SASS_MEMORY_NEW(IncludeImport,
           pstate, scanner.sourceUrl, url, nullptr));
       }
 

@@ -96,6 +96,7 @@ namespace Sass {
     // Consumes and ignores a loud (CSS-style) comment.
     virtual void scanLoudComment();
 
+    // Consumes and ignores a silent (Sass-style) comment.
     virtual void scanSilentComment();
 
     // Consumes a plain CSS identifier. If [unit] is `true`, this 

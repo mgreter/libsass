@@ -30,16 +30,16 @@ jobs:
           - {os: ubuntu-latest, build: 'static', cc: 'gcc-7', cxx: 'g++-7', autotools: 'no', cppstd: 'c++11'}
           - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-fsanitize=address'}
           - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-fsanitize=address'}
-          - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11', cflags: '-fsanitize=address'}
-          - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11', cflags: '-fsanitize=address'}
+          - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11'}
+          - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11'}
           - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
           - {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
           - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
           - {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
           - {os: macOS-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
           - {os: macOS-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
-          - {os: macOS-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11'}
-          - {os: macOS-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11'}
+          - {os: macOS-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
+          - {os: macOS-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', asan: 'detect_odr_violation=0'}
 
     env:
       ASAN_OPTIONS: ${{ matrix.config.asan }}

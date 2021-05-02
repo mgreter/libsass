@@ -26,7 +26,7 @@ namespace Sass {
 
     void exposeUseRule(UseRule* rule);
     void exposeFwdRule(ForwardRule* rule);
-    void exposeImpRule(IncludeImport62* rule);
+    void exposeImpRule(IncludeImport* rule);
 
     // Some references
     Logger& logger456;
@@ -275,7 +275,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
 
     void acceptStaticImport(StaticImport* import);
-    void acceptIncludeImport(IncludeImport62* import);
+    void acceptIncludeImport(IncludeImport* import);
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -344,7 +344,7 @@ protected:
     Value* visitWhileRule(WhileRule* rule);
 
   public:
-    Root* resolveIncludeImport(IncludeImport62* rule);
+    Root* resolveIncludeImport(IncludeImport* rule);
 
 
     // Backbone loader function

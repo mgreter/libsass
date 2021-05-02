@@ -65,7 +65,7 @@ namespace Sass {
     eval.exposeFwdRule(rule);
   }
 
-  void Preloader::visitIncludeImport(IncludeImport62* rule)
+  void Preloader::visitIncludeImport(IncludeImport* rule)
   {
     callStackFrame frame(compiler, {
       rule->pstate(), Strings::importRule });
@@ -98,7 +98,7 @@ namespace Sass {
   void Preloader::visitImportRule(ImportRule* rule)
   {
     for (const ImportBaseObj& import : rule->elements()) {
-      if (IncludeImport62* include = import->isaIncludeImport62()) {
+      if (IncludeImport* include = import->isaIncludeImport()) {
         visitIncludeImport(include);
       }
     }

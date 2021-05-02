@@ -38,7 +38,7 @@ namespace Sass {
     EnvRefs* idxs;
 
     void visitParentStatement(ParentStatement* rule);
-    void visitIncludeImport(IncludeImport62* include);
+    void visitIncludeImport(IncludeImport* include);
 
   public:
 

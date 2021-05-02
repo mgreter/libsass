@@ -654,7 +654,7 @@ namespace Sass {
   class ModRule : public WithConfig
   {
   private:
-    ADD_CONSTREF(Import93Obj, import);
+    ADD_CONSTREF(ImportObj, import);
     ADD_CONSTREF(sass::string, prev);
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::string, ns);
@@ -665,7 +665,7 @@ namespace Sass {
     ModRule(
       const sass::string& prev,
       const sass::string& url,
-      Import93* import,
+      Import* import,
       WithConfig* pwconfig = nullptr,
       sass::vector<WithConfigVar>&& config = {},
       bool hasLocalWith = false);
@@ -673,7 +673,7 @@ namespace Sass {
     ModRule(
       const sass::string& prev,
       const sass::string& url,
-      Import93* import,
+      Import* import,
       const sass::string& prefix,
       WithConfig* pwconfig,
       std::set<EnvKey>&& varFilters,
@@ -701,7 +701,7 @@ namespace Sass {
       const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,
-      Import93* import,
+      Import* import,
       WithConfig* pwconfig,
       sass::vector<WithConfigVar>&& config,
       bool hasLocalWith);
@@ -726,7 +726,7 @@ namespace Sass {
       const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,
-      Import93* import,
+      Import* import,
       const sass::string& prefix,
       WithConfig* pwconfig,
       std::set<EnvKey>&& varFilters,

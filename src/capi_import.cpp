@@ -21,7 +21,7 @@ extern "C" {
   {
     std::istreambuf_iterator<char> begin(std::cin), end;
     sass::string text(begin, end); // consume everything
-    Import93* import = SASS_MEMORY_NEW(Import93,
+    Import* import = SASS_MEMORY_NEW(Import,
       SASS_MEMORY_NEW(SourceString,
         path ? path : "stream://stdin",
         std::move(text)),
@@ -35,7 +35,7 @@ extern "C" {
   struct SassImport* ADDCALL sass_make_file_import(const char* imp_path)
   {
     sass::string abs_path(File::rel2abs(imp_path, CWD()));
-    Import93* loaded = SASS_MEMORY_NEW(Import93,
+    Import* loaded = SASS_MEMORY_NEW(Import,
       SASS_MEMORY_NEW(SourceFile,
         imp_path, abs_path.c_str(),
         nullptr, nullptr),
@@ -49,7 +49,7 @@ extern "C" {
   // Note: we take ownership of the passed `content` memory.
   struct SassImport* ADDCALL sass_make_content_import(char* content, const char* path)
   {
-    Import93* loaded = SASS_MEMORY_NEW(Import93,
+    Import* loaded = SASS_MEMORY_NEW(Import,
       SASS_MEMORY_NEW(SourceString,
         path ? path : "stream://stdin",
         path ? path : "stream://stdin",
@@ -67,8 +67,8 @@ extern "C" {
   struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_path,
     char* source, char* srcmap, enum SassImportSyntax format)
   {
-    Import93* import =
-      SASS_MEMORY_NEW(Import93,
+    Import* import =
+      SASS_MEMORY_NEW(Import,
         SASS_MEMORY_NEW(SourceFile,
           imp_path, abs_path,
           source ? source : 0,
@@ -77,14 +77,14 @@ extern "C" {
     // Use reference counter
     import->refcount += 1;
     // Create the shared source object
-    return Import93::wrap(import);
+    return Import::wrap(import);
   }
   // EO sass_make_import
 
   // Just in case we have some stray import structs
   void ADDCALL sass_delete_import(struct SassImport* import)
   {
-    Import93& object = Import93::unwrap(import);
+    Import& object = Import::unwrap(import);
     if (object.refcount <= 1) {
       object.refcount = 0;
       delete &object;
@@ -101,39 +101,39 @@ extern "C" {
   // Getter for specific import format for the given import (force css/sass/scss or set to auto)
   enum SassImportSyntax ADDCALL sass_import_get_type(const struct SassImport* entry)
   {
-    return Import93::unwrap(entry).syntax;
+    return Import::unwrap(entry).syntax;
   }
 
   // Setter for specific import format for the given import (force css/sass/scss or set to auto)
   void ADDCALL sass_import_set_syntax(struct SassImport* import, enum SassImportSyntax syntax)
   {
-    Import93::unwrap(import).syntax = syntax;
+    Import::unwrap(import).syntax = syntax;
   }
 
   // Getter for original import path (as seen when parsed)
   const char* ADDCALL sass_import_get_imp_path(const struct SassImport* entry)
   {
-    return Import93::unwrap(entry).getImpPath();
+    return Import::unwrap(entry).getImpPath();
   }
 
   // Getter for resolve absolute path (after being resolved)
   const char* ADDCALL sass_import_get_abs_path(const struct SassImport* entry)
   {
-    return Import93::unwrap(entry).getAbsPath();
+    return Import::unwrap(entry).getAbsPath();
   }
 
   // Getter for import error message (used by custom importers).
   // If error is not `nullptr`, the import must be considered as failed.
   const char* ADDCALL sass_import_get_error_message(struct SassImport* entry)
   {
-    return Import93::unwrap(entry).getErrorMsg();
+    return Import::unwrap(entry).getErrorMsg();
   }
 
   // Setter for import error message (used by custom importers).
   // If error is not `nullptr`, the import must be considered as failed.
   void ADDCALL sass_import_set_error_message(struct SassImport* entry, const char* msg)
   {
-    return Import93::unwrap(entry).setErrorMsg(msg);
+    return Import::unwrap(entry).setErrorMsg(msg);
   }
 
   /////////////////////////////////////////////////////////////////////////

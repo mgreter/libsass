@@ -278,59 +278,6 @@ namespace Sass {
     {}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /////////////////////////////////////////////////////////////////////////
-    // Various value operation errors
-    /////////////////////////////////////////////////////////////////////////
-
-    ZeroDivisionError::ZeroDivisionError(const Value& lhs, const Value& rhs)
-      : OperationError("divided by 0")
-    {}
-
-    //IncompatibleUnits::IncompatibleUnits(const Units& lhs, const Units& rhs)
-    //  : OperationError("Incompatible units "
-    //    + rhs.unit() + " and "
-    //    + lhs.unit() + ".")
-    //{}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	DeprecatedColorAdjustFn::DeprecatedColorAdjustFn(
     Logger& logger,
     const ValueVector& arguments,

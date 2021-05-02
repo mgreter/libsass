@@ -116,6 +116,9 @@ namespace Sass {
     // that it doesn't consume multi-line comments.
     LoudComment* readLoudComment();
 
+    // Consumes and ignores a loud (CSS-style) comment.
+    // This overrides loud comment consumption so that
+    // it doesn't consume multi-line comments.
     void scanLoudComment() override final;
 
     void scanWhitespaceWithoutComments() override final;

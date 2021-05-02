@@ -117,11 +117,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  IncludeImport62::IncludeImport62(
+  IncludeImport::IncludeImport(
     const SourceSpan& pstate,
     const sass::string& prev,
     const sass::string& url,
-    Import93* import) :
+    Import* import) :
     ImportBase(pstate),
     ModRule(
       prev, url,

@@ -52,7 +52,7 @@ namespace Sass {
   // Dynamic import beside its name must have a static url
   // We do not support to load sass partials programmatic
   // They also don't allow any supports or media queries.
-  class IncludeImport62 final : public ImportBase, public ModRule
+  class IncludeImport final : public ImportBase, public ModRule
   {
   private:
     ADD_PROPERTY(bool, wasExported33);
@@ -60,12 +60,12 @@ namespace Sass {
 
     const sass::vector<ResolvedImport>* candidates22 = nullptr;
 
-    IncludeImport62(const SourceSpan& pstate,
+    IncludeImport(const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,
-      Import93* import);
+      Import* import);
     // Implement final up-casting method
-    IMPLEMENT_ISA_CASTER(IncludeImport62);
+    IMPLEMENT_ISA_CASTER(IncludeImport);
   };
 
   /////////////////////////////////////////////////////////////////////////

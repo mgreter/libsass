@@ -496,12 +496,12 @@ namespace Sass {
 
     LOCAL_PTR(WithConfig, wconfig, rule);
 
-    auto sheet2 = loadModule(
+    auto sheet = loadModule(
       rule->prev(), rule->url());
-    rule->module(sheet2);
-    rule->root(sheet2);
+    rule->module(sheet);
+    rule->root(sheet);
 
-    return sheet2;
+    return sheet;
 
   }
 
@@ -530,7 +530,7 @@ namespace Sass {
     }
 
     // This is guaranteed to either load or error out!
-    Import93Obj loaded = compiler.loadImport(resolved[0]);
+    ImportObj loaded = compiler.loadImport(resolved[0]);
     ImportStackFrame iframe(compiler, loaded);
 
     sass::string abspath(loaded->getAbsPath());
@@ -548,7 +548,7 @@ namespace Sass {
   }
 
 
-  Root* Eval::resolveIncludeImport(IncludeImport62* rule)
+  Root* Eval::resolveIncludeImport(IncludeImport* rule)
   {
     // Seems already loaded?
     if (rule->root()) {
@@ -832,7 +832,7 @@ namespace Sass {
 
   }
 
-  void Eval::exposeImpRule(IncludeImport62* rule)
+  void Eval::exposeImpRule(IncludeImport* rule)
   {
 
     EnvRefs* pframe = compiler.getCurrentFrame();
@@ -910,7 +910,7 @@ namespace Sass {
 
   }
 
-  void Eval::acceptIncludeImport(IncludeImport62* rule)
+  void Eval::acceptIncludeImport(IncludeImport* rule)
   {
     BackTrace trace(rule->pstate(), Strings::importRule);
     callStackFrame cframe(logger456, trace);

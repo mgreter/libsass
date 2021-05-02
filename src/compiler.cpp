@@ -367,7 +367,7 @@ namespace Sass {
           ++count;
           // Consume the first item from the list
           struct SassImport* entry = sass_import_list_shift(imports);
-          Import93& import = Import93::unwrap(entry);
+          Import& import = Import::unwrap(entry);
           // Create a unique path to use as key
           sass::string uniq_path = imp_path;
           // Append counter to the path
@@ -405,7 +405,7 @@ namespace Sass {
               ImportStackFrame iframe(*this, &import);
               Root* sheet = registerImport(&import);
               // Add a dynamic import to the import rule
-              auto inc = SASS_MEMORY_NEW(IncludeImport62,
+              auto inc = SASS_MEMORY_NEW(IncludeImport,
                 pstate, ctx_path, path_key, &import);
               inc->root(sheet);
               rule->append(inc);
@@ -439,11 +439,11 @@ namespace Sass {
                 throw err;
               }
               // We made sure exactly one entry was found, load its content
-              if (Import93Obj loaded = loadImport(resolved[0])) {
+              if (ImportObj loaded = loadImport(resolved[0])) {
                 ImportStackFrame iframe(*this, loaded);
                 Root* sheet = registerImport(loaded);
                 const sass::string& url(resolved[0].abs_path);
-                auto inc = SASS_MEMORY_NEW(IncludeImport62,
+                auto inc = SASS_MEMORY_NEW(IncludeImport,
                   pstate, ctx_path, url, &import);
                 inc->root(sheet);
                 rule->append(inc);
@@ -613,7 +613,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Invoke parser according to import format
-  RootObj Compiler::parseSource(Import93Obj import)
+  RootObj Compiler::parseSource(ImportObj import)
   {
     Root* root = nullptr;
     if (import->syntax == SASS_IMPORT_CSS)
@@ -637,7 +637,7 @@ namespace Sass {
 
   // Parse the import (updates syntax flag if AUTO was set)
   // Results will be stored at `sheets[source->getAbsPath()]`
-  Root* Compiler::registerImport(Import93Obj import)
+  Root* Compiler::registerImport(ImportObj import)
   {
 
     SassImportSyntax& format(import->syntax);
@@ -713,7 +713,7 @@ namespace Sass {
     exit(EXIT_FAILURE);
   }
 
-  Root* Compiler::parseRoot(Import93Obj import)
+  Root* Compiler::parseRoot(ImportObj import)
   {
 
     // Attach signal handlers
@@ -755,7 +755,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ImportStackFrame::ImportStackFrame(Compiler& compiler, Import93* import) :
+  ImportStackFrame::ImportStackFrame(Compiler& compiler, Import* import) :
     compiler(compiler)
   {
 
@@ -878,7 +878,7 @@ namespace Sass {
   sass::string Compiler::findFile(const sass::string& path)
   {
     // Get last import entry for current base
-    Import93& import = import_stack.back();
+    Import& import = import_stack.back();
     // create the vector with paths to lookup
     sass::vector<sass::string> incpaths(1 + includePaths.size());
     incpaths.emplace_back(File::dir_name(import.source->getAbsPath()));
@@ -914,13 +914,13 @@ namespace Sass {
   }
 
   // Load import from the file-system and create source object
-  Import93* Compiler::loadImport(const ResolvedImport& import)
+  Import* Compiler::loadImport(const ResolvedImport& import)
   {
     // Try to find the item in the cache first
     auto cached = sources.find(import.abs_path);
     if (cached != sources.end()) return cached->second;
     // Try to read source and (ToDo) optional mappings
-    if (Import93Obj loaded = File::read_file(import)) {
+    if (ImportObj loaded = File::read_file(import)) {
       sources.insert({ import.abs_path, loaded });
       return loaded.ptr();
     }

@@ -39,7 +39,7 @@ namespace Sass {
   const char* sass_op_separator(enum SassOperator op);
 
   typedef LocalStack<EnvFrame*> ScopedStack;
-  typedef LocalStack<Import93Obj> ScopedImport93;
+  typedef LocalStack<ImportObj> ScopedImport;
   typedef LocalStack<SelectorListObj> ScopedSelector;
 
   /////////////////////////////////////////////////////////////////////////
@@ -233,7 +233,7 @@ namespace Sass {
     ImportBase(const ImportBase* ptr);
     // Declare up-casting methods
     DECLARE_ISA_CASTER(StaticImport);
-    DECLARE_ISA_CASTER(IncludeImport62);
+    DECLARE_ISA_CASTER(IncludeImport);
   };
 
   //////////////////////////////////////////////////////////////////////

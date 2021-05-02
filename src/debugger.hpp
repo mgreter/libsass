@@ -852,9 +852,9 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " [" << block->url()->text() << "] ";
     std::cerr << std::endl;
   }
-  else if (Cast<IncludeImport62>(node)) {
-    IncludeImport62* block = Cast<IncludeImport62>(node);
-    std::cerr << ind << "IncludeImport62 " << block;
+  else if (Cast<IncludeImport>(node)) {
+    IncludeImport* block = Cast<IncludeImport>(node);
+    std::cerr << ind << "IncludeImport " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     debug_idxs(block->module());
     std::cerr << std::endl;

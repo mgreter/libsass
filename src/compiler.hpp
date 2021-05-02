@@ -72,7 +72,7 @@ namespace Sass {
     std::map<const sass::string, RootObj> sheets;
 
     // Only used to cache `loadImport` calls
-    std::map<const sass::string, Import93Obj> sources;
+    std::map<const sass::string, ImportObj> sources;
 
     // Additional C-API stuff for interaction
     sass::vector<struct SassImporter*> cHeaders;
@@ -82,7 +82,7 @@ namespace Sass {
   public:
 
     // The import stack during evaluation phase
-    sass::vector<Import93Obj> import_stack;
+    sass::vector<ImportObj> import_stack;
 
     // List of all sources that have been included
     sass::vector<SourceDataObj> included_sources;
@@ -113,7 +113,7 @@ namespace Sass {
 
     // Load import from the file-system and create source object
     // Results will be stored at `sources[source->getAbsPath()]`
-    Import93* loadImport(const ResolvedImport& import);
+    Import* loadImport(const ResolvedImport& import);
 
     // Implementation for `sass_compiler_find_file`
     // Looks for the file in regard to the current
@@ -185,7 +185,7 @@ namespace Sass {
     sass::string output_path;
 
     // main entry point for compilation
-    Import93Obj entry_point;
+    ImportObj entry_point;
 
     // Parsed ast-tree
     RootObj sheet;
@@ -290,7 +290,7 @@ namespace Sass {
 
     // Parse the import (updates syntax flag if AUTO was set)
     // Results will be stored at `sheets[source->getAbsPath()]`
-    Root* registerImport(Import93Obj import);
+    Root* registerImport(ImportObj import);
 
     // Called by parserStylesheet on the very first parse call
     void applyCustomHeaders(StatementVector& root, SourceSpan pstate);
@@ -303,7 +303,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     void loadBuiltInFunctions();
 
-    Root* parseRoot(Import93Obj import);
+    Root* parseRoot(ImportObj import);
 
   private:
 
@@ -326,7 +326,7 @@ namespace Sass {
       void registerCustomFunction(struct SassFunction* function);
 
     // Invoke parser according to import format
-    RootObj parseSource(Import93Obj source);
+    RootObj parseSource(ImportObj source);
 
   public:
 
@@ -344,7 +344,7 @@ namespace Sass {
 
     ImportStackFrame(
       Compiler& compiler,
-      Import93* import);
+      Import* import);
 
     ~ImportStackFrame();
 
