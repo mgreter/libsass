@@ -3,7 +3,12 @@
 /*****************************************************************************/
 #include "capi_error.hpp"
 
+#include <sstream>
 #include "json.hpp"
+#include "unicode.hpp"
+#include "string_utils.hpp"
+
+using namespace Sass;
 
 // Create error formatted as serialized json.
 // You must free the data returned from here.
@@ -17,9 +22,9 @@ char* SassError::getJson(bool include_sources) const
   // Attach all stack traces
   if (traces.size() > 0) {
     JsonNode* json_traces = json_mkarray();
-    for (const Sass::StackTrace& trace : traces) {
+    for (const StackTrace& trace : traces) {
       JsonNode* json_trace = json_mkobject();
-      const Sass::SourceSpan& pstate(trace.pstate);
+      const SourceSpan& pstate(trace.pstate);
       json_append_member(json_trace, "file", json_mkstring(pstate.getAbsPath()));
       json_append_member(json_trace, "line", json_mknumber((double)(pstate.getLine())));
       json_append_member(json_trace, "column", json_mknumber((double)(pstate.getColumn())));
@@ -49,6 +54,77 @@ char* SassError::getJson(bool include_sources) const
 }
 // EO SassError::getJson
 
+// Write error style-sheet so errors are shown
+// in the browser if the stylesheet is loaded.
+void SassError::writeCss(std::ostream& css) const
+{
+  // Create a copy to replace chars
+  sass::string header(formatted);
+  StringUtils::makeRightTrimmed(header);
+  sass::string escaped(header);
+
+  size_t found = header.find_first_of("*/");
+  while (found != std::string::npos) {
+    header.replace(found, 2, "*\xE2\x88\x95");
+    found = header.find_first_of("*/", found + 4);
+  }
+  found = header.find_first_of("\n");
+  while (found != std::string::npos) {
+    header.replace(found, 1, "\n * ");
+    found = header.find_first_of("\n", found + 1);
+  }
+  css << "/* " << header << "\n */\n";
+
+  // Create a copy to replace chars
+  found = escaped.find_first_of("\n");
+  while (found != std::string::npos) {
+    escaped.replace(found, 1, "\\a ");
+    found = escaped.find_first_of("\n", found + 2);
+  }
+  found = escaped.find_first_of("\"");
+  while (found != std::string::npos) {
+    escaped.replace(found, 1, "\\\"");
+    found = escaped.find_first_of("\"", found + 2);
+  }
+
+  // Create body style-rule to show error in UA
+  css << "body::before{\n";
+  css << "  font-family: \"Source Code Pro\", \"SF Mono\", Monaco, Inconsolata, \"Fira Mono\",\n";
+  css << "      \"Droid Sans Mono\", monospace, monospace;\n";
+  css << "  white-space: pre;\n";
+  css << "  display: block; \n";
+  css << "  padding: 1em; \n";
+  css << "  margin-bottom: 1em; \n";
+  css << "  border-bottom: 2px solid black; \n";
+  css << "  content: \"";
+
+  // Print the escaped content now, code-point by code-point
+  auto cur = escaped.begin();
+  auto end = escaped.end();
+  while (cur != end) {
+    uint32_t cp = utf8::next(cur, end);
+    if (cp <= 127) {
+      css << (char)cp;
+    }
+    else {
+      css << "\\" <<
+        std::hex << cp;
+    }
+  }
+  css << "\"\n" << "}\n";
+}
+// EO SassError::writeCss
+
+// Getter for error status as css
+// In order to show error in browser.
+char* SassError::getCss() const
+{
+  sass::ostream css;
+  writeCss(css);
+  return sass_copy_string(css.str());
+}
+// EO SassError::getCss
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -66,6 +142,9 @@ extern "C" {
 
   // Getter for plain error message (use after compiler was rendered).
   const char* ADDCALL sass_error_get_string(const struct SassError* error) { return error->what.c_str(); }
+
+  // Getter for error status as css (In order to show error in browser).
+  char* ADDCALL sass_error_get_css(const struct SassError* error) { return error->getCss(); }
 
   // Getter for error status as json object (Useful to pass to downstream).
   char* ADDCALL sass_error_get_json(const struct SassError* error) { return error->getJson(true); }

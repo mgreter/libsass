@@ -158,32 +158,45 @@ namespace Sass {
   // Main implementation (caller is wrapped in try/catch)
   void _sass_compiler_write_output(Compiler& compiler)
   {
-    // Write to output only if no errors occurred
-    if (compiler.error.status != 0) return;
 
-    // ToDo: can we use the same types?
-    const char* footer = compiler.footer;
-    const char* content = compiler.content.empty() ?
-      nullptr : compiler.content.c_str();
     const char* path = compiler.output_path.c_str();
 
-    // Check if anything is to write
-    if (content || footer) {
-      // Check where to write it to
-      if (path && compiler.hasOutputFile()) {
-        std::ofstream fh(path, std::ios::out | std::ios::binary);
-        if (!fh) throw std::runtime_error("Error opening output file");
-        // Write stuff to the output file
-        if (content) { fh << content; }
-        if (footer) { fh << content; }
-        // Close file-handle
-        fh.close();
+    // Write regular output if no error occurred
+    if (compiler.error.status == 0) {
+
+      // ToDo: can we use the same types?
+      const char* footer = compiler.footer;
+      const char* content = compiler.content.empty() ?
+        nullptr : compiler.content.c_str();
+
+      // Check if anything is to write
+      if (content || footer) {
+        // Check where to write it to
+        if (path && compiler.hasOutputFile()) {
+          std::ofstream fh(path, std::ios::out | std::ios::binary);
+          if (!fh) throw std::runtime_error("Error opening output file");
+          // Write stuff to the output file
+          if (content) { fh << content; }
+          if (footer) { fh << content; }
+          // Close file-handle
+          fh.close();
+        }
+        else {
+          // Simply print results to stdout
+          if (content) std::cout << content;
+          if (footer) std::cout << footer;
+        }
       }
-      else {
-        // Simply print results to stdout
-        if (content) std::cout << content;
-        if (footer) std::cout << footer;
-      }
+
+    }
+    // Otherwise write special error css
+    else if (path && compiler.hasOutputFile()) {
+      std::ofstream fh(path, std::ios::out | std::ios::binary);
+      if (!fh) throw std::runtime_error("Error opening output file");
+      // Write stuff to the output file
+      compiler.error.writeCss(fh);
+      // Close file-handle
+      fh.close();
     }
 
   }
@@ -388,13 +401,12 @@ extern "C" {
     // Get original compiler exit status to return
     int result = sass_compiler_get_status(compiler);
 
-    // Check compile result
-    if (result == 0) {
-      // Write/print the results
-      sass_compiler_write_output(compiler);
-      sass_compiler_write_srcmap(compiler);
-    }
-    else {
+    // Write/print the results
+    sass_compiler_write_output(compiler);
+    sass_compiler_write_srcmap(compiler);
+
+    // Check for errors
+    if (result != 0) {
       // Print error message if we have an error
       const struct SassError* error = sass_compiler_get_error(compiler);
       if (error) sass_print_stderr(sass_error_get_formatted(error));

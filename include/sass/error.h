@@ -19,6 +19,9 @@ extern "C" {
   // Getter for plain error message (use after compiler was rendered).
   ADDAPI const char* ADDCALL sass_error_get_string(const struct SassError* error);
 
+  // Getter for error status as css (In order to show error in browser).
+  ADDAPI char* ADDCALL sass_error_get_css(const struct SassError* error);
+
   // Getter for error status as json object (Useful to pass to downstream).
   ADDAPI char* ADDCALL sass_error_get_json(const struct SassError* error);
 

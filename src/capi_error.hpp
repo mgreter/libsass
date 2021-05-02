@@ -37,6 +37,14 @@ struct SassError {
   // Do so by calling `sass_free_memory(ptr)`.
   char* getJson(bool include_sources) const;
 
+  // Getter for error status as css
+  // In order to show error in browser.
+  char* getCss() const;
+
+  // Write error style-sheet so errors are shown
+  // in the browser if the stylesheet is loaded.
+  void writeCss(std::ostream& css) const;
+
 };
 
 #endif
