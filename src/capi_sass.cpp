@@ -23,7 +23,7 @@ extern "C" {
   void ADDCALL sass_chdir(const char* path)
   {
     if (path != nullptr) {
-      CWD = File::rel2abs(path, CWD) + "/";
+      set_cwd(File::rel2abs(path, CWD()) + "/");
     }
   }
 

@@ -18,15 +18,19 @@
 
 namespace Sass {
 
+  // return the current directory
+  // always with forward slashes
+  extern sass::string get_pwd();
+
+  // return the current directory
+  // always with forward slashes
+  extern void set_cwd(const sass::string& path);
+
   // Should be thread_local?
-  extern thread_local sass::string CWD;
+  extern const sass::string& CWD();
 
   namespace File {
 
-
-    // return the current directory
-    // always with forward slashes
-    extern sass::string get_cwd();
 
     // test if path exists and is a file
     bool file_exists(const sass::string& file, const sass::string& CWD,
@@ -55,11 +59,11 @@ namespace Sass {
     sass::string rel2dbg(const sass::string& rel_path, const sass::string& orig_path);
 
     // create an absolute path by resolving relative paths with cwd
-    sass::string rel2abs(const sass::string& path, const sass::string& base = Sass::CWD, const sass::string& CWD = Sass::CWD);
+    sass::string rel2abs(const sass::string& path, const sass::string& base = Sass::CWD(), const sass::string& CWD = Sass::CWD());
 
     // create a path that is relative to the given base directory
     // path and base will first be resolved against cwd to make them absolute
-    sass::string abs2rel(const sass::string& path, const sass::string& base = Sass::CWD, const sass::string& CWD = Sass::CWD);
+    sass::string abs2rel(const sass::string& path, const sass::string& base = Sass::CWD(), const sass::string& CWD = Sass::CWD());
 
     // helper function to resolve a filename
     // searching without variations in all paths
@@ -104,7 +108,7 @@ namespace Sass {
         considerImports(considerImports)
       {
         if (base_path == "stream://") {
-          base_path = CWD;
+          base_path = CWD();
         }
       }
 

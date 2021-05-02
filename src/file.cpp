@@ -54,33 +54,55 @@ inline static sass::string wstring_to_string(const std::wstring &wstr)
 #endif
 
 namespace Sass {
-  namespace File {
 
-    // return the current directory
-    // always with forward slashes
-    // always with trailing slash
-    extern sass::string get_cwd()
-    {
-      const size_t wd_len = 4096;
-      #ifndef _WIN32
-        char wd[wd_len];
-        char* pwd = getcwd(wd, wd_len);
-        // we should check error for more detailed info (e.g. ENOENT)
-        // http://man7.org/linux/man-pages/man2/getcwd.2.html#ERRORS
-        if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
-        sass::string cwd = pwd;
-      #else
-        wchar_t wd[wd_len];
-        wchar_t* pwd = _wgetcwd(wd, wd_len);
-        if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
-        sass::string cwd = wstring_to_string(pwd);
-        //convert backslashes to forward slashes
-        replace(cwd.begin(), cwd.end(), '\\', '/');
-      #endif
-      if (cwd[cwd.length() - 1] != '/') cwd += '/';
-      return cwd;
+  // return the current directory
+  // always with forward slashes
+  // always with trailing slash
+  extern sass::string get_pwd()
+  {
+    const size_t wd_len = 4096;
+    #ifndef _WIN32
+    char wd[wd_len];
+    char* pwd = getcwd(wd, wd_len);
+    // we should check error for more detailed info (e.g. ENOENT)
+    // http://man7.org/linux/man-pages/man2/getcwd.2.html#ERRORS
+    if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
+    sass::string cwd = pwd;
+    #else
+    wchar_t wd[wd_len];
+    wchar_t* pwd = _wgetcwd(wd, wd_len);
+    if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
+    sass::string cwd = wstring_to_string(pwd);
+    //convert backslashes to forward slashes
+    replace(cwd.begin(), cwd.end(), '\\', '/');
+    #endif
+    if (cwd[cwd.length() - 1] != '/') cwd += '/';
+    return cwd;
+  }
+
+  // Use a pointer to avoid some compiler issues
+  // Has proven to be the most stable, but the memory
+  // will kinda leak (not relevant since long living).
+  // One known offender is mingw v8.1.0 x86/i686
+  static thread_local sass::string* cwd;
+
+  // Initialize current directory once
+  extern void set_cwd(const sass::string& path) {
+    if (cwd == nullptr) {
+      cwd = new sass::string(get_pwd());
     }
+    *cwd = path;
+  }
 
+  // Initialize current directory once
+  extern const sass::string& CWD() {
+    if (cwd == nullptr) {
+      cwd = new sass::string(get_pwd());
+    }
+    return *cwd;
+  }
+
+  namespace File {
 
     // test if path exists and is a file
     // takes a cache map to improve performance
@@ -567,7 +589,7 @@ namespace Sass {
     {
       // try to read the content of the resolved file entry
       // the memory buffer returned to us must be freed by us!
-      if (char* contents = slurp_file(import.abs_path, CWD)) {
+      if (char* contents = slurp_file(import.abs_path, CWD())) {
         // Return LoadedImport object
         // ToDo: Add sourcemap parsing
         return SASS_MEMORY_NEW(Import93,
@@ -599,7 +621,7 @@ namespace Sass {
     }
     // try to read the content of the resolved file entry
     // the memory buffer returned to us must be freed by us!
-    if (char* contents = File::slurp_file(getAbsPath(), CWD)) {
+    if (char* contents = File::slurp_file(getAbsPath(), CWD())) {
       // Upgrade to a source file
       // ToDo: Add sourcemap parsing
       source = SASS_MEMORY_NEW(SourceFile,

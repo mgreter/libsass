@@ -14,7 +14,7 @@ jobs:
 
   linux-and-mac:
     name: Linux and MacOS build
-    if: ${{ false }}
+    # if: ${{ false }}
     runs-on: ${{ matrix.config.os }}
 
     strategy:
@@ -28,10 +28,10 @@ jobs:
           - {os: ubuntu-16.04, build: 'static', cc: 'gcc-5', cxx: 'g++-5', autotools: 'no', cppstd: 'c++11'}
           - {os: ubuntu-16.04, build: 'static', cc: 'gcc-6', cxx: 'g++-6', autotools: 'no', cppstd: 'c++11'}
           - {os: ubuntu-latest, build: 'static', cc: 'gcc-7', cxx: 'g++-7', autotools: 'no', cppstd: 'c++11'}
-          - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11'}
-          - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11'}
-          - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11'}
-          - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11'}
+          - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-fsanitize=address'}
+          - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-fsanitize=address'}
+          - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11', cflags: '-fsanitize=address'}
+          - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11', cflags: '-fsanitize=address'}
           - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11'}
           - {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11'}
           - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11'}
@@ -44,6 +44,8 @@ jobs:
     env:
       ASAN_OPTIONS: detect_odr_violation=0
       AUTOTOOLS: ${{ matrix.config.autotools }}
+      EXTRA_CFLAGS: ${{ matrix.config.cflags }}
+      EXTRA_CXXFLAGS: ${{ matrix.config.cflags }}
       COVERAGE: no
       BUILD: ${{ matrix.config.build }}
       CXX: ${{ matrix.config.cxx }}
@@ -130,7 +132,7 @@ jobs:
   windows-msvc:
     runs-on: windows-latest
     name: Windows MSVC build
-    if: ${{ false }}
+    # if: ${{ false }}
 
     strategy:
       fail-fast: false

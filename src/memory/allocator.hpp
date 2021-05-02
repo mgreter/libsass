@@ -123,6 +123,15 @@ namespace Sass {
 // Make them available on the global scope
 // Easier for global structs needed for C linkage
 namespace sass { // Note the lower-case notation
+#ifndef SASS_CUSTOM_ALLOCATOR
+  template <typename T> using deque = std::deque<T>;
+  template <typename T> using vector = std::vector<T>;
+  using string = std::string;
+  using wstring = std::wstring;
+  using sstream = std::stringstream;
+  using ostream = std::ostringstream;
+  using istream = std::istringstream;
+#else
   template <typename T> using deque = std::deque<T, Sass::Allocator<T>>;
   template <typename T> using vector = std::vector<T, Sass::Allocator<T>>;
   using string = std::basic_string<char, std::char_traits<char>, Sass::Allocator<char>>;
@@ -130,6 +139,7 @@ namespace sass { // Note the lower-case notation
   using sstream = std::basic_stringstream<char, std::char_traits<char>, Sass::Allocator<char>>;
   using ostream = std::basic_ostringstream<char, std::char_traits<char>, Sass::Allocator<char>>;
   using istream = std::basic_istringstream<char, std::char_traits<char>, Sass::Allocator<char>>;
+#endif
 }
 
 #ifdef SASS_CUSTOM_ALLOCATOR

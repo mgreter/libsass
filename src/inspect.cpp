@@ -191,7 +191,7 @@ namespace Sass {
     if (opt.source_comments) {
       sass::sstream ss;
       append_indentation();
-      sass::string path(File::abs2rel(node->pstate().getAbsPath(), ".", CWD)); // ToDo: optimize
+      sass::string path(File::abs2rel(node->pstate().getAbsPath(), ".", CWD())); // ToDo: optimize
       ss << "/* line " << node->pstate().getLine() << ", " << path << " */";
       append_string(ss.str());
       append_optional_linefeed();

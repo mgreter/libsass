@@ -39,9 +39,6 @@
 
 namespace Sass {
 
-  // Initialize current directory once
-  thread_local sass::string CWD(File::get_cwd());
-
   Compiler::~Compiler()
   {
     for (auto& mod : modules) {
@@ -238,7 +235,7 @@ namespace Sass {
     // Create file reference to whom our mappings apply
     /**********************************************/
     sass::string origin(options.origin);
-    origin = File::abs2rel(origin, CWD);
+    origin = File::abs2rel(origin, CWD());
     JsonNode* json_file_name = json_mkstring(origin.c_str());
     json_append_member(json_srcmap, "file", json_file_name);
 
@@ -257,7 +254,7 @@ namespace Sass {
     for (size_t i = 0; i < included_sources.size(); ++i) {
       const SourceData* source(included_sources[i]);
       sass::string path(source->getAbsPath());
-      path = File::rel2abs(path, ".", CWD);
+      path = File::rel2abs(path, ".", CWD());
       // Optionally convert to file urls
       if (options.file_urls) {
         if (path[0] == '/') {
@@ -273,7 +270,7 @@ namespace Sass {
           json_mkstring(path.c_str()));
       }
       else {
-        path = File::abs2rel(path, ".", CWD);
+        path = File::abs2rel(path, ".", CWD());
         // Append item to json array
         json_append_element(json_sources,
           json_mkstring(path.c_str()));
@@ -780,8 +777,8 @@ namespace Sass {
         sass::string msg("An @import loop has been found:");
         // callStackFrame frame(compiler, import->pstate());
         for (size_t n = i; n < stack.size() - 1; ++n) {
-          msg += "\n    " + sass::string(File::abs2rel(stack[n]->source->getAbsPath(), CWD, CWD)) +
-            " imports " + sass::string(File::abs2rel(stack[n + 1]->source->getAbsPath(), CWD, CWD));
+          msg += "\n    " + sass::string(File::abs2rel(stack[n]->source->getAbsPath(), CWD(), CWD())) +
+            " imports " + sass::string(File::abs2rel(stack[n + 1]->source->getAbsPath(), CWD(), CWD()));
         }
         // implement error throw directly until we
         // decided how to handle full stack traces
@@ -886,7 +883,7 @@ namespace Sass {
     sass::vector<sass::string> incpaths(1 + includePaths.size());
     incpaths.emplace_back(File::dir_name(import.source->getAbsPath()));
     incpaths.insert(incpaths.end(), includePaths.begin(), includePaths.end());
-    return File::find_file(path, CWD, incpaths, fileExistsCache);
+    return File::find_file(path, CWD(), incpaths, fileExistsCache);
   }
 
   // Look for all possible filename variants (e.g. partials)
@@ -898,18 +895,18 @@ namespace Sass {
     if (it != resolveCache.end()) return it->second;
 
     // make sure we resolve against an absolute path
-    sass::string base_path(File::rel2abs(import.base_path, ".", CWD));
+    sass::string base_path(File::rel2abs(import.base_path, ".", CWD()));
 
     // first try to resolve the load path relative to the base path
     sass::vector<ResolvedImport>& vec(resolveCache[import]);
 
-    vec = File::resolve_includes(base_path, import.imp_path, CWD, forImport, fileExistsCache);
+    vec = File::resolve_includes(base_path, import.imp_path, CWD(), forImport, fileExistsCache);
 
     // then search in every include path (but only if nothing found yet)
     for (size_t i = 0, S = includePaths.size(); vec.size() == 0 && i < S; ++i)
     {
       sass::vector<ResolvedImport> resolved(File::resolve_includes(
-        includePaths[i], import.imp_path, CWD, forImport, fileExistsCache));
+        includePaths[i], import.imp_path, CWD(), forImport, fileExistsCache));
       vec.insert(vec.end(), resolved.begin(), resolved.end());
     }
     // return vector
