@@ -11,50 +11,60 @@
 
 namespace Sass {
 
-  Logger::Logger(enum SassLoggerStyle style, int precision, size_t columns) :
+  // Default constructor
+  Logger::Logger(bool colors, bool unicode, int precision, size_t columns) :
     epsilon(std::pow(0.1, precision + 1)),
     columns(columns),
-    style(style)
-  {
-    setLogStyle(style, columns);
-  }
+    support_colors(colors),
+    support_unicode(unicode)
+  {}
 
-  void Logger::setLogStyle(enum SassLoggerStyle style, size_t columns)
+  // Auto-detect if colors and unicode is supported
+  // Mostly depending if a terminal is connected
+  // Additionally fetches available terminal columns
+  void Logger::autodetectCapabalities()
   {
-    // This auto-detection is experimental
-    // We do our best but hard to make portable
-    if (style == SASS_LOGGER_AUTO) {
-      auto colors = Terminal::hasColorSupport(true);
-      bool unicode = Terminal::hasUnicodeSupport(true);
-      if (colors && unicode) { this->style = SASS_LOGGER_UNICODE_COLOR; }
-      else if (unicode) { this->style = SASS_LOGGER_UNICODE_MONO; }
-      else if (colors) { this->style = SASS_LOGGER_ASCII_COLOR; }
-      else { this->style = SASS_LOGGER_ASCII_MONO; }
-    }
-    else {
-      this->style = style;
-    }
-    // Auto-detect available columns
-    if (columns == NPOS) {
-      this->columns = Terminal::getColumns(true);
-    }
-    else {
-      this->columns = columns;
-    }
+    setLogColors(Terminal::hasColorSupport(true));
+    setLogUnicode(Terminal::hasUnicodeSupport(true));
+    setLogColumns(Terminal::getColumns(true));
+  }
+  // EO autodetectCapabalities
+
+  // Enable terminal ANSI color support
+  void Logger::setLogColors(bool enable)
+  {
+    support_colors = enable;
+  }
+  // EO setLogColors
+
+  // Enable terminal unicode support
+  void Logger::setLogUnicode(bool enable)
+  {
+    support_unicode = enable;
+  }
+  // EO setLogUnicode
+
+  // Set available columns to break debug text
+  void Logger::setLogColumns(size_t columns)
+  {
     // Clamp into a sensible range
     if (columns > 800) { columns = 800; }
     else if (columns < 40) { columns = 40; }
+    this->columns = columns;
   }
+  // EO setLogColumns
 
+  // Precision for numbers to be printed
   void Logger::setLogPrecision(int precision)
   {
     epsilon = std::pow(0.1, precision + 1);
   }
+  // EO setLogPrecision
 
   // Write warning header to error stream
   void Logger::writeWarnHead(bool deprecation)
   {
-    if (style & SASS_LOGGER_COLOR) {
+    if (support_colors) {
       logstrm << getColor(Terminal::yellow);
       if (!deprecation) logstrm << "Warning";
       else logstrm << "Deprecation Warning";
@@ -65,15 +75,7 @@ namespace Sass {
       else logstrm << "DEPRECATION WARNING";
     }
   }
-
-  // Convert back-traces which only hold references
-  // to e.g. the source content to stack-traces which
-  // manages copies of the temporary string references.
-  StackTraces convertBackTraces(BackTraces traces)
-  {
-    // They convert implicitly, so simply assign them
-    return StackTraces(traces.begin(), traces.end());
-  }
+  // EO writeWarnHead
 
   // Print the `input` string onto the output stream `os` and
   // wrap words around to fit into the given column `width`.
@@ -103,6 +105,7 @@ namespace Sass {
       os << STRMLF;
     }
   }
+  // EO wrap
 
   // Print a warning without any SourceSpan (used by @warn)
   void Logger::addWarning(const sass::string& message)
@@ -114,6 +117,7 @@ namespace Sass {
     StackTraces stack(callStack.begin(), callStack.end());
 		writeStackTraces(logstrm, stack, "    ", true, 0);
   }
+  // EO addWarning
 
   // Print a debug message without any SourceSpan (used by @debug)
   void Logger::addDebug(const sass::string& message, const SourceSpan& pstate)
@@ -122,7 +126,7 @@ namespace Sass {
       pstate.getLine() << " DEBUG: " << message;
     logstrm << STRMLF;
   }
-
+  // EO addDebug
 
   // Print a regular warning or deprecation
   void Logger::printWarning(const sass::string& message, const SourceSpan& pstate, bool deprecation)
@@ -146,32 +150,13 @@ namespace Sass {
 		writeStackTraces(logstrm, stack, "    ", true);
 
   }
+  // EO printWarning
 
-  /*
-  StdLogger::StdLogger(int precision, enum SassLoggerStyle style) :
-    Logger(precision, style)
-  {
-  }
-
-  void StdLogger::warn(sass::string message) const
-  {
-  }
-
-  void StdLogger::debug(sass::string message) const
-  {
-  }
-
-  void StdLogger::error(sass::string message) const
-  {
-  }
-  */
-
-
-
-
-
-
-  void Logger::printSourceSpan(SourceSpan pstate, sass::ostream& stream, enum SassLoggerStyle logstyle)
+  // Format and print source-span
+  void Logger::printSourceSpan(
+    SourceSpan pstate,
+    sass::ostream& stream,
+    bool unicode)
   {
 
     // ASCII reporting
@@ -183,7 +168,7 @@ namespace Sass {
     sass::string bottom("'");
 
     // Or use Unicode versions
-    if (logstyle & SASS_LOGGER_UNICODE) {
+    if (unicode) {
       top = "\xE2\x95\xB7";
       upper = "\xE2\x94\x8C";
       middle = "\xE2\x94\x82";
@@ -346,10 +331,10 @@ namespace Sass {
 
       sass::string raw = pstate.getSource()->getLine(pstate.position.line);
       sass::string line; utf8::replace_invalid(raw.begin(), raw.end(),
-        std::back_inserter(line), logstyle & SASS_LOGGER_UNICODE ? 0xfffd : '?');
+        std::back_inserter(line), unicode ? 0xfffd : '?');
 
       // Convert to ASCII only string
-      if (logstyle & SASS_LOGGER_ASCII) {
+      if (!unicode) {
         std::replace_if(line.begin(), line.end(),
           Character::isUtf8StartByte, '?');
         line.erase(std::remove_if(line.begin(), line.end(),
@@ -442,14 +427,16 @@ namespace Sass {
     }
 
   }
+  // EO printSourceSpan
 
+  // Helper function for `printSourceSpan` to split lines to be printed
   void Logger::splitLine(sass::string line, size_t lhs_len, size_t mid_len,
     size_t columns, sass::string& lhs, sass::string& mid, sass::string& rhs)
   {
 
     // Get the ellipsis character(s) either in unicode or ASCII
-    size_t ellipsis_len = style & SASS_LOGGER_UNICODE ? 1 : 3;
-    sass::string ellipsis(style & SASS_LOGGER_UNICODE ? "\xE2\x80\xA6": "...");
+    size_t ellipsis_len = support_unicode ? 1 : 3;
+    sass::string ellipsis(support_unicode ? "\xE2\x80\xA6": "...");
 
     // Normalize tab characters to spaces for better counting
     for (size_t i = line.length(); i != std::string::npos; i -= 1) {
@@ -618,7 +605,7 @@ namespace Sass {
 
       if (amount == sass::string::npos || amount > 0) {
         if (prev && *prev == trace) continue;
-        printSourceSpan(trace.pstate, os, style);
+        printSourceSpan(trace.pstate, os, support_unicode);
         if (amount > 0) --amount;
         prev = &trace;
       }

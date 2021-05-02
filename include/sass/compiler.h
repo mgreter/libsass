@@ -70,7 +70,13 @@ extern "C" {
   ADDAPI void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle output_style);
 
   // Setter for logging style (see `enum SassLoggerStyle` for possible options).
-  ADDAPI void ADDCALL sass_compiler_set_logger_style(struct SassCompiler* compiler, enum SassLoggerStyle log_style);
+  ADDAPI void ADDCALL sass_compiler_autodetect_logger_capabilities(struct SassCompiler* compiler);
+
+  // Setter for enabling/disabling logging with ANSI colors
+  ADDAPI void ADDCALL sass_compiler_set_logger_colors(struct SassCompiler* compiler, bool enable);
+
+  // Setter for enabling/disabling logging with unicode text
+  ADDAPI void ADDCALL sass_compiler_set_logger_unicode(struct SassCompiler* compiler, bool enable);
 
   // Getter for compiler precision (how floating point numbers are truncated).
   ADDAPI int ADDCALL sass_compiler_get_precision(struct SassCompiler* compiler);
@@ -107,6 +113,9 @@ extern "C" {
   // Getter for string containing the optional source-mapping.
   ADDAPI const char* ADDCALL sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
 
+  // Check if implementor is expected to write a source-map file
+  ADDAPI bool ADDCALL sass_compiler_has_srcmap_file(struct SassCompiler* compiler);
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -114,12 +123,12 @@ extern "C" {
   ADDAPI void ADDCALL sass_compiler_set_srcmap_mode(struct SassCompiler* compiler, enum SassSrcMapMode mode);
 
   // Setter for source-map path (where to store the source-mapping).
-  // Note: if path is not explicitly given, we will deduct one from input path.
+  // Note: if path is not explicitly given, we will deduct one from output path.
   // Note: LibSass does not write the file, implementers should write to this path.
   ADDAPI void ADDCALL sass_compiler_set_srcmap_path(struct SassCompiler* compiler, const char* path);
 
   // Getter for source-map path (where to store the source-mapping).
-  // Note: if path is not explicitly given, we will deduct one from input path.
+  // Note: if path is not explicitly given, we will deduct one from output path.
   // Note: the value will only be deducted after the main render phase is completed.
   // Note: LibSass does not write the file, implementers should write to this path.
   ADDAPI const char* ADDCALL sass_compiler_get_srcmap_path(struct SassCompiler* compiler);

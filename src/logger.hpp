@@ -34,8 +34,9 @@ namespace Sass {
     // Available columns on tty
     size_t columns;
 
-    // Flag for unicode and/or color
-    enum SassLoggerStyle style;
+    // Flags for unicode and color
+    bool support_colors = false;
+    bool support_unicode = false;
 
   private:
 
@@ -58,7 +59,7 @@ namespace Sass {
     // passed color if color output is enable, otherwise
     // it will simply return an empty string.
     inline const char* getColor(const char* color) {
-      if (style & SASS_LOGGER_COLOR) {
+      if (support_colors) {
         return color;
       }
       return Constants::String::empty;
@@ -74,13 +75,15 @@ namespace Sass {
       const SourceSpan& pstate,
       bool deprecation = false);
 
+    // Format and print source-span
     void printSourceSpan(
       SourceSpan pstate,
       sass::ostream& stream,
-      enum SassLoggerStyle logstyle);
+      bool unicode = false);
 
   public:
 
+    // Print `amount` of `traces` to output stream `os`.
     void writeStackTraces(sass::ostream& os,
 													StackTraces traces,
 													sass::string indent = "  ",
@@ -89,22 +92,38 @@ namespace Sass {
 
   public:
 
-    Logger(enum SassLoggerStyle style = SASS_LOGGER_ASCII_MONO,
+    // Default constructor
+    Logger(bool colors = false, bool unicode = false,
       int precision = SassDefaultPrecision, size_t columns = NPOS);
 
-    void setLogStyle(enum SassLoggerStyle style, size_t columns = NPOS);
+    // Auto-detect if colors and unicode is supported
+    // Mostly depending if a terminal is connected
+    // Additionally fetches available terminal columns
+    void autodetectCapabalities();
 
+    // Enable terminal ANSI color support
+    void setLogColors(bool enable);
+    // Enable terminal unicode support
+    void setLogUnicode(bool enable);
+    // Set available columns to break debug text
+    void setLogColumns(size_t columns = NPOS);
+
+    // Precision for numbers to be printed
     void setLogPrecision(int precision);
 
+    // Print a warning without any SourceSpan (used by @warn)
     void addWarning(const sass::string& message);
 
+    // Print a debug message without any SourceSpan (used by @debug)
     void addDebug(const sass::string& message, const SourceSpan& pstate);
 
+    // Print a warning with SourceSpan attached (used internally)
     void addWarning(const sass::string& message, const SourceSpan& pstate)
     {
       printWarning(message, pstate, false);
     }
 
+    // Print a deprecation warning with SourceSpan attached (used internally)
     void addDeprecation(const sass::string& message, const SourceSpan& pstate)
     {
       printWarning(message, pstate, true);
@@ -112,41 +131,12 @@ namespace Sass {
 
   public:
 
+    // Implicitly allow conversion
     operator BackTraces&() {
       return callStack; }
 
-    // virtual ~Logger() {};
-
-  };
-  /*
-  class StdLogger :
-    public Logger {
-
-  public:
-
-    StdLogger(int precision, enum SassLoggerStyle style = SASS_LOGGER_AUTO);
-
-    void warn(sass::string message) const override final;
-    void debug(sass::string message) const override final;
-    void error(sass::string message) const override final;
-
-    ~StdLogger() override final {};
-
   };
 
-  class NullLogger :
-    public Logger {
-
-  public:
-
-    void warn(sass::string message) const override final {};
-    void debug(sass::string message) const override final {};
-    void error(sass::string message) const override final {};
-
-    ~NullLogger() override final {};
-
-  };
-  */
 }
 
 #endif
