@@ -6,6 +6,7 @@
 #include "ast_selectors.hpp"
 #include "ast_values.hpp"
 #include "extension.hpp"
+#include <string.h>
 
 namespace Sass {
 
