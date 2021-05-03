@@ -42,16 +42,16 @@ compilers should catch the case when arguments mismatch on the C-API side.
 These structs have no real implementation and are only passed around as pointers.
 Internally in LibSass these pointers represent mostly different c++ objects.
 
-- struct SassError - An error object holding further information
-- struct SassTrace - An single stack-trace object holding further information
-- struct SassSource - Imported source with associated import and resolved path.
-- struct SassSrcSpan - Parser state for column, line and source information.
-- struct SassCompiler - Main object to hold state for whole compilation phase.
-- struct SassFunction - Custom function object holding callback and cookie.
-- struct SassImport - Single import for entry point or returned by custom importer.
-- struct SassImporter - Custom importer function to be hooked into our loading.
-- struct SassImportList - Custom importers can return a SassImport list.
-- struct SassMapIterator - Object to support iteration API over map objects.
+- `SassError` - An error object holding further information
+- `SassTrace` - An single stack-trace object holding further information
+- `SassSource` - Imported source with associated import and resolved path.
+- `SassSrcSpan` - Parser state for column, line and source information.
+- `SassCompiler` - Main object to hold state for whole compilation phase.
+- `SassFunction` - Custom function object holding callback and cookie.
+- `SassImport` - Single import for entry point or returned by custom importer.
+- `SassImporter` - Custom importer function to be hooked into our loading.
+- `SassImportList` - Custom importers can return a SassImport list.
+- `SassMapIterator` - Object to support iteration API over map objects.
 
 ## Why using c++11 (or gcc4.4 compatibility)
 

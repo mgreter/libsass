@@ -69,7 +69,6 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\interpolation.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\logger.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\json.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\kwd_arg_macros.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\randomize.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\mapping.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ordered_map.hpp" />

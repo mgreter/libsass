@@ -49,6 +49,10 @@ Note: `SassWarning` is currently handled in the same way, but warning should ult
 be a C-API function on its own, as we might want to emit multiple warnings, but still
 return a successful return state (we only can have one error, but many warnings).
 
+### Example code
+
+See [sass value code example](api-value-example.md).
+
 ### Basic Usage
 
 ```C

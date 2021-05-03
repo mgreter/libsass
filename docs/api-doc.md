@@ -49,38 +49,48 @@ int main() {
 gcc -Wall version.c -lsass -o version && ./version
 ```
 
-## More C Examples
+## More code examples
 
 - [Sample code for Sass Compiler](api-compiler-example.md)
-- [Sample code for Sass Value](api-value-example.md)
 - [Sample code for Sass Function](api-function-example.md)
 - [Sample code for Sass Importer](api-importer-example.md)
+- [Sample code for Sass Value](api-value-example.md)
 
-## Compiling a stylesheet
+## Compiler entry points
 
 LibSass parsing starts with an entry point, which can either be a
 file or some text you provide directly. Relative includes are
-resolved against the current working directory.
+resolved against the current (virtual) working directory. Entry
+points must be of type `struct SassImport*` and can be created
+via different constructor functions:
 
-`struct SassImport* data = sass_make_content_import(text, "styles.scss");`
-`struct SassImport* data = sass_make_file_import("styles.scss");`
+- `sass_make_file_import("styles.scss"); // loads the file`
+- `sass_make_stdin_import("styles.scss"); // reads from stdin`
+- `sass_make_content_import(text, "styles.scss"); // uses text`
+- `sass_make_import(imp_path, abs_path, source, srcmap, format);`
+
+Remember that `SassImport` must be freed via `sass_delete_import`.
 
 **Building a compiler**
 
-  sass_compiler_set_entry_point(compiler, entrypoint);
-  // entry point now passed to compiler, so its reference count was increased
-  // in order to not leak memory we must release our own usage (usage after is UB)
-  sass_delete_import(entrypoint); // decrease ref-count
-
+  // Create the main compiler object
+  struct SassCompiler* compiler = sass_make_compiler();
+  // Check terminal capabilities (useful for CLI tools)
+  sass_compiler_autodetect_logger_capabilities(compiler);
+  // Create a file-import entry point (without input file-name)
+  struct SassImport* import = sass_make_content_import("foo{bar:baz}", 0);
+  // Set import syntax since input has no file extension
+  sass_import_set_syntax(import, SASS_IMPORT_SCSS);
+  // Tell compiler which entry point to load
+  sass_compiler_set_entry_point(compiler, import);
+  // We are done with this (ref-counted) import
+  sass_delete_import(import);
   // Execute compiler and print/write results
   sass_compiler_execute(compiler, false);
-
   // Get result code after all compilation steps
   int status = sass_compiler_get_status(compiler);
-
   // Clean-up compiler, we're done
   sass_delete_compiler(compiler);
-
   // exit status
   return status;
 
@@ -122,7 +132,7 @@ void sass_chdir(const char* path);
 void sass_print_stdout(const char* message);
 void sass_print_stderr(const char* message);
 
-// Get compiled libsass version
+// Get compiled LibSass version
 const char* libsass_version(void);
 
 // Implemented sass language version
@@ -204,9 +214,9 @@ have all features implemented!
 
 ## Plugins (experimental)
 
-LibSass can load plugins from directories. Just define `plugin_path` on context
-options to load all plugins from the directories. To implement plugins, please
-consult the following example implementations.
+LibSass can [load plugins](dev-plugins.md) from directories. Just define `plugin_path`
+on context options to load all plugins from the directories. To implement plugins,
+please consult the following example implementations.
 
 - https://github.com/mgreter/libsass-glob
 - https://github.com/mgreter/libsass-math

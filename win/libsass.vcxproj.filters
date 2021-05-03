@@ -5,374 +5,375 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Headers">
+    <Filter Include="LibSass Headers">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;in;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Sources">
+    <Filter Include="API Headers">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EB92}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;in;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="LibSass Sources">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup Label="Includes">
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\base.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\enums.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\error.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\fwdecl.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\import.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\importer.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\function.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\compiler.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\variable.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\traces.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\values.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\version.h">
-      <Filter>LibSass Headers</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup Label="Headers">
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_css.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_nodes.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_def_macros.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_fwd_decl.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_helpers.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_selectors.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_containers.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_imports.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_supports.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_callable.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_callables.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_statements.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_expressions.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ast_values.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\modules.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\backtrace.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\base64vlq.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\character.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\charcode.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\color_maps.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\constants.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\cssize.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\dart_helpers.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\debugger.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\emitter.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\environment.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\exceptions.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\settings.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\memory.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\memory\config.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\memory\allocator.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\memory\shared_ptr.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\memory\memory_pool.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\MurmurHash2.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\eval.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\extender.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\extension.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\file.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\compiler.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_meta.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_maps.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_math.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_colors.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_lists.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_selectors.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_texts.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\fn_utils.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\strings.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\inspect.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\terminal.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\interpolation.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\logger.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\json.hpp">
-      <Filter>Library Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\kwd_arg_macros.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\randomize.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\mapping.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\ordered_map.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\source.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sources.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\output.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_base.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_css.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_expression.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_media_query.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_at_root_query.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_keyframe_selector.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_sass.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_scss.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_selector.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\parser_stylesheet.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\permutate.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\plugins.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\offset.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\remove_placeholders.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\capi_sass.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\capi_error.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\capi_traces.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\capi_import.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\capi_importer.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\capi_compiler.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\capi_variable.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\capi_function.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\capi_values.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\scanner_string.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\source_map.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\source_state.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\source_span.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\stylesheet.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\preloader.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\units.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\unicode.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\hashing.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\visitor_css.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\visitor_expression.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\visitor_selector.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\visitor_statement.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\visitor_value.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\string_utils.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\callstack.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\environment_cnt.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\environment_key.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\environment_stack.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\b64\cencode.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\b64\encode.hpp">
-      <Filter>Library Includes</Filter>
+      <Filter>LibSass Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup Label="Sources">

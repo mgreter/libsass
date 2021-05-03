@@ -130,7 +130,7 @@ jobs:
 
 
   windows-msvc:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.config.os }}
     name: Windows MSVC build
     # if: ${{ false }}
 
@@ -138,10 +138,14 @@ jobs:
       # fail-fast: false
       matrix:
         config:
-          - {build: Release, platform: Win64}
-          - {build: Debug, platform: Win64}
-          - {build: Release, platform: Win32}
-          - {build: Debug, platform: Win32}
+          - {os: 'windows-latest', build: Release, platform: Win64, version: 'latest'}
+          - {os: 'windows-latest', build: Debug, platform: Win64, version: 'latest'}
+          - {os: 'windows-latest', build: Release, platform: Win32, version: 'latest'}
+          - {os: 'windows-latest', build: Debug, platform: Win32, version: 'latest'}
+          - {os: 'windows-2016', build: Release, platform: Win64, version: '[15.0,16.0]'}
+          - {os: 'windows-2016', build: Debug, platform: Win64, version: '[15.0,16.0]'}
+          - {os: 'windows-2016', build: Release, platform: Win32, version: '[15.0,16.0]'}
+          - {os: 'windows-2016', build: Debug, platform: Win32, version: '[15.0,16.0]'}
 
     steps:
     - name: Change git config to preserve line-endings
@@ -159,6 +163,8 @@ jobs:
       run: gem install minitest
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
+      with:
+        vs-version: ${{ matrix.config.version }}
     - name: Clone and checkout sassc repository
       run: git clone https://github.com/mgreter/sassc.git --branch refactor/libsass-4-alpha
     - name: Clone and checkout sass-spec repository

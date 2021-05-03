@@ -50,10 +50,14 @@ it should ignore any imports whose URLs end in .css or begin with http:// or htt
 that have media queries, should always be treated as plain CSS and never passed to custom importers.
 For further details check https://github.com/sass/libsass/issues/2957 and linked issues.
 
+### Example code
+
+See [sass importer code example](api-importer-example.md).
+
 ### Basic Usage
 
 ```C
-#include <sass/functions.h>
+#include <sass/importer.h>
 ```
 
 ## Sass Importer API
@@ -92,9 +96,3 @@ void* sass_importer_get_cookie(struct SassImporter* cb);
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 ```
-
-### More links
-
-- [Sass Importer Example](api-importer-example.md)
-- [Sass Importer Internal](api-importer-internal.md)
-

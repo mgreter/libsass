@@ -3,15 +3,24 @@
 
 Imports on the C-API side can either be used as compilation entry points or
 imports returned from custom importers/headers. They represent a loadable
-resource with text to be parsed. These object are reference-counted.
+resource with text to be parsed. These object are reference-counted and
+must always be freed by the allocator. To improve usage with `SassImportList`
+there is a convenience method `sass_import_list_emplace` that will transfer
+the ownership of the import to the list object.
 
 ### Imports and source-maps
 
-Imports with embedded source-maps are not automatically parsed correctly. Ideally
-we would want to automatically load associated source-maps for inputs. Currently
+Source-maps embedded in imports are not automatically parsed out. Ideally we
+would want to automatically load associated source-maps for inputs. Currently
 LibSass does not make use of any upstream source-maps. The API has been designed
 with that case in mind, but implementation is not done yet. Everything still
 works, but additional source-maps may end up as superfluous comments.
+
+### Basic Usage
+
+```C
+#include <sass/import.h>
+```
 
 ### Sass Import API
 

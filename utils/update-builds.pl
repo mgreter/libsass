@@ -7,25 +7,25 @@ use warnings;
 # Alternative `cpanm install File::Slurp`
 use File::Slurp qw(read_file write_file);
 
-my $tmpl_msvc_head = <<EOTMPL;
-    <ClInclude Include="\$(LIBSASS_HEADERS_DIR)\\%s" />
-EOTMPL
-
 my $tmpl_msvc_inc = <<EOTMPL;
     <ClInclude Include="\$(LIBSASS_INCLUDES_DIR)\\%s" />
+EOTMPL
+
+my $tmpl_msvc_head = <<EOTMPL;
+    <ClInclude Include="\$(LIBSASS_HEADERS_DIR)\\%s" />
 EOTMPL
 
 my $tmpl_msvc_src = <<EOTMPL;
     <ClCompile Include="\$(LIBSASS_SRC_DIR)\\%s" />
 EOTMPL
 
-my $tmpl_msvc_filter_head = <<EOTMPL;
+my $tmpl_msvc_filter_inc = <<EOTMPL;
     <ClInclude Include="\$(LIBSASS_INCLUDES_DIR)\\%s">
-      <Filter>Library Includes</Filter>
+      <Filter>API Headers</Filter>
     </ClInclude>
 EOTMPL
 
-my $tmpl_msvc_filter_inc = <<EOTMPL;
+my $tmpl_msvc_filter_head = <<EOTMPL;
     <ClInclude Include="\$(LIBSASS_INCLUDES_DIR)\\%s">
       <Filter>LibSass Headers</Filter>
     </ClInclude>

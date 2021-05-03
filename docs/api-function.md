@@ -18,6 +18,10 @@ Note: The fallback implementation will be given the name of the called function
 as the first argument, before all the original function arguments. These features
 are pretty new and should be considered experimental.
 
+### Example code
+
+See [sass function code example](api-function-example.md).
+
 ### Basic Usage
 
 ```C
@@ -59,8 +63,3 @@ void* sass_function_get_cookie (struct SassFunction* function);
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 ```
-
-### More links
-
-- [Sass Function Example](api-function-example.md)
-

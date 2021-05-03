@@ -3,7 +3,7 @@
 LibSass is only a library and does not do much on its own, you'll need an additional
 piece to tell LibSass what to do actually, called the implementor. The most basic
 implementor is [`sassc`][6], as a basic command line interface (CLI). LibSass can
-either be compiled as a static or shared library, and provides a [functional API](12)
+either be compiled as a static or shared library, and provides a [functional API][12]
 to its consumer. Therefore it can be utilized to drive all kind of different
 applications (CLI utility, bindings to other languages or even in browsers).
 
@@ -103,10 +103,6 @@ We use two CI services to automatically test all commits against the latest [spe
 
 There were some efforts to get `libsass` to compile with CMake, which should make it easier to
 create build files for linux and windows. Unfortunately this was not completed. But we are certainly open for PRs!
-
-#### Miscellaneous
-
-- [Ebuilds for Gentoo Linux](build-on-gentoo.md)
 
 [1]: build-with-makefiles.md
 [2]: build-with-autotools.md

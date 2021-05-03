@@ -38,6 +38,16 @@ you can trigger by calling `sass_compiler_autodetect_logger_capabilities`. You
 can still overload the detected settings afterwards. Additionally LibSass will
 try to break running-text into the available columns and shorten stack-traces.
 
+### Example code
+
+See [sass compiler code example](api-compiler-example.md).
+
+### Basic Usage
+
+```C
+#include <sass/compiler.h>
+```
+
 ### Sass Compiler API
 
 ```C

@@ -2,6 +2,7 @@
 
 API to get additional information for errors occurring during custom functions.
 Error object are not reference counted and are coupled to the compiler life-cycle.
+You can also use them to inspect errors after the compiler failed at any phase.
 
 ### Basic Usage
 
