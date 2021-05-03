@@ -67,12 +67,18 @@ extern "C" {
 #endif
 
   // Change the virtual current working directory
-  // You should probably not really use this function!
   ADDAPI void ADDCALL sass_chdir(const char* path);
 
   // Prints message to stderr with color for windows
   ADDAPI void ADDCALL sass_print_stdout(const char* message);
   ADDAPI void ADDCALL sass_print_stderr(const char* message);
+
+  // Return implemented sass language version
+  ADDAPI const char* ADDCALL libsass_version(void);
+
+  // Return the compiled libsass language (hard-coded)
+  // This is hard-coded with the library on compilation!
+  ADDAPI const char* ADDCALL libsass_language_version(void);
 
   // Allocate a memory block on the heap of (at least) [size].
   // Make sure to release to acquired memory at some later point via
@@ -89,13 +95,6 @@ extern "C" {
   // Deallocate libsass heap memory
   ADDAPI void ADDCALL sass_free_memory(void* ptr);
   ADDAPI void ADDCALL sass_free_c_string(char* ptr);
-
-  // Return implemented sass language version
-  ADDAPI const char* ADDCALL libsass_version(void);
-
-  // Return the compiled libsass language (hard-coded)
-  // This is hard-coded with the library on compilation!
-  ADDAPI const char* ADDCALL libsass_language_version(void);
 
 #ifdef __cplusplus
 } // __cplusplus defined.

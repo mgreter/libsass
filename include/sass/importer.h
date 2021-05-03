@@ -23,7 +23,8 @@ extern "C" {
 
   // Create custom importer (with arbitrary data pointer called `cookie`)
   // The pointer is often used to store the callback into the actual binding.
-  ADDAPI struct SassImporter* ADDCALL sass_make_importer(SassImporterLambda lambda, double priority, void* cookie);
+  ADDAPI struct SassImporter* ADDCALL sass_make_importer(
+    SassImporterLambda lambda, double priority, void* cookie);
 
   // Deallocate the importer and release memory
   ADDAPI void ADDCALL sass_delete_importer(struct SassImporter* cb);

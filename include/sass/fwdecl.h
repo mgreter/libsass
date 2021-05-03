@@ -12,16 +12,17 @@ extern "C" {
 
   // Forward declare anonymous structs
   // C never sees any implementation
-  struct SassTrace;
-  struct SassError;
-  struct SassCompiler;
-  struct SassFunction;
-  struct SassSource;
-  struct SassSrcSpan;
-  struct SassImport;
-  struct SassImporter;
-  struct SassImportList;
-  struct SassMapIterator;
+  struct SassValue; // ref-counted
+  struct SassTrace; // C++ wrapper
+  struct SassError; // CAPI-struct
+  struct SassCompiler; // C++ wrapper
+  struct SassFunction; // CAPI-struct
+  struct SassSource; // C++ wrapper
+  struct SassSrcSpan; // C++ wrapper
+  struct SassImport; // ref-counted
+  struct SassImporter; // CAPI-struct
+  struct SassImportList; // std::deque
+  struct SassMapIterator; // CAPI-struct
 
 #ifdef __cplusplus
 } // __cplusplus defined.

@@ -26,6 +26,7 @@ extern "C" {
     SASS_IMPORT_CSS,
   };
 
+  // Config how to produce source-map
   enum SassSrcMapMode {
     // Don't render any source-mapping.
     SASS_SRCMAP_NONE,
@@ -38,6 +39,7 @@ extern "C" {
     SASS_SRCMAP_EMBED_JSON,
   };
 
+  // State of the compiler object
   enum SassCompilerState {
     SASS_COMPILER_CREATED,
     SASS_COMPILER_PARSED,

@@ -50,7 +50,8 @@ git clone https://github.com/sass/sass-spec.git libsass/sass-spec
 
 ### Decide for static or shared library
 
-`libsass` can be built and linked as a `static` or as a `shared` library. The default is `static`. To change it you can set the `BUILD` environment variable:
+`libsass` can be built and linked as a `static` or as a `shared` library.
+The default is `static`. To change it you can set the `BUILD` environment variable:
 
 ```bat
 set BUILD="shared"

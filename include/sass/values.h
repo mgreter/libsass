@@ -17,7 +17,7 @@
 // a ValueObj inside a struct. My final conclusion was to simply create an "anonymous" struct
 // on the C-API side, which has no implementation at all. In the actual implementation we
 // just trust the pointer to be of the type it should be, or you get undefined behavior.
-// Since underlying the pointer is RefCounted, we know how to handle the reference count
+// Since underlying pointers are often RefCounted, we know how to handle the reference count
 // for memory management when destruction is requested from C-API. Whenever the created value
 // is a e.g. added to a container, the actual destruction of the original is skipped.
 

@@ -71,7 +71,8 @@ typedef struct SassImportList* (*SassImporterLambda)(
 
 // Create custom importer (with arbitrary data pointer called `cookie`)
 // The pointer is often used to store the callback into the actual binding.
-struct SassImporter* sass_make_importer(SassImporterLambda lambda, double priority, void* cookie);
+struct SassImporter* sass_make_importer(
+  SassImporterLambda lambda, double priority, void* cookie);
 
 // Deallocate the importer and release memory
 void sass_delete_importer(struct SassImporter* cb);

@@ -65,12 +65,13 @@ export CXX=/usr/bin/clang++
 We constantly and automatically test `libsass` against the official [spec test-suite][5].
 To do this we need to have a test-runner (which is written in ruby) and a command-line
 tool ([`sassc`][6]) to run the tests. Therefore we need to additionally compile `sassc`.
-To do this, the build files of all three projects need to work together. This may not have
-the same quality for all build flavors. You definitely need to have ruby (2.1?) installed
-(version 1.9 seems to cause problems at least on windows). You also need some gems installed:
+To do this, the build files of all three projects need to work together.
+
+You also need some ruby gems installed:
 
 ```bash
 ruby -v
+gem install hrx
 gem install minitest
 # should be optional
 gem install minitap
@@ -79,11 +80,11 @@ gem install minitap
 #### Including the LibSass version
 
 There is a function in `libsass` to query the current version. This has to be defined at compile time.
-We use a C macro for this, which can be defined by calling `g++ -DLIBSASS_VERSION="\"x.y.z.\""`.
+We use a C macro for this, which can be defined by calling e.g. `g++ -DLIBSASS_VERSION="\"x.y.z.\""`.
 The two quotes are necessary, since it needs to end up as a valid C string. Normally you do not
 need to do anything if you use the makefiles or autotools. They will try to fetch the version
-via git directly. If you only have the sources without the git repo, you can pass the version
-as an environment variable to `make` or `configure`:
+either via an optional VERSION file or via git directly. If you only have the sources without
+the git repo, you can also pass the version as an environment variable to `make` or `configure`:
 
 ```
 export LIBSASS_VERSION="x.y.z."

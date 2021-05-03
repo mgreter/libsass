@@ -14,7 +14,7 @@ int main(int argc, const char* argv[])
   // Use `sass_alloc_memory` to get a buffer to pass to LibSass
   // then fill it with data you load from disk or somewhere else.
 
-  // create the data context and get all related structs
+  // create compiler object holding config and states
   struct SassCompiler* compiler = sass_make_compiler();
   // we've set the input name to "styles" here, which means ...
   struct SassImport* data = sass_make_content_import(text, "styles");
@@ -89,7 +89,7 @@ echo "foo { margin: 21px * 2; }" > foo.scss
 int main(int argc, const char* argv[])
 {
 
-  // create the data context and get all related structs
+  // create compiler object holding config and states
   struct SassCompiler* compiler = sass_make_compiler();
   // set input name with extension so we can deduct type from it
   struct SassImport* import = sass_make_file_import("foo.scss");

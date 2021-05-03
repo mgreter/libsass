@@ -7,8 +7,8 @@ resource with text to be parsed. These object are reference-counted.
 
 ### Imports and source-maps
 
-Imports are not yet parsed correctly if they contain source-maps. Ideally we
-would want to automatically load associated source-maps for inputs. Currently
+Imports with embedded source-maps are not automatically parsed correctly. Ideally
+we would want to automatically load associated source-maps for inputs. Currently
 LibSass does not make use of any upstream source-maps. The API has been designed
 with that case in mind, but implementation is not done yet. Everything still
 works, but additional source-maps may end up as superfluous comments.

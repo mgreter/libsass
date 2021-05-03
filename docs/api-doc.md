@@ -86,13 +86,13 @@ resolved against the current working directory.
 
 ## Memory handling and life-cycles
 
-The C-API mandates that you have one delete call for every make call. Internally
-LibSass often utilizes reference counting, but you still need to call the appropriate
-`sass_free` function for every object you own. APIs that return a `char*` also need
-the returned memory to be freed by `sass_free_c_string`. Some APIs also allow
+The C-API mandates that you have one delete/free call for every make call. Internally
+LibSass sometimes utilizes reference counting, but you still need to call the appropriate
+`sass_delete` function for every object you own. APIs that return a `char*` also need
+the returned memory to be freed by `sass_free_c_string`. A few APIs also allow
 implementors to take over ownership of some data. Otherwise this data is attached
-to the life-time of the main Compiler object. Reference counted objects will stay
-alive, even after you've called `sass_delete_compiler`.
+to the life-time of the main Compiler object. Although reference counted objects
+will stay alive, even after you've called `sass_delete_compiler`.
 
 ```C
 // Allocate a memory block on the heap of (at least) [size].
@@ -115,12 +115,63 @@ void sass_free_c_string(char* ptr);
 ## Miscellaneous API functions
 
 ```C
+// Change the virtual current working directory
+void sass_chdir(const char* path);
+
+// Prints message to stderr with color for windows
+void sass_print_stdout(const char* message);
+void sass_print_stderr(const char* message);
+
 // Get compiled libsass version
 const char* libsass_version(void);
 
 // Implemented sass language version
 // Hardcoded version 3.9 for time being
 const char* libsass_language_version(void);
+```
+
+## Miscellaneous API enums
+
+```C
+// Different render styles
+enum SassOutputStyle {
+  SASS_STYLE_NESTED,
+  SASS_STYLE_EXPANDED,
+  SASS_STYLE_COMPACT,
+  SASS_STYLE_COMPRESSED,
+  // only used internally!
+  SASS_STYLE_TO_CSS
+};
+
+// Type of parser to use
+enum SassImportSyntax {
+  SASS_IMPORT_AUTO,
+  SASS_IMPORT_SCSS,
+  SASS_IMPORT_SASS,
+  SASS_IMPORT_CSS,
+};
+
+// Config how to produce source-map
+enum SassSrcMapMode {
+  // Don't render any source-mapping.
+  SASS_SRCMAP_NONE,
+  // Only render the `srcmap` string.
+  // The `footer` will be `NULL`.
+  SASS_SRCMAP_CREATE,
+  // Write srcmap link into `footer`
+  SASS_SRCMAP_EMBED_LINK,
+  // Embed srcmap into `footer`
+  SASS_SRCMAP_EMBED_JSON,
+};
+
+// State of the compiler object
+enum SassCompilerState {
+  SASS_COMPILER_CREATED,
+  SASS_COMPILER_PARSED,
+  SASS_COMPILER_COMPILED,
+  SASS_COMPILER_RENDERED,
+  SASS_COMPILER_DESTROYED
+};
 ```
 
 ## Common Pitfalls

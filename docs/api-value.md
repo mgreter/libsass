@@ -199,5 +199,4 @@ void sass_warning_set_message(struct SassValue* v, const char* msg);
 ### More links
 
 - [Sass Value Example](api-value-example.md)
-- [Sass Value Internal](api-value-internal.md)
 
