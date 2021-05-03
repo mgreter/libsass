@@ -26,11 +26,32 @@ It is normally located at `"%ProgramFiles(x86)%\MSBuild\15.0\Bin\MSBuild"`
 * If the platform is 32-bit Windows, replace `ProgramFiles(x86)` with `ProgramFiles`.
 * To build with Visual Studio 2019, replace `15.0` with `16.0` in the commands.
 
-Once the command is available you can build with multiple config options:
+Once the command is available you can build any configuration you need:
 
-```batch
+```bash
 MSBuild win\libsass.sln /p:Platform="x64" /p:Configuration="Release Shared" -t:Clean;Build
 MSBuild win\libsass.sln /p:Platform="x86" /p:Configuration="Debug Static" -t:Clean;Build
 ```
 
 The results can be found inside the `build` directory.
+
+### Training LibSass for better performance
+
+Visual Studio offers the possibility to train code via Profile Guided Optimizations.
+In order to achieve this we need to first create an "instrumented" build. This build
+will then generate statistics when being executed. Once enough data is generated,
+the code is linked once more to create the final optimized version. You can expect
+to get around 10% to 15% free performance.
+
+```bash
+# Build an instrumented version to gather statistics for later optimization
+MSBuild libsass.sln /p:Platform="x64" /p:Configuration="Release Shared" /p:PGO="Instrument"
+# Run the trainer against some heavy sass benchmark code
+# You may need to change into a different directory
+..\build\x86\Release\Shared\trainer bench.scss 1>nul
+# Build the final optimized version with the gathered profile statistics
+MSBuild libsass.sln /p:Platform="x64" /p:Configuration="Release Shared" /p:PGO="Instrument"
+```
+
+See [train.bat](win/train.bat) for a full example.
+

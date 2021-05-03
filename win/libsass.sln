@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".SolutionItems", ".Solution
 		..\res\resource.rc = ..\res\resource.rc
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trainer", "trainer.vcxproj", "{C6328AB3-F322-41F1-916B-2F00D19E8B82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug Shared|x64 = Debug Shared|x64
@@ -44,6 +46,22 @@ Global
 		{E4030474-AFC9-4CC6-BEB6-D846F631502B}.Release Static|x64.Build.0 = Release Static|x64
 		{E4030474-AFC9-4CC6-BEB6-D846F631502B}.Release Static|x86.ActiveCfg = Release Static|Win32
 		{E4030474-AFC9-4CC6-BEB6-D846F631502B}.Release Static|x86.Build.0 = Release Static|Win32
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Debug Shared|x64.ActiveCfg = Debug Shared|x64
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Debug Shared|x64.Build.0 = Debug Shared|x64
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Debug Shared|x86.ActiveCfg = Debug Shared|Win32
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Debug Shared|x86.Build.0 = Debug Shared|Win32
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Debug Static|x64.ActiveCfg = Debug Static|x64
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Debug Static|x64.Build.0 = Debug Static|x64
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Debug Static|x86.ActiveCfg = Debug Static|Win32
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Debug Static|x86.Build.0 = Debug Static|Win32
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Release Shared|x64.ActiveCfg = Release Shared|x64
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Release Shared|x64.Build.0 = Release Shared|x64
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Release Shared|x86.ActiveCfg = Release Shared|Win32
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Release Shared|x86.Build.0 = Release Shared|Win32
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Release Static|x64.ActiveCfg = Release Static|x64
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Release Static|x64.Build.0 = Release Static|x64
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Release Static|x86.ActiveCfg = Release Static|Win32
+		{C6328AB3-F322-41F1-916B-2F00D19E8B82}.Release Static|x86.Build.0 = Release Static|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

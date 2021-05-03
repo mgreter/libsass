@@ -1,34 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Main" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <LIBSASS_VERSION>[NA]</LIBSASS_VERSION>
     <LIBSASS_SRC_DIR>..\src</LIBSASS_SRC_DIR>
     <LIBSASS_HEADERS_DIR>..\src</LIBSASS_HEADERS_DIR>
     <LIBSASS_INCLUDES_DIR>..\include</LIBSASS_INCLUDES_DIR>
   </PropertyGroup>
-  <PropertyGroup Label="Globals">
-    <ProjectGuid>{E4030474-AFC9-4CC6-BEB6-D846F631502B}</ProjectGuid>
-    <RootNamespace>libsass</RootNamespace>
-  </PropertyGroup>
-  <Target Name="GitVersion" BeforeTargets="Main">
-    <Exec Command="git -C .. describe --abbrev=4 --dirty --always --tags" LogStandardErrorAsError="true" ContinueOnError="true" ConsoleToMSBuild="true">
-      <Output TaskParameter="ConsoleOutput" PropertyName="LIBSASS_VERSION" />
-    </Exec>
-  </Target>
-  <Target Name="VersionMacros" BeforeTargets="Main">
-    <ItemGroup>
-      <ClCompile>
-        <PreprocessorDefinitions>%(PreprocessorDefinitions);LIBSASS_VERSION="$(LIBSASS_VERSION)";</PreprocessorDefinitions>
-      </ClCompile>
-    </ItemGroup>
-  </Target>
-  <Target Name="Main">
-    <Message Condition="$(LibType) == 'Static'" Text="Building Static LibSass library" />
-    <Message Condition="$(LibType) == 'Shared'" Text="Building Dynamic LibSass library" />
-    <Message Condition="$(PGO) != 'None' AND $(Platform) == 'Win32'" Text="Note: PGO may not work in x86 archs!?" />
-    <Message Text="Version: $(LIBSASS_VERSION)" />
-    <CallTarget Targets="Build" />
-  </Target>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug Shared|Win32">
       <Configuration>Debug Shared</Configuration>
@@ -63,12 +40,22 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup Label="Common Properties">
-    <PGO>None</PGO>
-    <RelType>Debug</RelType>
-    <LibType>Shared</LibType>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{c6328ab3-f322-41f1-916b-2f00d19e8b82}</ProjectGuid>
+    <RootNamespace>trainer</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Common Properties">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <RelType>Debug</RelType>
+    <LibType>Shared</LibType>
+    <PGO>None</PGO>
+  </PropertyGroup>
   <PropertyGroup Condition="$(Configuration) == 'Release Static'">
     <RelType>Release</RelType>
     <LibType>Static</LibType>
@@ -84,25 +71,6 @@
   <PropertyGroup Condition="$(Configuration) == 'Debug Shared'">
     <RelType>Debug</RelType>
     <LibType>Shared</LibType>
-  </PropertyGroup>
-  <PropertyGroup Condition="$(LibType) == 'Shared'">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PreprocessorDefinitions>ADD_EXPORTS;$(PreprocessorDefinitions);</PreprocessorDefinitions>
-  </PropertyGroup>
-  <PropertyGroup Condition="$(LibType) == 'Static'">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Label="VS2013 toolset selection" Condition="'$(VisualStudioVersion)' == '12.0'">
-    <PlatformToolset>v120</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="VS2015 toolset selection" Condition="'$(VisualStudioVersion)' == '14.0'">
-    <PlatformToolset>v140</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="VS2017 toolset selection" Condition="'$(VisualStudioVersion)' == '15.0'">
-    <PlatformToolset>v141</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="VS2019 toolset selection" Condition="'$(VisualStudioVersion)' == '16.0'">
-    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="$(RelType) == 'Debug'">
     <LinkIncremental>true</LinkIncremental>
@@ -121,12 +89,14 @@
     <OutDir>$(SolutionDir)build\x64\$(RelType)\$(LibType)\</OutDir>
   </PropertyGroup>
   <PropertyGroup>
-    <IntDir>$(OutDir)libsass\</IntDir>
+    <IntDir>$(OutDir)trainer\</IntDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="UserSettings">
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -134,13 +104,19 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalIncludeDirectories)</AdditionalLibraryDirectories>
+      <AdditionalIncludeDirectories>$(LIBSASS_INCLUDES_DIR);$(LIBSASS_HEADERS_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions Condition="$(PGO) == 'Instrument'">/GENPROFILE $(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="$(PGO) == 'Optimize'">/USEPROFILE $(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies Condition="$(LibType) == 'Shared'">$(OutDir)\libsass.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="$(LibType) == 'Static'">$(OutDir)\libsass.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="$(Platform) == 'Win32'">
@@ -150,26 +126,30 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="$(RelType) == 'Debug'">
     <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_LIB;$(PreprocessorDefinitions);</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="$(RelType) == 'Release'">
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_LIB;$(PreprocessorDefinitions);</PreprocessorDefinitions>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <OmitFramePointers>true</OmitFramePointers>
-      <StringPooling>true</StringPooling>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <Import Project="libsass.targets" />
+  <ItemGroup>
+    <ClCompile Include="trainer.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
