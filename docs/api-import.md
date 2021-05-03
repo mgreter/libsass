@@ -1,12 +1,17 @@
 
 ## LibSass import C-API
 
-Imports on the C-API side can either be compilation entry points or imports
-returned from custom importers. Overall they behave very similarly, but entry
-points are a bit more strict, as we know better what to expect. Imports from
-custom importers can be more versatile. An import can either have a path,
-some loaded content or both. Custom importer can return imports in either
-of that state, while with entry points we know what to expect.
+Imports on the C-API side can either be used as compilation entry points or
+imports returned from custom importers/headers. They represent a loadable
+resource with text to be parsed. These object are reference-counted.
+
+### Imports and source-maps
+
+Imports are not yet parsed correctly if they contain source-maps. Ideally we
+would want to automatically load associated source-maps for inputs. Currently
+LibSass does not make use of any upstream source-maps. The API has been designed
+with that case in mind, but implementation is not done yet. Everything still
+works, but additional source-maps may end up as superfluous comments.
 
 ### Sass Import API
 

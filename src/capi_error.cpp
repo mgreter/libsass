@@ -167,9 +167,11 @@ extern "C" {
   const char* ADDCALL sass_error_get_string(const struct SassError* error) { return error->what.c_str(); }
 
   // Getter for error status as css (In order to show error in browser).
+  // Memory returned by this function must be freed via `sass_free_c_string`.
   char* ADDCALL sass_error_get_css(const struct SassError* error) { return error->getCss(); }
 
   // Getter for error status as json object (Useful to pass to downstream).
+  // Memory returned by this function must be freed via `sass_free_c_string`.
   char* ADDCALL sass_error_get_json(const struct SassError* error) { return error->getJson(true); }
 
   // Getter for formatted error message. According to logger style this

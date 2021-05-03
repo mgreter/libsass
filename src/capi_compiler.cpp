@@ -446,7 +446,7 @@ extern "C" {
     Compiler::unwrap(compiler).loadPlugins(paths);
   }
 
-  // Add a custom header importer that will always be executed before any other 
+  // Add a custom header importer that will always be executed before any other
   // compilations takes place. Useful to prepend a shared copyright header or to
   // provide global variables or functions. This feature is still in experimental state.
   // Note: With the adaption of Sass Modules this might be completely replaced in the future.
@@ -483,31 +483,31 @@ extern "C" {
     Compiler::unwrap(compiler).output_style = output_style;
   }
 
-  // Setter for logging style (see `enum SassLoggerStyle` for possible options).
+  // Try to detect and set logger options for terminal colors, unicode and columns.
   void ADDCALL sass_compiler_autodetect_logger_capabilities(struct SassCompiler* compiler)
   {
     Compiler::unwrap(compiler).autodetectCapabalities();
   }
 
-  // Setter for enabling/disabling logging with ANSI colors
+  // Setter for enabling/disabling logging with ANSI colors.
   void ADDCALL sass_compiler_set_logger_colors(struct SassCompiler* compiler, bool enable)
   {
    Compiler::unwrap(compiler).support_colors = enable;
   }
 
-  // Setter for enabling/disabling logging with unicode text
+  // Setter for enabling/disabling logging with unicode text.
   void ADDCALL sass_compiler_set_logger_unicode(struct SassCompiler* compiler, bool enable)
   {
     Compiler::unwrap(compiler).support_unicode = enable;
   }
 
-  // Getter for compiler precision (how floating point numbers are truncated).
+  // Getter for number precision (how floating point numbers are truncated).
   int ADDCALL sass_compiler_get_precision(struct SassCompiler* compiler)
   {
     return Compiler::unwrap(compiler).precision;
   }
 
-  // Setter for compiler precision (how floating point numbers are truncated).
+  // Setter for number precision (how floating point numbers are truncated).
   void ADDCALL sass_compiler_set_precision(struct SassCompiler* context, int precision)
   {
     Compiler& compiler(Compiler::unwrap(context));
@@ -581,7 +581,7 @@ extern "C" {
   {
     return Compiler::unwrap(compiler).hasSrcMapFile();
   }
-  
+
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -731,7 +731,7 @@ extern "C" {
   //   {
   //     return Compiler::unwrap(compiler).source_comments;
   //   }
-  // 
+  //
   //   void ADDCALL sass_compiler_set_source_comments(struct SassCompiler* compiler, bool source_comments)
   //   {
   //     Compiler::unwrap(compiler).source_comments = source_comments;

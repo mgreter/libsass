@@ -10,17 +10,8 @@
 extern "C" {
 #endif
 
-  // Traces must be got directly from the underlying object.
-  // We expose traces during eval (BackTraces) and on when handling
-  // error (StackTraces). We can't convert a vector<StackTrace> to
-  // vector<Traced>, because they are not covariant. Easiest to add
-  // two implementation to fetch a trace and make the cast there.
-
-  // ADDAPI size_t ADDCALL sass_traces_get_size(struct SassTraces* traces);
-  // ADDAPI struct SassTrace* ADDCALL sass_traces_get_last(struct SassTraces* traces);
-  // ADDAPI struct SassTrace* ADDCALL sass_traces_get_trace(struct SassTraces* traces, size_t i);
-
-  // ADDAPI size_t ADDCALL sass_traces_get_size(struct SassTraces* traces);
+  // Traces must be got directly from the underlying object. We expose
+  // traces during eval (BackTraces) and when handling error (StackTraces).
 
   /////////////////////////////////////////////////////////////////////////
   // Implementation related to struct SassTrace

@@ -42,36 +42,16 @@ int main(int argc, const char* argv[])
   sass_compiler_set_entry_point(compiler, import);
   sass_delete_import(import);
 
-  // execute all compiler steps
-  sass_compiler_parse(compiler);
-  sass_compiler_compile(compiler);
-  sass_compiler_render(compiler);
+  // Execute compiler and print/write results
+  sass_compiler_execute(compiler, false);
 
-  // print warnings first to stderr
-  if (sass_compiler_get_warn_string(compiler)) {
-    sass_print_stderr(sass_compiler_get_warn_string(compiler));
-  }
-
-  // Check if there was any error in any phase
-  if (sass_compiler_get_status(compiler) != 0) {
-    // Print formatted error to stderr
-    const struct SassError* err = sass_compiler_get_error(compiler);
-    sass_print_stderr(sass_error_get_formatted(err));
-  }
-  else {
-    // Print output string to stdout
-    if (sass_compiler_get_output_string(compiler)) {
-      sass_print_stdout(sass_compiler_get_output_string(compiler));
-    }
-    // Print optional footer to stdout
-    if (sass_compiler_get_footer_string(compiler)) {
-      sass_print_stdout(sass_compiler_get_footer_string(compiler));
-    }
-  }
-
-  // Get return status before deleting the compiler
+  // Get result code after all compilation steps
   int status = sass_compiler_get_status(compiler);
+
+  // Clean-up compiler, we're done
   sass_delete_compiler(compiler);
+
+  // exit status
   return status;
 }
 ```

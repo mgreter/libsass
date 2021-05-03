@@ -1,12 +1,14 @@
 ## LibSass custom importer C-API
 
+Note: currently custom importers are not yet implemented for `@use` and friends!
+
 The custom importer C-API allows implementors to decide how `@import` and similar
-rules (e.g. `@use`) are handled with given sass code. Custom importers will we called
-once we try to resolve an import rule. Without any custom importer, LibSass will try
-to resolve the import by looking into all include directories. Custom importers will
-be invoked before this happens, if any are registered. LibSass passes the current
-path that should be imported and the resolved path to the parent import, in order
-for the custom importer to resolve relative imports to the parent.
+rules (e.g. `@use`) are handled. Custom importers will we called once we try to
+resolve an import rule. Without any custom importer, LibSass will try to resolve
+the import by looking into all include directories. Custom importers will be invoked
+before this happens, if any are registered. LibSass passes the current path that
+should be imported and the resolved path to the parent import, in order for the
+custom importer to resolve relative imports to the parent style-sheet.
 
 The custom importer must return a pointer to a `SassImportList`, with which it can
 represent three different states. It can return a `nullptr`, which will let LibSass
@@ -15,19 +17,15 @@ mean that the import is consumed, but nothing is really imported. Last it can re
 one or more entries in the `SassImportList`. That list consists of `SassImport` entries,
 which can either be just rewritten paths, or also already have fully loaded content.
 
-This feature is still considered experimental as we don't exactly follow the official
-Sass implementation here.
-
 ### C-API for `SassImportList`
 
 You have to return a list of imports, since some importers may want to import multiple
-files from one import statement (ie. a glob/star importer). The memory you pass with source and
-srcmap is taken over by LibSass and freed automatically when the import is done. You are also
-allowed to return `0` or `nullptr` instead of a list, which will tell LibSass to handle the
-import by itself (as if no custom importer was in use).
-
-The C-API for `SassImportList` is designed like a FiFo queue (first in, first out). The C-API
-only allows to push or shift items from the list.
+files from one import statement (ie. a glob/star importer). The memory you pass with
+source and srcmap is taken over by LibSass and freed automatically when the import is
+done. You are also allowed to return `0` or `nullptr` instead of a list, which will
+tell LibSass to handle the import by itself (as if no custom importer was in use).
+The C-API for `SassImportList` is designed like a FiFo queue (first in, first out).
+The C-API only allows to push or shift items from the list.
 
 ```C
 struct SassImportList* imports = sass_make_import_list();

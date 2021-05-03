@@ -1,6 +1,6 @@
 # How LibSass handles variables, functions and mixins
 
-This document is intended for developers of LibSass only and are of now use
+This document is intended for developers of LibSass only and are of no use
 for implementers. It documents how variable stacks are implemented.
 
 ## Foreword

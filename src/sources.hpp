@@ -105,7 +105,7 @@ namespace Sass {
   // The resources passed in will be taken over and disposed at the end.
   // Resources must have been allocated via `sass_alloc_memory`.
   /////////////////////////////////////////////////////////////////////////
-  class SourceFile : public SourceWithPath
+  class SourceFile final : public SourceWithPath
   {
   protected:
 

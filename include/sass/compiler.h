@@ -55,7 +55,7 @@ extern "C" {
   // Note: the passed in `paths` can be path separated (`;` on windows, `:` otherwise).
   ADDAPI void ADDCALL sass_compiler_load_plugins(struct SassCompiler* compiler, const char* paths);
 
-  // Add a custom header importer that will always be executed before any other 
+  // Add a custom header importer that will always be executed before any other
   // compilations takes place. Useful to prepend a shared copyright header or to
   // provide global variables or functions. This feature is still in experimental state.
   // Note: With the adaption of Sass Modules this might be completely replaced in the future.
@@ -78,19 +78,19 @@ extern "C" {
   // Setter for output style (see `enum SassOutputStyle` for possible options).
   ADDAPI void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle output_style);
 
-  // Setter for logging style (see `enum SassLoggerStyle` for possible options).
+  // Try to detect and set logger options for terminal colors, unicode and columns.
   ADDAPI void ADDCALL sass_compiler_autodetect_logger_capabilities(struct SassCompiler* compiler);
 
-  // Setter for enabling/disabling logging with ANSI colors
+  // Setter for enabling/disabling logging with ANSI colors.
   ADDAPI void ADDCALL sass_compiler_set_logger_colors(struct SassCompiler* compiler, bool enable);
 
-  // Setter for enabling/disabling logging with unicode text
+  // Setter for enabling/disabling logging with unicode text.
   ADDAPI void ADDCALL sass_compiler_set_logger_unicode(struct SassCompiler* compiler, bool enable);
 
-  // Getter for compiler precision (how floating point numbers are truncated).
+  // Getter for number precision (how floating point numbers are truncated).
   ADDAPI int ADDCALL sass_compiler_get_precision(struct SassCompiler* compiler);
 
-  // Setter for compiler precision (how floating point numbers are truncated).
+  // Setter for number precision (how floating point numbers are truncated).
   ADDAPI void ADDCALL sass_compiler_set_precision(struct SassCompiler* compiler, int precision);
 
   // Getter for compiler entry point (which file or data to parse first).

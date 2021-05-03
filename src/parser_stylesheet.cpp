@@ -399,7 +399,7 @@ namespace Sass {
 
     if (!lookingAtIdentifier()) return readStyleRule();
 
-    Offset start(scanner.offset);
+    // Offset start(scanner.offset);
     AssignRule* assignment = nullptr;
     Interpolation* interpolation = nullptr;
     tryVariableDeclarationOrInterpolation(assignment, interpolation);
@@ -1356,7 +1356,7 @@ namespace Sass {
     bool isHidden = false;
     std::set<EnvKey> varFilters;
     std::set<EnvKey> callFilters;
-    Offset beforeShow(scanner.offset);
+    // Offset beforeShow(scanner.offset);
     if (scanIdentifier("show")) {
       readForwardMembers(varFilters, callFilters);
       isShown = true;
@@ -2635,7 +2635,7 @@ namespace Sass {
   // Otherwise, it will ignore the dot without consuming it.
   double StylesheetParser::tryDecimal(bool allowTrailingDot)
   {
-    Offset start(scanner.offset);
+    // Offset start(scanner.offset);
     StringScannerState state(scanner.state());
     if (scanner.peekChar() != $dot) return 0.0;
 

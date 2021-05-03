@@ -1,10 +1,10 @@
 ## Sass Compiler API
 
 Sass Compiler is the main object to facilitate the Sass compilation process.
-It keeps state between different stages of the process, which is split in
-three main stages: parsing, compiling and rendering.
+It holds the configuration, the compilation state and the results. It's the
+main object you will interact on the C-API side.
 
-The regular life-time of a compiler will mostly look like this:
+The regular life-cycle of a compiler will mostly look like this:
 - Create new compiler object
 - Set various configuration options
 - Set one compilation entry point
@@ -16,6 +16,26 @@ The regular life-time of a compiler will mostly look like this:
 The split between parse, compile and render is done because there
 are cases where we might want to omit certain phases. One example
 would be the init phase for a watcher to get all includes first.
+
+### Compiler entry point
+
+Every compiler must have one entry point. This can either be a file or
+a data entry point. See (import api)[api-import.md] for further details.
+
+### Writing output files
+
+Implementors may write output files on their own or you can tell
+LibSass to write them to the configured locations. The functions
+`sass_compiler_write_output` and `sass_compiler_write_srcmap` should
+act according to the configuration and the produced results.
+
+### Logger configuration
+
+LibSass supports error reporting with ANSI colors on windows and unix. It can
+also make use of Unicode compatible terminals. There is some basic auto-detection
+you can trigger by calling `sass_compiler_autodetect_logger_capabilities`. You
+can still overload the detected settings afterwards. Additionally LibSass will
+try to break running-text into the available columns and shorten stack-traces.
 
 ### Sass Compiler API
 
@@ -40,6 +60,15 @@ void sass_compiler_compile(struct SassCompiler* compiler);
 
 // Render the evaluated ast-tree to get the final output string.
 void sass_compiler_render(struct SassCompiler* compiler);
+
+// Write or print the output to the console or the configured output path
+void sass_compiler_write_output(struct SassCompiler* compiler);
+
+// Write source-map to configured path if options are set accordingly
+void sass_compiler_write_srcmap(struct SassCompiler* compiler);
+
+// Execute all compiler steps and write/print results
+int sass_compiler_execute(struct SassCompiler* compiler, bool quiet);
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -78,13 +107,19 @@ void sass_compiler_add_custom_function(struct SassCompiler* compiler, struct Sas
 // Setter for output style (see `enum SassOutputStyle` for possible options).
 void sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle output_style);
 
-// Setter for logging style (see `enum SassLoggerStyle` for possible options).
-void sass_compiler_set_logger_style(struct SassCompiler* compiler, enum SassLoggerStyle log_style);
+// Try to detect and set logger options for terminal colors, unicode and columns.
+void sass_compiler_autodetect_logger_capabilities(struct SassCompiler* compiler);
 
-// Getter for compiler precision (how floating point numbers are truncated).
+// Setter for enabling/disabling logging with ANSI colors.
+void sass_compiler_set_logger_colors(struct SassCompiler* compiler, bool enable);
+
+// Setter for enabling/disabling logging with unicode text.
+void sass_compiler_set_logger_unicode(struct SassCompiler* compiler, bool enable);
+
+// Getter for number precision (how floating point numbers are truncated).
 int sass_compiler_get_precision(struct SassCompiler* compiler);
 
-// Setter for compiler precision (how floating point numbers are truncated).
+// Setter for number precision (how floating point numbers are truncated).
 void sass_compiler_set_precision(struct SassCompiler* compiler, int precision);
 
 // Getter for compiler entry point (which file or data to parse first).
@@ -116,6 +151,12 @@ const char* sass_compiler_get_footer_string(struct SassCompiler* compiler);
 // Getter for string containing the optional source-mapping.
 const char* sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
 
+// Check if implementor is expected to write a output file
+bool sass_compiler_has_output_file(struct SassCompiler* compiler);
+
+// Check if implementor is expected to write a source-map file
+bool sass_compiler_has_srcmap_file(struct SassCompiler* compiler);
+
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
@@ -123,9 +164,15 @@ const char* sass_compiler_get_srcmap_string(struct SassCompiler* compiler);
 void sass_compiler_set_srcmap_mode(struct SassCompiler* compiler, enum SassSrcMapMode mode);
 
 // Setter for source-map path (where to store the source-mapping).
-// Note: if path is not explicitly given, we will deduct one from input path.
+// Note: if path is not explicitly given, we will deduct one from output path.
 // Note: LibSass does not write the file, implementers should write to this path.
 void sass_compiler_set_srcmap_path(struct SassCompiler* compiler, const char* path);
+
+// Getter for source-map path (where to store the source-mapping).
+// Note: if path is not explicitly given, we will deduct one from output path.
+// Note: the value will only be deducted after the main render phase is completed.
+// Note: LibSass does not write the file, implementers should write to this path.
+const char* sass_compiler_get_srcmap_path(struct SassCompiler* compiler);
 
 // Setter for source-map root (simply passed to the resulting srcmap info).
 // Note: if not given, no root attribute will be added to the srcmap info object.
@@ -155,6 +202,9 @@ const struct SassImport* sass_compiler_get_last_import(struct SassCompiler* comp
 // Returns pointer to error object associated with compiler.
 // Will be valid until the associated compiler is destroyed.
 const struct SassError* sass_compiler_get_error(struct SassCompiler* compiler);
+
+// Returns status code for compiler (0 meaning success, anything else is an error)
+int sass_compiler_get_status(struct SassCompiler* compiler);
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////

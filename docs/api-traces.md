@@ -78,5 +78,4 @@ const char* sass_source_get_srcmap(struct SassSource* source);
 ### More links
 
 - [Sass Traces Example](api-traces-example.md)
-- [Sass Traces Internal](api-traces-internal.md)
 
