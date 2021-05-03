@@ -12,8 +12,8 @@ struct SassImportList* sass_importer(SassImporterLambda lambda, double priority,
   struct SassImportList* list = sass_make_import_list();
   char* local = sass_copy_c_string("local { color: green; }");
   char* remote = sass_copy_c_string("remote { color: red; }");
-  sass_import_list_push(list, sass_make_content_import(local, "/tmp/styles.scss"));
-  sass_import_list_push(list, sass_make_content_import(remote, "http://www.example.com"));
+  sass_import_list_emplace(list, sass_make_content_import(local, "/tmp/styles.scss"));
+  sass_import_list_emplace(list, sass_make_content_import(remote, "http://www.example.com"));
   return list;
 }
 
@@ -65,7 +65,7 @@ struct SassImportList* importer(SassImporterLambda lambda, double priority, void
   // Let LibSass load the file identified by the importer
   // No further importers are consulted
   struct SassImportList* list = sass_make_import_list();
-  sass_import_list_push(list, sass_make_file_import(path));
+  sass_import_list_emplace(list, sass_make_file_import(path));
   return list;
 }
 
@@ -75,14 +75,14 @@ struct SassImportList* importer(SassImporterLambda lambda, double priority, void
   const char* message = "some error message";
   struct SassImport* import = sass_make_file_import(path);
   sass_import_set_error_message(import, sass_copy_c_string(message));
-  sass_import_list_push(list, import);
+  sass_import_list_emplace(list, import);
   return list;
 }
 
 struct SassImportList* importer(SassImporterLambda lambda, double priority, void* cookie) {
   // Let LibSass load the file identified by the importer
   struct SassImportList* list = sass_make_import_list();
-  sass_import_list_push(list, sass_make_file_import(path));
+  sass_import_list_emplace(list, sass_make_file_import(path));
   return list;
 }
 

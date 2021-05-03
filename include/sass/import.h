@@ -30,30 +30,30 @@ extern "C" {
     char* source, char* srcmap, enum SassImportSyntax format);
 
   // Just in case we have some stray import structs
-  ADDAPI void ADDCALL sass_delete_import(struct SassImport*);
+  ADDAPI void ADDCALL sass_delete_import(struct SassImport* import);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   // Getter for specific import format for the given import (force css/sass/scss or set to auto)
-  ADDAPI enum SassImportSyntax ADDCALL sass_import_get_type(const struct SassImport*);
+  ADDAPI enum SassImportSyntax ADDCALL sass_import_get_type(const struct SassImport* import);
 
   // Setter for specific import format for the given import (force css/sass/scss or set to auto)
   ADDAPI void ADDCALL sass_import_set_syntax(struct SassImport* import, enum SassImportSyntax syntax);
 
   // Getter for original import path (as seen when parsed)
-  ADDAPI const char* ADDCALL sass_import_get_imp_path(const struct SassImport*);
+  ADDAPI const char* ADDCALL sass_import_get_imp_path(const struct SassImport* import);
 
   // Getter for resolve absolute path (after being resolved)
-  ADDAPI const char* ADDCALL sass_import_get_abs_path(const struct SassImport*);
+  ADDAPI const char* ADDCALL sass_import_get_abs_path(const struct SassImport* import);
 
   // Getter for import error message (used by custom importers).
   // If error is not `nullptr`, the import must be considered as failed.
-  ADDAPI const char* ADDCALL sass_import_get_error_message(struct SassImport*);
+  ADDAPI const char* ADDCALL sass_import_get_error_message(struct SassImport* import);
 
   // Setter for import error message (used by custom importers).
   // If error is not `nullptr`, the import must be considered as failed.
-  ADDAPI void ADDCALL sass_import_set_error_message(struct SassImport*, const char* msg);
+  ADDAPI void ADDCALL sass_import_set_error_message(struct SassImport* import, const char* msg);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,10 @@ extern "C" {
   ADDAPI struct SassImport* ADDCALL sass_import_list_shift(struct SassImportList* list);
 
   // Append an additional import to the list container.
-  ADDAPI void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport*);
+  ADDAPI void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport* import);
+
+  // Append an additional import to the list container and takes ownership of the import.
+  ADDAPI void ADDCALL sass_import_list_emplace(struct SassImportList* list, struct SassImport* import);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

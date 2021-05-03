@@ -179,7 +179,15 @@ extern "C" {
   void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport* import)
   {
     if (list == nullptr) return;
-    list->push_back(import);
+    if (import) list->push_back(import);
+  }
+
+  // Append an additional import to the list container and takes ownership of the import.
+  void ADDCALL sass_import_list_emplace(struct SassImportList* list, struct SassImport* import)
+  {
+    sass_import_list_push(list, import);
+    // Reduce refcount by one (we took ownership)
+    if (import) Import::unwrap(import).refcount--;
   }
 
   /////////////////////////////////////////////////////////////////////////

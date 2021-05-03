@@ -36,30 +36,30 @@ struct SassImport* sass_make_import(const char* imp_path, const char* abs_base,
   char* source, char* srcmap, enum SassImportSyntax format);
 
 // Just in case we have some stray import structs
-void sass_delete_import(struct SassImport*);
+void sass_delete_import(struct SassImport* import);
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
 // Getter for specific import format for the given import (force css/sass/scss or set to auto)
-enum SassImportSyntax sass_import_get_type(const struct SassImport*);
+enum SassImportSyntax sass_import_get_type(const struct SassImport* import);
 
 // Setter for specific import format for the given import (force css/sass/scss or set to auto)
 void sass_import_set_syntax(struct SassImport* import, enum SassImportSyntax syntax);
 
 // Getter for original import path (as seen when parsed)
-const char* sass_import_get_imp_path(const struct SassImport*);
+const char* sass_import_get_imp_path(const struct SassImport* import);
 
 // Getter for resolve absolute path (after being resolved)
-const char* sass_import_get_abs_path(const struct SassImport*);
+const char* sass_import_get_abs_path(const struct SassImport* import);
 
 // Getter for import error message (used by custom importers).
 // If error is not `nullptr`, the import must be considered as failed.
-const char* sass_import_get_error_message(struct SassImport*);
+const char* sass_import_get_error_message(struct SassImport* import);
 
 // Setter for import error message (used by custom importers).
 // If error is not `nullptr`, the import must be considered as failed.
-void sass_import_set_error_message(struct SassImport*, const char* msg);
+void sass_import_set_error_message(struct SassImport* import, const char* msg);
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -80,7 +80,10 @@ size_t sass_import_list_size(struct SassImportList* list);
 struct SassImport* sass_import_list_shift(struct SassImportList* list);
 
 // Append an additional import to the list container.
-void sass_import_list_push(struct SassImportList* list, struct SassImport*);
+void sass_import_list_push(struct SassImportList* list, struct SassImport* import);
+
+// Append an additional import to the list container and takes ownership of the import.
+void sass_import_list_emplace(struct SassImportList* list, struct SassImport* import);
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////

@@ -9,6 +9,8 @@ This is useful for custom importers, custom functions or in case of errors.
 #include <sass/traces.h>
 ```
 
+### Sass stack trace related APIs
+
 ```C
 /////////////////////////////////////////////////////////////////////////
 // Implementation related to struct SassTrace

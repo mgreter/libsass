@@ -29,7 +29,7 @@ The C-API only allows to push or shift items from the list.
 
 ```C
 struct SassImportList* imports = sass_make_import_list();
-sass_import_list_push(imports, sass_make_import(rel, abs, source, srcmap));
+sass_import_list_push(imports, sass_import_list_emplace(rel, abs, source, srcmap));
 struct SassImport* import = sass_import_list_shift(imports);
 ```
 

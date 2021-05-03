@@ -15,12 +15,13 @@ The regular life-cycle of a compiler will mostly look like this:
 
 The split between parse, compile and render is done because there
 are cases where we might want to omit certain phases. One example
-would be the init phase for a watcher to get all includes first.
+would be to only execute the init phase for a watcher to get all
+includes first, before triggering the first compilation.
 
 ### Compiler entry point
 
 Every compiler must have one entry point. This can either be a file or
-a data entry point. See (import api)[api-import.md] for further details.
+a data entry point. See [import api][api-import.md] for further details.
 
 ### Writing output files
 
