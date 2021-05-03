@@ -59,32 +59,53 @@ char* SassError::getJson(bool include_sources) const
 void SassError::writeCss(std::ostream& css) const
 {
   // Create a copy to replace chars
-  sass::string header(formatted);
-  StringUtils::makeRightTrimmed(header);
-  sass::string escaped(header);
+  sass::string comment(formatted);
+  StringUtils::makeRightTrimmed(comment);
 
-  size_t found = header.find_first_of("*/");
+  // Remove ANSI color codes
+  size_t found = comment.find_first_of("\x1B[");
   while (found != std::string::npos) {
-    header.replace(found, 2, "*\xE2\x88\x95");
-    found = header.find_first_of("*/", found + 4);
+    auto end = found + 2;
+    while (comment[end] != '\0' && comment[end] != ';' && comment[end] != 'm') end += 1;
+    comment.replace(found, end - found + (comment[end] == '\0' ? 0 : 1), "");
+    found = comment.find_first_of("\x1B[", found);
   }
-  found = header.find_first_of("\n");
-  while (found != std::string::npos) {
-    header.replace(found, 1, "\n * ");
-    found = header.find_first_of("\n", found + 1);
-  }
-  css << "/* " << header << "\n */\n";
 
-  // Create a copy to replace chars
-  found = escaped.find_first_of("\n");
+  // Create copy for content escape
+  sass::string content(comment);
+
+  // Sanitize comment closer with unicode
+  found = comment.find_first_of("*/");
   while (found != std::string::npos) {
-    escaped.replace(found, 1, "\\a ");
-    found = escaped.find_first_of("\n", found + 2);
+    comment.replace(found, 2, "*\xE2\x88\x95");
+    found = comment.find_first_of("*/", found + 4);
   }
-  found = escaped.find_first_of("\"");
+  // Prefix each line with another star
+  found = comment.find_first_of("\n");
   while (found != std::string::npos) {
-    escaped.replace(found, 1, "\\\"");
-    found = escaped.find_first_of("\"", found + 2);
+    comment.replace(found, 1, "\n * ");
+    found = comment.find_first_of("\n", found + 1);
+  }
+  // Add a css comment with the error
+  css << "/* " << comment << "\n */\n";
+
+  // Escape all existing backslashes
+  found = content.find_first_of("\\");
+  while (found != std::string::npos) {
+    content.replace(found, 1, "\\\\");
+    found = content.find_first_of("\\", found + 2);
+  }
+  // Escape all quotes to paste into content
+  found = content.find_first_of("\"");
+  while (found != std::string::npos) {
+    content.replace(found, 1, "\\\"");
+    found = content.find_first_of("\"", found + 2);
+  }
+  // Escape newlines with css escapes
+  found = content.find_first_of("\n");
+  while (found != std::string::npos) {
+    content.replace(found, 1, "\\a ");
+    found = content.find_first_of("\n", found + 2);
   }
 
   // Create body style-rule to show error in UA
@@ -99,16 +120,18 @@ void SassError::writeCss(std::ostream& css) const
   css << "  content: \"";
 
   // Print the escaped content now, code-point by code-point
-  auto cur = escaped.begin();
-  auto end = escaped.end();
+  auto cur = content.begin();
+  auto end = content.end();
   while (cur != end) {
     uint32_t cp = utf8::next(cur, end);
     if (cp <= 127) {
+      // Just pass the char
       css << (char)cp;
     }
     else {
-      css << "\\" <<
-        std::hex << cp;
+      // Write css unicode escape sequence
+      // Must be followed by trailing space!
+      css << "\\" << std::hex << cp << " ";
     }
   }
   css << "\"\n" << "}\n";

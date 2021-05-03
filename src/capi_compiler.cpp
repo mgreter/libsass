@@ -174,12 +174,17 @@ namespace Sass {
         // Check where to write it to
         if (path && compiler.hasOutputFile()) {
           std::ofstream fh(path, std::ios::out | std::ios::binary);
-          if (!fh) throw std::runtime_error("Error opening output file");
+          if (!fh) throw Exception::IoError(compiler,
+            "Error opening output file", path);
           // Write stuff to the output file
           if (content) { fh << content; }
           if (footer) { fh << content; }
           // Close file-handle
           fh.close();
+          // Check for error state after closing
+          // This should report also write errors
+          if (!fh) throw Exception::IoError(compiler,
+            "Error writing output file", path);
         }
         else {
           // Simply print results to stdout
@@ -192,11 +197,16 @@ namespace Sass {
     // Otherwise write special error css
     else if (path && compiler.hasOutputFile()) {
       std::ofstream fh(path, std::ios::out | std::ios::binary);
-      if (!fh) throw std::runtime_error("Error opening output file");
+      if (!fh) throw Exception::IoError(compiler,
+        "Error opening output file", path);
       // Write stuff to the output file
       compiler.error.writeCss(fh);
       // Close file-handle
       fh.close();
+      // Check for error state after closing
+      // This should report also write errors
+      if (!fh) throw Exception::IoError(compiler,
+        "Error writing output file", path);
     }
 
   }

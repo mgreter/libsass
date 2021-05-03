@@ -266,7 +266,12 @@ namespace Sass {
     ExtendAcrossMedia::ExtendAcrossMedia(BackTraces traces, Extension extension)
       : Base("You may not @extend selectors across media queries.", traces)
     {}
-    
+
+    // Thrown when we encounter some IO error (mainly when handling files)
+    IoError::IoError(BackTraces traces, const sass::string& msg, const sass::string& path)
+      : Base(msg + " <" + path + "> (" + strerror(errno) + ")", traces)
+    {}
+
     // Thrown when we find an unexpected UTF8 sequence
     InvalidUnicode::InvalidUnicode(SourceSpan pstate, BackTraces traces)
       : Base("Invalid UTF-8.", traces, pstate)

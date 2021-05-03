@@ -246,6 +246,11 @@ namespace Sass {
       ExtendAcrossMedia(BackTraces traces, Extension extension);
     };
 
+    class IoError : public Base {
+    public:
+      IoError(BackTraces traces, const sass::string& msg, const sass::string& path);
+    };
+
   }
 
 }

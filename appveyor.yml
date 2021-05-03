@@ -8,9 +8,9 @@ environment:
   - Compiler: msvc
     Config: Release
     Platform: Win32
-  - Compiler: msvc
-    Config: Debug
-    Platform: Win32
+#  - Compiler: msvc
+#    Config: Debug
+#    Platform: Win32
   - Compiler: msvc
     Config: Release
     Platform: Win64
