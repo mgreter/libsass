@@ -430,13 +430,13 @@ namespace Sass {
   void Inspect::acceptNameSpaceSelector(NameSpaceSelector* selector)
   {
     flush_schedules();
-    add_open_mapping(selector);
+    // add_open_mapping(selector);
     if (selector->hasNs()) {
       write_string(selector->ns());
       write_char($pipe);
     }
     write_string(selector->name());
-    add_close_mapping(selector);
+    // add_close_mapping(selector);
   }
 
   void Inspect::visitAttributeSelector(AttributeSelector* attribute)

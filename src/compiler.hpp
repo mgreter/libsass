@@ -27,6 +27,12 @@ namespace Sass {
   // The main compiler context object holding config and results
   class Compiler final : public OutputOptions, public Logger {
 
+  private:
+
+    #ifdef DEBUG_MSVC_CRT_MEM
+    _CrtMemState memState;
+    #endif
+
   public:
 
     // Checking if a file exists can be quite extensive

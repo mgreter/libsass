@@ -44,6 +44,13 @@ namespace Sass {
     for (auto& mod : modules) {
       delete mod.second;
     }
+    #ifdef DEBUG_MSVC_CRT_MEM
+    _CrtMemState state;
+    _CrtMemState delta;
+    _CrtMemCheckpoint(&state);
+    if (_CrtMemDifference(&delta, &memState, &state))
+      _CrtMemDumpStatistics(&delta);
+    #endif
   }
 
   Compiler::Compiler() :
@@ -54,7 +61,11 @@ namespace Sass {
     footer(nullptr),
     srcmap(nullptr),
     error()
-  {}
+  {
+    #ifdef DEBUG_MSVC_CRT_MEM
+    _CrtMemCheckpoint(&memState);
+    #endif
+  }
 
   // Get path of compilation entry point
   // Returns the resolved/absolute path
