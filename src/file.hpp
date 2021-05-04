@@ -13,6 +13,7 @@
 
 #include "ast_fwd_decl.hpp"
 #include "ast_def_macros.hpp"
+#include "backtrace.hpp"
 #include "hashing.hpp"
 #include "source.hpp"
 
@@ -146,7 +147,7 @@ namespace Sass {
     SourceDataObj source;
     SassImportSyntax syntax;
     char* error = nullptr;
-    void loadIfNeeded();
+    void loadIfNeeded(BackTraces& traces);
     bool isLoaded() const;
     const char* getImpPath() const;
     const char* getAbsPath() const;

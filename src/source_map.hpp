@@ -34,6 +34,11 @@ namespace Sass {
     // Current position
     Offset position;
 
+    // Flags to move column position for next
+    // mapping a little (useful in some cases)
+    int moveNextSrc = 0;
+    int moveNextDst = 0;
+
   public:
 
     // Empty constructor
@@ -67,6 +72,9 @@ namespace Sass {
 
     // Add mapping pointing to ast node end position
     void addCloseMapping(const AstNode* node);
+
+    // Move
+    void moveNextMapping(int start, int end = 0);
 
     // Render the source-map into comma-separated base64 encoded representation
     sass::string render(const std::unordered_map<size_t, size_t>& remap_srcidx) const;

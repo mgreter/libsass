@@ -124,7 +124,7 @@ namespace Sass {
   void Compiler::parse()
   {
     // Do initial loading
-    entry_point->loadIfNeeded();
+    entry_point->loadIfNeeded(*this);
     // Now parse the entry point stylesheet
     sheet = parseRoot(entry_point);
     // Update the compiler state
@@ -916,8 +916,9 @@ namespace Sass {
       return loaded.ptr();
     }
     // Throw error if read has failed
-    throw Exception::OperationError(
-      "File to read not found or unreadable.");
+    throw Exception::IoError(*this,
+      "File not found or unreadable",
+        File::abs2rel(import.abs_path));
   }
   // EO loadImport
 

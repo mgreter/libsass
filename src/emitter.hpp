@@ -32,6 +32,7 @@ namespace Sass {
       void add_open_mapping(const AstNode* node);
       void add_close_mapping(const AstNode* node);
       void schedule_mapping(const AstNode* node);
+      void move_next_mapping(int start, int end = 0);
 
     public:
       OutputOptions& opt;

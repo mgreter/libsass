@@ -55,13 +55,34 @@ namespace Sass {
   {
     scheduled_mapping = node;
   }
+
   void Emitter::add_open_mapping(const AstNode* node)
   {
-    if (wbuf.srcmap) wbuf.srcmap->addOpenMapping(node);
+    flush_schedules();
+    if (wbuf.srcmap) {
+      wbuf.srcmap->addOpenMapping(node);
+      if (scheduled_crutch) {
+        wbuf.srcmap->addOpenMapping(scheduled_crutch);
+        scheduled_crutch = nullptr;
+      }
+    }
   }
+
   void Emitter::add_close_mapping(const AstNode* node)
   {
     if (wbuf.srcmap) wbuf.srcmap->addCloseMapping(node);
+  }
+
+  void Emitter::move_next_mapping(int start, int end)
+  {
+    flush_schedules();
+    if (wbuf.srcmap) {
+      wbuf.srcmap->moveNextMapping(start, end);
+      if (scheduled_crutch) {
+        wbuf.srcmap->addOpenMapping(scheduled_crutch);
+        scheduled_crutch = nullptr;
+      }
+    }
   }
 
   // MAIN BUFFER MANIPULATION
@@ -207,14 +228,8 @@ namespace Sass {
   {
     flush_schedules();
     add_open_mapping(node);
-    // hotfix for browser issues
-    // this is pretty ugly indeed
-    if (scheduled_crutch) {
-      add_open_mapping(scheduled_crutch);
-      scheduled_crutch = nullptr;
-    }
     write_string(text);
-    add_close_mapping(node);
+    // add_close_mapping(node);
   }
 
   // HELPER METHODS
@@ -336,7 +351,10 @@ namespace Sass {
     }
 
     append_char('}');
-    if (node) add_close_mapping(node);
+    if (node) {
+      move_next_mapping(-1, -1);
+      add_close_mapping(node);
+    }
     append_optional_linefeed();
     if (indentation != 0) return;
     if (output_style() != SASS_STYLE_COMPRESSED)

@@ -233,12 +233,7 @@ namespace Sass {
   void Output::visitString(String* s)
   {
     if (!in_custom_property) {
-      if (s->hasQuotes()) {
-        renderQuotedString(s->value());
-      }
-      else {
-        renderUnquotedString(s->value());
-      }
+      Inspect::visitString(s);
     }
     else {
       sass::string value(s->value());

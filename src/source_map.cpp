@@ -5,6 +5,7 @@
 
 #include "source.hpp"
 #include "ast_nodes.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -75,16 +76,34 @@ namespace Sass {
   }
   // EO prepend
 
+  // Add mapping pointing to ast node end position
+  void SourceMap::moveNextMapping(int start, int end)
+  {
+    moveNextSrc = start;
+    moveNextDst = end;
+  }
+
   // Add mapping pointing to ast node start position
   void SourceMap::addOpenMapping(const AstNode* node)
   {
     const SourceSpan& pstate = node->pstate();
     if (pstate.getSrcIdx() != sass::string::npos) {
+      auto source_start = pstate.position;
+      if (moveNextSrc || moveNextDst) {
+        source_start.column += moveNextSrc;
+        position.column += moveNextDst;
+      }
       mappings.emplace_back(Mapping{
-          pstate.getSrcIdx(),
-          pstate.position,
-          position
-        });
+        pstate.getSrcIdx(),
+        source_start,
+        position
+      });
+      if (moveNextSrc || moveNextDst) {
+        source_start.column -= moveNextSrc;
+        position.column -= moveNextDst;
+        moveNextSrc = 0;
+        moveNextDst = 0;
+      }
     }
   }
   // EO addOpenMapping
@@ -93,12 +112,28 @@ namespace Sass {
   void SourceMap::addCloseMapping(const AstNode* node)
   {
     const SourceSpan& pstate = node->pstate();
+    auto fin = pstate.position + pstate.span;
+    // std::cerr << "Close: "
+    //   << position.line << ":" << position.column << " -> "
+    //   << fin.line << ":" << fin.column
+    //   << "\n";
     if (pstate.getSrcIdx() != sass::string::npos) {
+      auto source_end = pstate.position + pstate.span;
+      if (moveNextSrc || moveNextDst) {
+        source_end.column += moveNextSrc;
+        position.column += moveNextDst;
+      }
       mappings.emplace_back(Mapping{
           pstate.getSrcIdx(),
-          pstate.position + pstate.span,
+          source_end,
           position
-        });
+      });
+      if (moveNextSrc || moveNextDst) {
+        source_end.column -= moveNextSrc;
+        position.column -= moveNextDst;
+        moveNextSrc = 0;
+        moveNextDst = 0;
+      }
     }
   }
   // EO addCloseMapping
@@ -127,23 +162,30 @@ namespace Sass {
       int original_line = static_cast<int>(mappings[i].origin.line);
       int original_column = static_cast<int>(mappings[i].origin.column);
       int original_file = static_cast<int>(idxremap.at(mappings[i].srcidx));
+      bool linefeed = generated_line != previous_generated_line;
 
-      if (generated_line != previous_generated_line) {
+      if (linefeed) {
         previous_generated_column = 0;
         if (generated_line > previous_generated_line) {
           result += sass::string(size_t(generated_line) - previous_generated_line, ';');
           previous_generated_line = generated_line;
         }
       }
-      else if (i > 0) {
-        result += ',';
-      }
+
+      auto generated_offset = generated_column - previous_generated_column;
+      auto file_delta = original_file - previous_original_file;
+      auto line_delta = original_line - previous_original_line;
+      auto col_delta = original_column - previous_original_column;
 
       // maybe we can optimize this a bit in the future?
-      base64vlq.encode(result, generated_column - previous_generated_column);
-      base64vlq.encode(result, original_file - previous_original_file);
-      base64vlq.encode(result, original_line - previous_original_line);
-      base64vlq.encode(result, original_column - previous_original_column);
+      // Only emit mappings if it is actually pointing at something new
+      if (!i || generated_offset || file_delta || line_delta || col_delta) {
+        if (!linefeed && i) result += ',';
+        base64vlq.encode(result, generated_offset);
+        base64vlq.encode(result, file_delta);
+        base64vlq.encode(result, line_delta);
+        base64vlq.encode(result, col_delta);
+      }
 
       previous_generated_column = generated_column;
       previous_original_column = original_column;

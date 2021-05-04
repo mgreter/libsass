@@ -63,22 +63,24 @@ void SassError::writeCss(std::ostream& css) const
   StringUtils::makeRightTrimmed(comment);
 
   // Remove ANSI color codes
-  size_t found = comment.find_first_of("\x1B[");
+  size_t found = comment.find_first_of("\x1B");
   while (found != std::string::npos) {
     auto end = found + 2;
     while (comment[end] != '\0' && comment[end] != ';' && comment[end] != 'm') end += 1;
     comment.replace(found, end - found + (comment[end] == '\0' ? 0 : 1), "");
-    found = comment.find_first_of("\x1B[", found);
+    found = comment.find_first_of("\x1B", found);
   }
 
   // Create copy for content escape
   sass::string content(comment);
 
   // Sanitize comment closer with unicode
-  found = comment.find_first_of("*/");
+  found = comment.find_first_of("/");
   while (found != std::string::npos) {
-    comment.replace(found, 2, "*\xE2\x88\x95");
-    found = comment.find_first_of("*/", found + 4);
+    if (found != 0 && comment[found - 1] == '*') {
+      comment.replace(found, 2, "*\xE2\x88\x95");
+    }
+    found = comment.find_first_of("/", found + 4);
   }
   // Prefix each line with another star
   found = comment.find_first_of("\n");

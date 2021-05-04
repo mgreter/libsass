@@ -7,7 +7,7 @@
 // This include must be the first in all compile units!
 // Otherwise you may run into issues with other headers!
 
-#define DEBUG_SHARED_PTR
+// #define DEBUG_SHARED_PTR
 
 // Undefine extensions macro to tell sys includes
 // that we do not want any macros to be exported

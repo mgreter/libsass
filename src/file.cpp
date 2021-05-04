@@ -591,7 +591,7 @@ namespace Sass {
   // Entry point for top level file import
   // Don't load like other includes, we do not
   // check inside include paths for this file!
-  void Import::loadIfNeeded()
+  void Import::loadIfNeeded(BackTraces& traces)
   {
     // Only load once
     if (isLoaded()) return;
@@ -614,8 +614,9 @@ namespace Sass {
     }
     else {
       // Throw error if read has failed
-      throw Exception::OperationError(
-        "File to read not found or unreadable.");
+      throw Exception::IoError(traces,
+        "File not found or unreadable",
+        File::abs2rel(source->getAbsPath()));
     }
   }
 

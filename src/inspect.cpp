@@ -197,7 +197,7 @@ namespace Sass {
       append_optional_linefeed();
     }
 
-    scheduled_crutch = s;
+    // scheduled_crutch = s;
     if (s) visitSelectorList(s);
     append_scope_opener(node);
 
@@ -398,7 +398,7 @@ namespace Sass {
         first = false;
       }
     }
-    add_close_mapping(import);
+//    add_close_mapping(import);
     append_delimiter();
   }
 
@@ -430,19 +430,17 @@ namespace Sass {
   void Inspect::acceptNameSpaceSelector(NameSpaceSelector* selector)
   {
     flush_schedules();
-    // add_open_mapping(selector);
     if (selector->hasNs()) {
       write_string(selector->ns());
       write_char($pipe);
     }
     write_string(selector->name());
-    // add_close_mapping(selector);
   }
 
   void Inspect::visitAttributeSelector(AttributeSelector* attribute)
   {
     append_string("[");
-    add_open_mapping(attribute);
+    // add_open_mapping(attribute);
     acceptNameSpaceSelector(attribute);
     if (!attribute->op().empty()) {
       append_string(attribute->op());
@@ -459,7 +457,7 @@ namespace Sass {
         }
       }
     }
-    add_close_mapping(attribute);
+    // add_close_mapping(attribute);
     if (attribute->modifier() != 0) {
       append_mandatory_space();
       append_char(attribute->modifier());
@@ -470,23 +468,19 @@ namespace Sass {
   void Inspect::visitClassSelector(ClassSelector* klass)
   {
     flush_schedules();
+    // Skip over '.' character
+    move_next_mapping(1, 1);
     add_open_mapping(klass);
-    // hotfix for browser issues
-    // this is pretty ugly indeed
-    if (scheduled_crutch) {
-      add_open_mapping(scheduled_crutch);
-      scheduled_crutch = 0;
-    }
     append_string(klass->name());
-    add_close_mapping(klass);
+//    add_close_mapping(klass);
   }
 
   void Inspect::visitComplexSelector(ComplexSelector* complex)
   {
     bool many = false;
-    if (complex->hasPreLineFeed()) {
-      append_optional_linefeed();
-    }
+
+    scheduled_crutch = complex->last();
+
     for (SelectorComponentObj& item : complex->elements()) {
       if (many) append_mandatory_space();
       if (SelectorCombinator* combinator = item->isaSelectorCombinator()) {
@@ -497,6 +491,11 @@ namespace Sass {
       }
       many = true;
     }
+
+    scheduled_crutch = nullptr;
+
+    // add_open_mapping(complex->last());
+
   }
 
   void Inspect::visitCompoundSelector(CompoundSelector* compound)
@@ -509,6 +508,8 @@ namespace Sass {
         append_string("&");
       }
     }
+
+    // add_open_mapping(compound);
 
     for (SimpleSelectorObj& item : compound->elements()) {
       item->accept(this);
@@ -548,6 +549,8 @@ namespace Sass {
 
   void Inspect::visitIDSelector(IDSelector* id)
   {
+    // Skip over '#' character
+    move_next_mapping(1, 1);
     append_token(id->name(), id);
   }
 
@@ -611,8 +614,12 @@ namespace Sass {
 
       if (i == 0) append_indentation();
       if ((*list)[i] == nullptr) continue;
-      schedule_mapping(list->get(i)->last());
-      // add_open_mapping(list->get(i)->last());
+//      schedule_mapping(list->get(i)->last());
+
+      if (list->get(i)->hasPreLineFeed()) {
+        append_optional_linefeed();
+      }
+
       visitComplexSelector(list->get(i));
       // add_close_mapping(list->get(i)->last());
       if (i < L - 1) {
@@ -630,7 +637,11 @@ namespace Sass {
 
   void Inspect::visitTypeSelector(TypeSelector* type)
   {
+    flush_schedules();
+    add_open_mapping(type);
+    SelectorList* list = (SelectorList *) type;
     acceptNameSpaceSelector(type);
+//    add_close_mapping(type);
   }
 
   // Returns whether [value] needs parentheses as an
@@ -672,7 +683,7 @@ namespace Sass {
       append_char($lparen);
     }
 
-    add_open_mapping(list);
+    // add_open_mapping(list);
 
     const sass::vector<ValueObj>& values(list->elements());
 
@@ -706,7 +717,7 @@ namespace Sass {
       }
     }
 
-    add_close_mapping(list);
+    // add_close_mapping(list);
 
     if (preserveComma) {
       append_char($comma);
@@ -954,6 +965,8 @@ namespace Sass {
 
   void Inspect::visitString(String* value)
   {
+    flush_schedules();
+    add_open_mapping(value);
     if (quotes && value->hasQuotes()) {
       renderQuotedString(value->value());
     }
@@ -961,6 +974,7 @@ namespace Sass {
       renderUnquotedString(value->value());
       // append_token(s->value(), s);
     }
+//    add_close_mapping(value);
   }
 
 
