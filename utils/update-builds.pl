@@ -63,13 +63,13 @@ EOTMPL
 
 my $tmpl_msvc_filter_fn_head = <<EOTMPL;
     <ClInclude Include="\$(LIBSASS_HEADERS_DIR)\\%s">
-      <Filter>Parser Headers</Filter>
+      <Filter>Function Headers</Filter>
     </ClInclude>
 EOTMPL
 
 my $tmpl_msvc_filter_fn_src = <<EOTMPL;
     <ClCompile Include="\$(LIBSASS_SRC_DIR)\\%s">
-      <Filter>Parser Sources</Filter>
+      <Filter>Function Sources</Filter>
     </ClCompile>
 EOTMPL
 

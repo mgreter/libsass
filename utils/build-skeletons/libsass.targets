@@ -6,6 +6,8 @@
   <ItemGroup Label="AST Sources">{{ast_sources}}</ItemGroup>
   <ItemGroup Label="Parser Headers">{{parser_headers}}</ItemGroup>
   <ItemGroup Label="Parser Sources">{{parser_sources}}</ItemGroup>
+  <ItemGroup Label="Function Headers">{{fn_headers}}</ItemGroup>
+  <ItemGroup Label="Function Sources">{{fn_sources}}</ItemGroup>
   <ItemGroup Label="LibSass Headers">{{headers}}</ItemGroup>
   <ItemGroup Label="LibSass Sources">{{sources}}</ItemGroup>
 </Project>

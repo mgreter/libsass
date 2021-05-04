@@ -95,6 +95,25 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser_at_root_query.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser_keyframe_selector.cpp" />
   </ItemGroup>
+  <ItemGroup Label="Function Headers">
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_meta.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_maps.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_math.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_colors.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_lists.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_selectors.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_texts.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_utils.hpp" />
+  </ItemGroup>
+  <ItemGroup Label="Function Sources">
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_meta.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_maps.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_math.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_lists.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_colors.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_texts.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_selectors.cpp" />
+  </ItemGroup>
   <ItemGroup Label="LibSass Headers">
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\modules.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\backtrace.hpp" />

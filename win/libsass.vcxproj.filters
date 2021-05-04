@@ -33,6 +33,14 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A274}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Function Headers">
+      <UniqueIdentifier>{93995380-89B2-4b04-88EB-625FBE52EB97}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;in;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Function Sources">
+      <UniqueIdentifier>{4FC737F1-C735-4376-A066-2A32D752A274}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
     <Filter Include="LibSass Headers">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;in;inl;inc;xsd</Extensions>
@@ -300,6 +308,55 @@
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\parser_keyframe_selector.cpp">
       <Filter>Parser Sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_meta.hpp">
+      <Filter>Function Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_maps.hpp">
+      <Filter>Function Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_math.hpp">
+      <Filter>Function Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_colors.hpp">
+      <Filter>Function Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_lists.hpp">
+      <Filter>Function Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_selectors.hpp">
+      <Filter>Function Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_texts.hpp">
+      <Filter>Function Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\fn_utils.hpp">
+      <Filter>Function Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_meta.cpp">
+      <Filter>Function Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_maps.cpp">
+      <Filter>Function Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_math.cpp">
+      <Filter>Function Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_lists.cpp">
+      <Filter>Function Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_colors.cpp">
+      <Filter>Function Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_texts.cpp">
+      <Filter>Function Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\fn_selectors.cpp">
+      <Filter>Function Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

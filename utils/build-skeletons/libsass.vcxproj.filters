@@ -33,6 +33,14 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A274}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Function Headers">
+      <UniqueIdentifier>{93995380-89B2-4b04-88EB-625FBE52EB97}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;in;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Function Sources">
+      <UniqueIdentifier>{4FC737F1-C735-4376-A066-2A32D752A274}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
     <Filter Include="LibSass Headers">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;in;inl;inc;xsd</Extensions>
@@ -49,6 +57,8 @@
   <ItemGroup>{{ast_sources}}</ItemGroup>
   <ItemGroup>{{parser_headers}}</ItemGroup>
   <ItemGroup>{{parser_sources}}</ItemGroup>
+  <ItemGroup>{{fn_headers}}</ItemGroup>
+  <ItemGroup>{{fn_sources}}</ItemGroup>
   <ItemGroup>{{headers}}</ItemGroup>
   <ItemGroup>{{sources}}</ItemGroup>
 </Project>
