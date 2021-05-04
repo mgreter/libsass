@@ -17,6 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".SolutionItems", ".Solution
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trainer", "trainer.vcxproj", "{C6328AB3-F322-41F1-916B-2F00D19E8B82}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E4030474-AFC9-4CC6-BEB6-D846F631502B} = {E4030474-AFC9-4CC6-BEB6-D846F631502B}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

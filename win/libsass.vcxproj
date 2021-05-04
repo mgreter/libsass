@@ -132,34 +132,31 @@
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup>
     <ClCompile>
+      <SDLCheck>true</SDLCheck>
       <WarningLevel>Level3</WarningLevel>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/MP $(AdditionalOptions)</AdditionalOptions>
+      <!-- <MultiProcessorCompilation>true</MultiProcessorCompilation> -->
+      <AdditionalIncludeDirectories>$(LIBSASS_INCLUDES_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CONSOLE;_LIB;$(PreprocessorDefinitions);</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="$(RelType) == 'Debug'">_DEBUG;$(PreprocessorDefinitions);</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="$(RelType) == 'Release'">NDEBUG;$(PreprocessorDefinitions);</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="$(Platform) == 'Win32'">WIN32;$(PreprocessorDefinitions);</PreprocessorDefinitions>
+      <Optimization Condition="$(RelType) == 'Debug'">Disabled</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions Condition="$(PGO) == 'Instrument'">/GENPROFILE $(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="$(PGO) == 'Optimize'">/USEPROFILE $(AdditionalOptions)</AdditionalOptions>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration Condition="$(PGO) != 'None'">UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="$(Platform) == 'Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>WIN32;$(PreprocessorDefinitions);</PreprocessorDefinitions>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="$(RelType) == 'Debug'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_LIB;$(PreprocessorDefinitions);</PreprocessorDefinitions>
-    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="$(RelType) == 'Release'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_LIB;$(PreprocessorDefinitions);</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <StringPooling>true</StringPooling>
