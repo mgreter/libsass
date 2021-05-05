@@ -692,9 +692,9 @@ namespace Sass {
     // Needed in loop
     ValueObj value;
     // Create CSS output options
-    OutputOptions out({
+    OutputOptions out(
       SASS_STYLE_TO_CSS,
-      compiler.precision });
+      compiler.precision);
     // Create the emitter
     Cssize cssize(out);
     // Don't quote strings

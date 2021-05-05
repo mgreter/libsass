@@ -695,9 +695,9 @@ namespace Sass {
     ListObj list = SASS_MEMORY_NEW(List,
       pstate(), {}, SASS_SPACE);
     for (SelectorComponent* component : elements()) {
-      OutputOptions out({
+      OutputOptions out(
         SASS_STYLE_TO_CSS,
-        SassDefaultPrecision });
+        SassDefaultPrecision);
       Cssize inspect(out);
       component->accept(&inspect);
       list->append(SASS_MEMORY_NEW(String,

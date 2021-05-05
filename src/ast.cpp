@@ -54,9 +54,9 @@ namespace Sass {
 
   sass::string Selector::inspect(int precision) const
   {
-    OutputOptions out({
+    OutputOptions out(
       SASS_STYLE_NESTED,
-      precision });
+      precision);
     Inspect i(out);
     i.inspect = true;
     // Inspect must be const, accept isn't
@@ -66,9 +66,9 @@ namespace Sass {
 
   sass::string Value::inspect(int precision, bool quotes) const
   {
-    OutputOptions out({
+    OutputOptions out(
       SASS_STYLE_NESTED,
-      precision });
+      precision);
     Inspect i(out);
     i.inspect = true;
     i.quotes = quotes;
@@ -79,9 +79,9 @@ namespace Sass {
 
   sass::string Value::toCss(Logger& logger, bool quote) const
   {
-    OutputOptions out({
+    OutputOptions out(
       SASS_STYLE_TO_CSS,
-      SassDefaultPrecision });
+      SassDefaultPrecision);
     Cssize i(out);
     i.quotes = quote;
     // Inspect must be const, accept isn't
