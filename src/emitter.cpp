@@ -59,7 +59,9 @@ namespace Sass {
   {
     flush_schedules();
     if (wbuf.srcmap) {
-      wbuf.srcmap->addOpenMapping(node, optional);
+      wbuf.srcmap->addOpenMapping(node,
+        force_next_mapping || optional);
+      force_next_mapping = false;
       if (scheduled_mapping) {
         wbuf.srcmap->addOpenMapping(scheduled_mapping, false);
         scheduled_mapping = nullptr;
@@ -71,7 +73,9 @@ namespace Sass {
   {
     flush_schedules();
     if (wbuf.srcmap) {
-      wbuf.srcmap->addCloseMapping(node, optional);
+      wbuf.srcmap->addCloseMapping(node,
+        force_next_mapping || optional);
+      force_next_mapping = false;
       if (scheduled_mapping) {
         wbuf.srcmap->addCloseMapping(scheduled_mapping, false);
         scheduled_mapping = nullptr;

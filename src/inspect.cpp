@@ -290,11 +290,15 @@ namespace Sass {
     //   indentation += node->tabs();
     append_indentation();
     if (node->name()) {
+      force_next_mapping = true;
       acceptCssString(node->name());
-    }
+      force_next_mapping = false;
+     }
     append_colon_separator();
     if (node->value()) {
+      force_next_mapping = true;
       node->value()->accept(this);
+      force_next_mapping = false;
     }
     append_delimiter();
     // if (output_style() == SASS_STYLE_NESTED)

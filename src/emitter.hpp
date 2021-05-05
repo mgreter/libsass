@@ -39,6 +39,7 @@ namespace Sass {
       size_t indentation;
       size_t scheduled_space;
       size_t scheduled_linefeed;
+      bool force_next_mapping;
       bool scheduled_delimiter;
       const AstNode* scheduled_mapping;
 
