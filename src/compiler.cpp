@@ -116,8 +116,8 @@ namespace Sass {
   // Check if we should write srcmap file
   bool Compiler::hasSrcMapFile() const
   {
-    return srcmap_options.mode == SASS_SRCMAP_CREATE ||
-      srcmap_options.mode == SASS_SRCMAP_EMBED_LINK;
+    return mapopt.mode == SASS_SRCMAP_CREATE ||
+      mapopt.mode == SASS_SRCMAP_EMBED_LINK;
   }
   // EO hasSrcMapFile
 
@@ -185,7 +185,7 @@ namespace Sass {
   OutputBuffer Compiler::renderCss()
   {
     // Create the emitter object
-    Output emitter(*this, srcmap_options.mode != SASS_SRCMAP_NONE);
+    Output emitter(*this);
     emitter.reserve(1024 * 1024); // 1MB
     emitter.in_declaration = false;
     // Start the render process
@@ -203,26 +203,26 @@ namespace Sass {
 
   // Case 1) output to stdout, source map must be fully inline
   // Case 2) output to path, source map output is deducted from it
-  char* Compiler::renderSrcMapLink(SrcMapOptions options, const SourceMap& source_map)
+  char* Compiler::renderSrcMapLink(const SourceMap& source_map)
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
     // Check if we output to stdout (any link would be useless)
     if (output_path.empty() || output_path == "stream://stdout") {
-      if (options.path.empty() || options.path == "stream://stdout") {
+      if (mapopt.path.empty() || mapopt.path == "stream://stdout") {
         // Instead always embed the source-map on stdout
-        return renderEmbeddedSrcMap(options, source_map);
+        return renderEmbeddedSrcMap(source_map);
       }
     }
     // Create resulting footer and return a copy
     return sass_copy_string("\n/*# sourceMappingURL=" +
-      File::abs2rel(options.path, options.origin) + " */");
+      File::abs2rel(mapopt.path, mapopt.origin) + " */");
 
   }
   // EO renderSrcMapLink
 
   // Memory returned by this function must be freed by caller via `sass_free_c_string`
-  char* Compiler::renderEmbeddedSrcMap(SrcMapOptions options, const SourceMap& source_map)
+  char* Compiler::renderEmbeddedSrcMap(const SourceMap& source_map)
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
@@ -239,7 +239,7 @@ namespace Sass {
   // EO renderEmbeddedSrcMap
 
   // Memory returned by this function must be freed by caller via `sass_free_c_string`
-  char* Compiler::renderSrcMapJson(SrcMapOptions options, const SourceMap& source_map)
+  char* Compiler::renderSrcMapJson(const SourceMap& source_map)
   {
     // Create the emitter object
     // Sass::OutputBuffer buffer;
@@ -257,7 +257,7 @@ namespace Sass {
     /**********************************************/
     // Create file reference to whom our mappings apply
     /**********************************************/
-    sass::string origin(options.origin);
+    sass::string origin(mapopt.origin);
     origin = File::abs2rel(origin, CWD());
     JsonNode* json_file_name = json_mkstring(origin.c_str());
     json_append_member(json_srcmap, "file", json_file_name);
@@ -265,9 +265,9 @@ namespace Sass {
     /**********************************************/
     // pass-through source_map_root option
     /**********************************************/
-    if (!options.root.empty()) {
+    if (!mapopt.root.empty()) {
       json_append_member(json_srcmap, "sourceRoot",
-        json_mkstring(options.root.c_str()));
+        json_mkstring(mapopt.root.c_str()));
     }
 
     /**********************************************/
@@ -279,7 +279,7 @@ namespace Sass {
       sass::string path(source->getAbsPath());
       path = File::rel2abs(path, ".", CWD());
       // Optionally convert to file urls
-      if (options.file_urls) {
+      if (mapopt.file_urls) {
         if (path[0] == '/') {
           // ends up with three slashes
           path = "file://" + path;
@@ -307,7 +307,7 @@ namespace Sass {
     /**********************************************/
     // Check if we have any includes to render
     /**********************************************/
-    if (options.embed_contents) {
+    if (mapopt.embed_contents) {
       JsonNode* json_contents = json_mkarray();
       for (size_t i = 0; i < included_sources.size(); ++i) {
         const SourceData* source = included_sources[i];

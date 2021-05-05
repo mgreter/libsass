@@ -121,7 +121,7 @@ namespace Sass {
     compiler.content = std::move(output.buffer);
 
     // Create options to render source map and footer.
-    SrcMapOptions& options(compiler.srcmap_options);
+    SrcMapOptions& options(compiler.mapopt);
     // Deduct some options always from original values.
     // ToDo: is there really any need to customize this?
     if (options.origin.empty() || options.origin == "stream://stdout") {
@@ -139,16 +139,16 @@ namespace Sass {
       compiler.footer = nullptr;
       break;
     case SASS_SRCMAP_CREATE:
-      compiler.srcmap = compiler.renderSrcMapJson(options, *output.srcmap);
+      compiler.srcmap = compiler.renderSrcMapJson(*output.srcmap);
       compiler.footer = nullptr; // Don't add link, just create map file
       break;
     case SASS_SRCMAP_EMBED_LINK:
-      compiler.srcmap = compiler.renderSrcMapJson(options, *output.srcmap);
-      compiler.footer = compiler.renderSrcMapLink(options, *output.srcmap);
+      compiler.srcmap = compiler.renderSrcMapJson(*output.srcmap);
+      compiler.footer = compiler.renderSrcMapLink(*output.srcmap);
       break;
     case SASS_SRCMAP_EMBED_JSON:
-      compiler.srcmap = compiler.renderSrcMapJson(options, *output.srcmap);
-      compiler.footer = compiler.renderEmbeddedSrcMap(options, *output.srcmap);
+      compiler.srcmap = compiler.renderSrcMapJson(*output.srcmap);
+      compiler.footer = compiler.renderEmbeddedSrcMap(*output.srcmap);
       break;
     }
 
@@ -225,8 +225,8 @@ namespace Sass {
     if (compiler.error.status != 0) return;
 
     const char* srcmap = compiler.srcmap;
-    const char* path = compiler.srcmap_options.path.empty() ?
-      nullptr : compiler.srcmap_options.path.c_str();
+    const char* path = compiler.mapopt.path.empty() ?
+      nullptr : compiler.mapopt.path.c_str();
 
     // Write source-map if needed
     if (srcmap && path && compiler.hasSrcMapFile()) {
@@ -595,7 +595,7 @@ extern "C" {
   // Setter for source-map mode (how to embed or not embed the source-map).
   void ADDCALL sass_compiler_set_srcmap_mode(struct SassCompiler* compiler, enum SassSrcMapMode mode)
   {
-    Compiler::unwrap(compiler).srcmap_options.mode = mode;
+    Compiler::unwrap(compiler).mapopt.mode = mode;
   }
 
   // Setter for source-map path (where to store the source-mapping).
@@ -603,7 +603,7 @@ extern "C" {
   // Note: LibSass does not write the file, implementers should write to this path.
   void ADDCALL sass_compiler_set_srcmap_path(struct SassCompiler* compiler, const char* path)
   {
-    Compiler::unwrap(compiler).srcmap_options.path = path;
+    Compiler::unwrap(compiler).mapopt.path = path;
   }
 
   // Getter for source-map path (where to store the source-mapping).
@@ -612,7 +612,7 @@ extern "C" {
   // Note: LibSass does not write the file, implementers should write to this path.
   const char* ADDCALL sass_compiler_get_srcmap_path(struct SassCompiler* compiler)
   {
-    const sass::string& path(Compiler::unwrap(compiler).srcmap_options.path);
+    const sass::string& path(Compiler::unwrap(compiler).mapopt.path);
     return path.empty() ? nullptr : path.c_str();
   }
 
@@ -620,19 +620,28 @@ extern "C" {
   // Note: if not given, no root attribute will be added to the srcmap info object.
   void ADDCALL sass_compiler_set_srcmap_root(struct SassCompiler* compiler, const char* root)
   {
-    Compiler::unwrap(compiler).srcmap_options.root = root;
+    Compiler::unwrap(compiler).mapopt.root = root;
   }
 
   // Setter for source-map file-url option (renders urls in srcmap as `file://` urls)
   void ADDCALL sass_compiler_set_srcmap_file_urls(struct SassCompiler* compiler, bool enable)
   {
-    Compiler::unwrap(compiler).srcmap_options.file_urls = enable;
+    Compiler::unwrap(compiler).mapopt.file_urls = enable;
   }
 
   // Setter for source-map embed-contents option (includes full sources in the srcmap info)
   void ADDCALL sass_compiler_set_srcmap_embed_contents(struct SassCompiler* compiler, bool enable)
   {
-    Compiler::unwrap(compiler).srcmap_options.embed_contents = enable;
+    Compiler::unwrap(compiler).mapopt.embed_contents = enable;
+  }
+
+  // Setter to enable more detailed source map (also meaning bigger payload).
+  // Mostly useful if you want to post process the results again where the more detailed
+  // source-maps might by used by downstream post-processor to point back to original files.
+  void ADDCALL sass_compiler_set_srcmap_details(struct SassCompiler* compiler, bool openers, bool closers)
+  {
+    Compiler::unwrap(compiler).mapopt.enable_closers = closers;
+    Compiler::unwrap(compiler).mapopt.enable_openers = openers;
   }
 
   /////////////////////////////////////////////////////////////////////////

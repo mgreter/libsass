@@ -698,7 +698,7 @@ namespace Sass {
       OutputOptions out({
         SASS_STYLE_TO_CSS,
         SassDefaultPrecision });
-      Cssize inspect(out, false);
+      Cssize inspect(out);
       component->accept(&inspect);
       list->append(SASS_MEMORY_NEW(String,
         pstate(), inspect.get_buffer()));

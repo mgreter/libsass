@@ -34,10 +34,14 @@ namespace Sass {
     // Current position
     Offset position;
 
-    // Flags to move column position for next
-    // mapping a little (useful in some cases)
+    // Flags to move column position for next mapping a little
+    // Can be useful to e.g. skip over a leading non-word character.
     int moveNextSrc = 0;
     int moveNextDst = 0;
+
+    // Options to include more or less details
+    bool useOptionalOpeners = false;
+    bool useOptionalClosers = false;
 
   public:
 
@@ -68,13 +72,18 @@ namespace Sass {
     void prepend(const OutputBuffer& out);
 
     // Add mapping pointing to ast node start position
-    void addOpenMapping(const AstNode* node);
+    void addOpenMapping(const AstNode* node, bool optional);
 
     // Add mapping pointing to ast node end position
-    void addCloseMapping(const AstNode* node);
+    void addCloseMapping(const AstNode* node, bool optional);
 
-    // Move
+    // Set flags to move column position for next mapping a little
+    // Can be useful to e.g. skip over a leading non-word character.
     void moveNextMapping(int start, int end = 0);
+
+    // Setter to enable/disable additional more detailed source mappings
+    void enableOptionalOpeners(bool enable) { useOptionalOpeners = enable; }
+    void enableOptionalClosers(bool enable) { useOptionalClosers = enable; }
 
     // Render the source-map into comma-separated base64 encoded representation
     sass::string render(const std::unordered_map<size_t, size_t>& remap_srcidx) const;

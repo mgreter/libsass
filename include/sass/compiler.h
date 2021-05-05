@@ -155,6 +155,11 @@ extern "C" {
   // Setter for source-map embed-contents option (includes full sources in the srcmap info)
   ADDAPI void ADDCALL sass_compiler_set_srcmap_embed_contents(struct SassCompiler* compiler, bool enable);
 
+  // Setter to enable more detailed source map (also meaning bigger payload).
+  // Mostly useful if you want to post process the results again where the more detailed
+  // source-maps might by used by downstream post-processor to point back to original files.
+  ADDAPI void ADDCALL sass_compiler_set_srcmap_details(struct SassCompiler* compiler, bool openers, bool closers);
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

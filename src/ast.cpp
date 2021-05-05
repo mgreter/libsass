@@ -57,7 +57,7 @@ namespace Sass {
     OutputOptions out({
       SASS_STYLE_NESTED,
       precision });
-    Inspect i(out, false);
+    Inspect i(out);
     i.inspect = true;
     // Inspect must be const, accept isn't
     const_cast<Selector*>(this)->accept(&i);
@@ -69,7 +69,7 @@ namespace Sass {
     OutputOptions out({
       SASS_STYLE_NESTED,
       precision });
-    Inspect i(out, false);
+    Inspect i(out);
     i.inspect = true;
     i.quotes = quotes;
     // Inspect must be const, accept isn't
@@ -82,7 +82,7 @@ namespace Sass {
     OutputOptions out({
       SASS_STYLE_TO_CSS,
       SassDefaultPrecision });
-    Cssize i(out, false);
+    Cssize i(out);
     i.quotes = quote;
     // Inspect must be const, accept isn't
     const_cast<Value*>(this)->accept(&i);

@@ -145,46 +145,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // sass output and inspect options
-  class OutputOptions : public InspectOptions
-  {
-  public:
-    // String to be used for indentation
-    const char* indent;
-    // String to be used to for line feeds
-    const char* linefeed;
-
-    // Emit comments in the generated CSS indicating
-    // the corresponding source line.
-    bool source_comments;
-
-    // initialization list (constructor with defaults)
-    OutputOptions(InspectOptions& opt,
-      const char* indent = "  ",
-      const char* linefeed = "\n",
-      bool source_comments = false)
-      : InspectOptions(opt),
-      indent(indent), linefeed(linefeed),
-      source_comments(source_comments)
-    { }
-
-    // initialization list (constructor with defaults)
-    OutputOptions(SassOutputStyle style = SASS_STYLE_NESTED,
-      int precision = SassDefaultPrecision,
-      const char* indent = "  ",
-      const char* linefeed = "\n",
-      bool source_comments = false)
-      : InspectOptions(style, precision),
-      indent(indent), linefeed(linefeed),
-      source_comments(source_comments)
-    { }
-
-  };
-  // EO class OutputOptions
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   // sass source-map options
   class SrcMapOptions
   {
@@ -204,6 +164,10 @@ namespace Sass {
     // create file URLs for sources
     bool file_urls;
 
+    // Flags to enable more details
+    bool enable_openers;
+    bool enable_closers;
+
     // Directly inserted in source maps
     sass::string root;
 
@@ -217,11 +181,56 @@ namespace Sass {
     SrcMapOptions() :
       mode(SASS_SRCMAP_NONE),
       embed_contents(false),
-      file_urls(false)
+      file_urls(false),
+      enable_openers(false),
+      enable_closers(false)
     {}
 
   };
   // EO class SrcMapOptions
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // sass output and inspect options
+  class OutputOptions : public InspectOptions
+  {
+  public:
+    // String to be used for indentation
+    const char* indent;
+    // String to be used to for line feeds
+    const char* linefeed;
+
+    // Emit comments in the generated CSS indicating
+    // the corresponding source line.
+    bool source_comments;
+
+    // Sourcemap related options
+    SrcMapOptions mapopt;
+
+    // initialization list (constructor with defaults)
+    OutputOptions(const InspectOptions& opt,
+      const char* indent = "  ",
+      const char* linefeed = "\n",
+      bool source_comments = false) :
+      InspectOptions(opt),
+      indent(indent), linefeed(linefeed),
+      source_comments(source_comments)
+    { }
+
+    // initialization list (constructor with defaults)
+    OutputOptions(SassOutputStyle style = SASS_STYLE_NESTED,
+      int precision = SassDefaultPrecision,
+      const char* indent = "  ",
+      const char* linefeed = "\n",
+      bool source_comments = false) :
+      InspectOptions(style, precision),
+      indent(indent), linefeed(linefeed),
+      source_comments(source_comments)
+    { }
+
+  };
+  // EO class OutputOptions
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

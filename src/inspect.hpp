@@ -36,8 +36,8 @@ namespace Sass {
     bool inspect;
 
     // We should probably pass an emitter, so we can switch implementation?
-    Inspect(OutputOptions& opt, bool srcmap_enabled);
-    Inspect(Logger& logger, OutputOptions& opt, bool srcmap_enabled);
+    Inspect(const OutputOptions& opt);
+    Inspect(Logger& logger, const OutputOptions& opt);
 
     void visitBlockStatements(CssNodeVector children);
     

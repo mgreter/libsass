@@ -11,14 +11,13 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  Emitter::Emitter(OutputOptions& opt, bool srcmap_enabled)
-  : wbuf(srcmap_enabled),
-    opt(opt),
+  Emitter::Emitter(const OutputOptions& outopt)
+  : wbuf(outopt.mapopt.mode != SASS_SRCMAP_NONE),
+    outopt(outopt),
     indentation(0),
     scheduled_space(0),
     scheduled_linefeed(0),
     scheduled_delimiter(false),
-    scheduled_crutch(nullptr),
     scheduled_mapping(nullptr),
     in_custom_property(false),
     in_declaration(true),
@@ -39,7 +38,7 @@ namespace Sass {
 
   enum SassOutputStyle Emitter::output_style(void) const
   {
-    return opt.output_style;
+    return outopt.output_style;
   }
 
   // PROXY METHODS FOR SOURCE MAPS
@@ -56,21 +55,28 @@ namespace Sass {
     scheduled_mapping = node;
   }
 
-  void Emitter::add_open_mapping(const AstNode* node)
+  void Emitter::add_open_mapping(const AstNode* node, bool optional)
   {
     flush_schedules();
     if (wbuf.srcmap) {
-      wbuf.srcmap->addOpenMapping(node);
-      if (scheduled_crutch) {
-        wbuf.srcmap->addOpenMapping(scheduled_crutch);
-        scheduled_crutch = nullptr;
+      wbuf.srcmap->addOpenMapping(node, optional);
+      if (scheduled_mapping) {
+        wbuf.srcmap->addOpenMapping(scheduled_mapping, false);
+        scheduled_mapping = nullptr;
       }
     }
   }
 
-  void Emitter::add_close_mapping(const AstNode* node)
+  void Emitter::add_close_mapping(const AstNode* node, bool optional)
   {
-    if (wbuf.srcmap) wbuf.srcmap->addCloseMapping(node);
+    flush_schedules();
+    if (wbuf.srcmap) {
+      wbuf.srcmap->addCloseMapping(node, optional);
+      if (scheduled_mapping) {
+        wbuf.srcmap->addCloseMapping(scheduled_mapping, false);
+        scheduled_mapping = nullptr;
+      }
+    }
   }
 
   void Emitter::move_next_mapping(int start, int end)
@@ -78,10 +84,6 @@ namespace Sass {
     flush_schedules();
     if (wbuf.srcmap) {
       wbuf.srcmap->moveNextMapping(start, end);
-      if (scheduled_crutch) {
-        wbuf.srcmap->addOpenMapping(scheduled_crutch);
-        scheduled_crutch = nullptr;
-      }
     }
   }
 
@@ -106,7 +108,7 @@ namespace Sass {
       sass::string linefeeds = "";
 
       for (size_t i = 0; i < scheduled_linefeed; i++)
-        linefeeds += opt.linefeed;
+        linefeeds += outopt.linefeed;
       scheduled_space = false;
       scheduled_linefeed = 0;
       if (scheduled_delimiter) {
@@ -227,9 +229,9 @@ namespace Sass {
   void Emitter::append_token(const sass::string& text, const AstNode* node)
   {
     flush_schedules();
-    add_open_mapping(node);
+    add_open_mapping(node, true);
     write_string(text);
-    // add_close_mapping(node);
+    add_close_mapping(node, true);
   }
 
   // HELPER METHODS
@@ -241,7 +243,7 @@ namespace Sass {
     if (in_declaration && in_comma_array) return;
     if (scheduled_linefeed && indentation)
       scheduled_linefeed = 1;
-    append_string(opt.indent, indentation); // 1.5% (realloc)
+    append_string(outopt.indent, indentation); // 1.5% (realloc)
   }
 
   void Emitter::append_delimiter()
@@ -298,7 +300,7 @@ namespace Sass {
     if (output_style() == SASS_STYLE_COMPACT) {
       append_mandatory_linefeed();
       for (size_t p = 0; p < indentation; p++)
-        append_string(opt.indent);
+        append_string(outopt.indent);
     }
   }
 
@@ -325,7 +327,7 @@ namespace Sass {
     scheduled_linefeed = 0;
     append_optional_space();
     flush_schedules();
-    if (node) add_open_mapping(node);
+    if (node) add_open_mapping(node, true);
     write_char('{');
     append_optional_linefeed();
     ++ indentation;
@@ -353,7 +355,7 @@ namespace Sass {
     append_char('}');
     if (node) {
       move_next_mapping(-1, -1);
-      add_close_mapping(node);
+      add_close_mapping(node, true);
     }
     append_optional_linefeed();
     if (indentation != 0) return;

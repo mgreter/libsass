@@ -179,9 +179,6 @@ namespace Sass {
     // The current state the compiler is in.
     enum SassCompilerState state;
 
-    // Option struct for source map options
-    SrcMapOptions srcmap_options;
-
     // Where we want to store the output.
     // Source-map path is deducted from it.
     // Defaults to `stream://stdout`.
@@ -240,14 +237,11 @@ namespace Sass {
     // ToDO, maybe belongs to compiler?
     CssRootObj compileRoot(bool plainCss);
 
-    char* renderSrcMapJson(SrcMapOptions options,
-      const SourceMap& source_map);
+    char* renderSrcMapJson(const SourceMap& source_map);
 
-    char* renderSrcMapLink(SrcMapOptions options,
-      const SourceMap& source_map);
+    char* renderSrcMapLink(const SourceMap& source_map);
 
-    char* renderEmbeddedSrcMap(SrcMapOptions options,
-      const SourceMap& source_map);
+    char* renderEmbeddedSrcMap(const SourceMap& source_map);
 
     // Check if we should write output file
     bool hasOutputFile() const;

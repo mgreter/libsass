@@ -15,7 +15,7 @@ namespace Sass {
   class Emitter {
 
     public:
-      Emitter(OutputOptions& opt, bool srcmap_enabled);
+      Emitter(const OutputOptions& outopt);
 
     protected:
       OutputBuffer wbuf;
@@ -29,18 +29,17 @@ namespace Sass {
       // proxy methods for source maps
       void add_source_index(size_t idx);
       // void set_filename(const sass::string& str);
-      void add_open_mapping(const AstNode* node);
-      void add_close_mapping(const AstNode* node);
+      void add_open_mapping(const AstNode* node, bool optional);
+      void add_close_mapping(const AstNode* node, bool optional);
       void schedule_mapping(const AstNode* node);
       void move_next_mapping(int start, int end = 0);
 
     public:
-      OutputOptions& opt;
+      const OutputOptions& outopt;
       size_t indentation;
       size_t scheduled_space;
       size_t scheduled_linefeed;
       bool scheduled_delimiter;
-      const AstNode* scheduled_crutch;
       const AstNode* scheduled_mapping;
 
     public:

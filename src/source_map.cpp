@@ -7,6 +7,47 @@
 #include "ast_nodes.hpp"
 #include "debugger.hpp"
 
+/////////////////////////////////////////////////////////////////////////
+// Most UAs don't allow very detailed navigation, although LibSass
+// is able to give much more detailed information about where e.g.
+// certain values from a long-hand property come from. Consider the
+// longhand-property `border: 1px solid red`. Currently the best UA
+// seems to be anything WebKit based (like Chrome). There you can
+// actually reach the source (by clicking on it while holding the
+// ctrl key) for `border` and `1px solid red`. We could actually
+// give the source position for each value, e.g. `1px` or `red`
+// individually, but currently no UA seems to supports this. Same
+// applies for complex selector, where we could give the source for
+// every compound selector (basically for every word token).
+/////////////////////////////////////////////////////////////////////////
+// Implementation of Source-Maps in UAs also have another flaw (IMO).
+// It seems UAs work actively against us from embedding more detailed
+// information, which could be interesting for re-mapping operations,
+// e.g. when files flow through multiple processors. Consider the
+// selector `foo bar baz`. Since UAs can at best only navigate to one
+// certain source position, we have to decide where this should be.
+// Naturally we probably want it to point the most inner block. To
+// illustrate consider the following sass code (with marked position):
+// `[A]foo { [B]bar { [C]baz { ... }}}`. Rendered with source positions
+// this might look like this: `[A]foo [B]bar [C]baz { ... }`. In case
+// we render the results like this, UAs will link the final selector
+// to the most outer block [A], which is quite useless for Sass files,
+// since you will probably have one big block there. Now you might
+// think we could just fiddle with it a little to make it look like 
+// `[C][A]foo [B]bar [C]baz`. Unfortunately this doesn't improve
+// the situation, as the only way this will work correctly is
+// `[A][C]foo [B]bar [C]baz`. Although not unsolvable, it really
+// is pretty `out of order` and needs some dirty flags to work
+// around in the code-base Well, it is what it is :-/
+/////////////////////////////////////////////////////////////////////////
+// Since I couldn't decide how to proceed, I decided to try to
+// offer all possible direction one could like to take this. Not
+// yet sure if we will ever expose this directly on the C-API side.
+// I basically see a few different desirable cases:
+// - Minimum payload to just make it work in UAs
+// - More detailed version including crutch to fix UAs
+// - Fully detailed version without crutch included
+/////////////////////////////////////////////////////////////////////////
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
@@ -84,8 +125,13 @@ namespace Sass {
   }
 
   // Add mapping pointing to ast node start position
-  void SourceMap::addOpenMapping(const AstNode* node)
+  void SourceMap::addOpenMapping(const AstNode* node, bool optional)
   {
+    if (optional && !useOptionalOpeners) {
+      moveNextSrc = 0;
+      moveNextDst = 0;
+      return;
+    }
     const SourceSpan& pstate = node->pstate();
     if (pstate.getSrcIdx() != sass::string::npos) {
       auto source_start = pstate.position;
@@ -109,8 +155,13 @@ namespace Sass {
   // EO addOpenMapping
 
   // Add mapping pointing to ast node end position
-  void SourceMap::addCloseMapping(const AstNode* node)
+  void SourceMap::addCloseMapping(const AstNode* node, bool optional)
   {
+    if (optional && !useOptionalClosers) {
+      moveNextSrc = 0;
+      moveNextDst = 0;
+      return;
+    }
     const SourceSpan& pstate = node->pstate();
     auto fin = pstate.position + pstate.span;
     // std::cerr << "Close: "

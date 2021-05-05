@@ -19,13 +19,13 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  Inspect::Inspect(OutputOptions& opt, bool srcmap_enabled)
-    : Emitter(opt, srcmap_enabled), quotes(true), inspect(false)
+  Inspect::Inspect(const OutputOptions& outopt)
+    : Emitter(outopt), quotes(true), inspect(false)
   {
   }
 
-  Inspect::Inspect(Logger& logger, OutputOptions& opt, bool srcmap_enabled)
-    : Emitter(opt, srcmap_enabled), quotes(true), inspect(false)
+  Inspect::Inspect(Logger& logger, const OutputOptions& outopt)
+    : Emitter(outopt), quotes(true), inspect(false)
   {
   }
 
@@ -188,7 +188,7 @@ namespace Sass {
     //   indentation += node->tabs();
     // }
 
-    if (opt.source_comments) {
+    if (outopt.source_comments) {
       sass::sstream ss;
       append_indentation();
       sass::string path(File::abs2rel(node->pstate().getAbsPath(), ".", CWD())); // ToDo: optimize
@@ -376,7 +376,7 @@ namespace Sass {
   void Inspect::visitCssImport(CssImport* import)
   {
     append_indentation();
-    add_open_mapping(import);
+    add_open_mapping(import, true);
     append_string("@import");
     append_mandatory_space();
     CssString* url(import->url());
@@ -398,7 +398,7 @@ namespace Sass {
         first = false;
       }
     }
-//    add_close_mapping(import);
+    add_close_mapping(import, true);
     append_delimiter();
   }
 
@@ -440,7 +440,6 @@ namespace Sass {
   void Inspect::visitAttributeSelector(AttributeSelector* attribute)
   {
     append_string("[");
-    // add_open_mapping(attribute);
     acceptNameSpaceSelector(attribute);
     if (!attribute->op().empty()) {
       append_string(attribute->op());
@@ -467,19 +466,18 @@ namespace Sass {
 
   void Inspect::visitClassSelector(ClassSelector* klass)
   {
-    flush_schedules();
     // Skip over '.' character
     move_next_mapping(1, 1);
-    add_open_mapping(klass);
+    add_open_mapping(klass, true);
     append_string(klass->name());
-//    add_close_mapping(klass);
+    add_close_mapping(klass, true);
   }
 
   void Inspect::visitComplexSelector(ComplexSelector* complex)
   {
     bool many = false;
 
-    scheduled_crutch = complex->last();
+    schedule_mapping(complex->last());
 
     for (SelectorComponentObj& item : complex->elements()) {
       if (many) append_mandatory_space();
@@ -492,9 +490,7 @@ namespace Sass {
       many = true;
     }
 
-    scheduled_crutch = nullptr;
-
-    // add_open_mapping(complex->last());
+    schedule_mapping(nullptr);
 
   }
 
@@ -508,8 +504,6 @@ namespace Sass {
         append_string("&");
       }
     }
-
-    // add_open_mapping(compound);
 
     for (SimpleSelectorObj& item : compound->elements()) {
       item->accept(this);
@@ -614,14 +608,10 @@ namespace Sass {
 
       if (i == 0) append_indentation();
       if ((*list)[i] == nullptr) continue;
-//      schedule_mapping(list->get(i)->last());
-
       if (list->get(i)->hasPreLineFeed()) {
         append_optional_linefeed();
       }
-
       visitComplexSelector(list->get(i));
-      // add_close_mapping(list->get(i)->last());
       if (i < L - 1) {
         scheduled_space = 0;
         append_comma_separator();
@@ -637,11 +627,10 @@ namespace Sass {
 
   void Inspect::visitTypeSelector(TypeSelector* type)
   {
-    flush_schedules();
-    add_open_mapping(type);
+    add_open_mapping(type, true);
     SelectorList* list = (SelectorList *) type;
     acceptNameSpaceSelector(type);
-//    add_close_mapping(type);
+    add_close_mapping(type, true);
   }
 
   // Returns whether [value] needs parentheses as an
@@ -683,8 +672,6 @@ namespace Sass {
       append_char($lparen);
     }
 
-    // add_open_mapping(list);
-
     const sass::vector<ValueObj>& values(list->elements());
 
     bool first = true;
@@ -716,8 +703,6 @@ namespace Sass {
         value->accept(this);
       }
     }
-
-    // add_close_mapping(list);
 
     if (preserveComma) {
       append_char($comma);
@@ -793,7 +778,7 @@ namespace Sass {
     // resolved color
     sass::string res_name = name;
 
-    double epsilon = std::pow(0.1, opt.precision);
+    double epsilon = std::pow(0.1, outopt.precision);
 
     double r = round64(clamp(c->r(), 0.0, 255.0), epsilon);
     double g = round64(clamp(c->g(), 0.0, 255.0), epsilon);
@@ -819,7 +804,7 @@ namespace Sass {
     // dart sass compressed all colors in regular css always
     // ruby sass and libsass does it only when not delayed
     // since color math is going to be removed, this can go too
-    bool compressed = opt.output_style == SASS_STYLE_COMPRESSED;
+    bool compressed = outopt.output_style == SASS_STYLE_COMPRESSED;
     hexlet << '#' << std::setw(1) << std::setfill('0');
     // create a short color hexlet if there is any need for it
     if (compressed && is_color_doublet(r, g, b) && a >= 1.0) {
@@ -933,7 +918,7 @@ namespace Sass {
     // Avoid streams
     char buf[255];
     snprintf(buf, 255,
-      opt.nr_sprintf,
+      outopt.nr_sprintf,
       value->value());
 
     // Operate from behind
@@ -965,16 +950,14 @@ namespace Sass {
 
   void Inspect::visitString(String* value)
   {
-    flush_schedules();
-    add_open_mapping(value);
+    add_open_mapping(value, true);
     if (quotes && value->hasQuotes()) {
       renderQuotedString(value->value());
     }
     else {
       renderUnquotedString(value->value());
-      // append_token(s->value(), s);
     }
-//    add_close_mapping(value);
+    add_close_mapping(value, true);
   }
 
 

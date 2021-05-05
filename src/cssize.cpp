@@ -48,7 +48,7 @@ namespace Sass {
     // reduce units
     n->reduce();
 
-    if (opt.output_style == SASS_STYLE_TO_CSS && !n->isValidCssUnit()) {
+    if (outopt.output_style == SASS_STYLE_TO_CSS && !n->isValidCssUnit()) {
       // traces.push_back(BackTrace(nr->pstate()));
       // issue_1804
       throw Exception::InvalidCssValue({}, *n);

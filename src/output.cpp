@@ -20,9 +20,8 @@ namespace Sass {
 
   // Value constructor
   Output::Output(
-    OutputOptions& opt,
-    bool srcmap_enabled) :
-    Cssize(opt, srcmap_enabled)
+    OutputOptions& opt) :
+    Cssize(opt)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -67,7 +66,7 @@ namespace Sass {
   OutputBuffer Output::getBuffer(void)
   {
     // Create an identical rendered for the hoisted part
-    Inspect inspect(opt, wbuf.srcmap ? true : false);
+    Inspect inspect(outopt);
 
     // Render the hoisted imports with comments
     for (size_t i = 0; i < imports.size(); i++) {
@@ -83,9 +82,9 @@ namespace Sass {
     flushCssComments();
 
     // make sure we end with a linefeed
-    if (!StringUtils::endsWith(wbuf.buffer, opt.linefeed)) {
+    if (!StringUtils::endsWith(wbuf.buffer, outopt.linefeed)) {
       // if the output is not completely empty
-      if (!wbuf.buffer.empty()) append_string(opt.linefeed);
+      if (!wbuf.buffer.empty()) append_string(outopt.linefeed);
     }
 
     // search for unicode char
@@ -95,7 +94,7 @@ namespace Sass {
       // declare the charset
       if (output_style() != SASS_STYLE_COMPRESSED)
         charset = "@charset \"UTF-8\";"
-        + sass::string(opt.linefeed);
+        + sass::string(outopt.linefeed);
       else charset = "\xEF\xBB\xBF";
       // abort search
       break;

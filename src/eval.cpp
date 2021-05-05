@@ -696,7 +696,7 @@ namespace Sass {
       SASS_STYLE_TO_CSS,
       compiler.precision });
     // Create the emitter
-    Cssize cssize(out, false);
+    Cssize cssize(out);
     // Don't quote strings
     cssize.quotes = false;
     // Process all interpolants in the interpolation
