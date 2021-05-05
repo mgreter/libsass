@@ -60,7 +60,7 @@ namespace Sass {
     flush_schedules();
     if (wbuf.srcmap) {
       wbuf.srcmap->addOpenMapping(node,
-        force_next_mapping || optional);
+        optional && !force_next_mapping);
       force_next_mapping = false;
       if (scheduled_mapping) {
         wbuf.srcmap->addOpenMapping(scheduled_mapping, false);
@@ -74,7 +74,7 @@ namespace Sass {
     flush_schedules();
     if (wbuf.srcmap) {
       wbuf.srcmap->addCloseMapping(node,
-        force_next_mapping || optional);
+        optional && !force_next_mapping);
       force_next_mapping = false;
       if (scheduled_mapping) {
         wbuf.srcmap->addCloseMapping(scheduled_mapping, false);
@@ -232,7 +232,6 @@ namespace Sass {
   // this adds source-mappings for node start and end
   void Emitter::append_token(const sass::string& text, const AstNode* node)
   {
-    flush_schedules();
     add_open_mapping(node, true);
     write_string(text);
     add_close_mapping(node, true);
