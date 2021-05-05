@@ -333,6 +333,8 @@ namespace Sass {
 
   public:
 
+    void setPrecision(int precision);
+
     CAPI_WRAPPER(Compiler, SassCompiler);
 
   };

@@ -43,6 +43,9 @@ namespace Terminal {
   // It translates the ANSI terminal codes to windows
   void print(const char* output, bool error = false);
 
+  // Count number of printable bytes/characters
+  size_t count_printable(const char* string);
+
 }
 
 #endif

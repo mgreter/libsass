@@ -39,7 +39,7 @@ extern "C" {
   ADDAPI void ADDCALL sass_compiler_write_srcmap(struct SassCompiler* compiler);
 
   // Execute all compiler steps and write/print results
-  ADDAPI int ADDCALL sass_compiler_execute(struct SassCompiler* compiler, bool quiet);
+  ADDAPI int ADDCALL sass_compiler_execute(struct SassCompiler* compiler);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -76,7 +76,10 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   // Setter for output style (see `enum SassOutputStyle` for possible options).
-  ADDAPI void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle output_style);
+  ADDAPI void ADDCALL sass_compiler_set_input_syntax(struct SassCompiler* compiler, enum SassImportSyntax syntax);
+
+  // Setter for output style (see `enum SassOutputStyle` for possible options).
+  ADDAPI void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle style);
 
   // Try to detect and set logger options for terminal colors, unicode and columns.
   ADDAPI void ADDCALL sass_compiler_autodetect_logger_capabilities(struct SassCompiler* compiler);

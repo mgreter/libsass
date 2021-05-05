@@ -20,7 +20,7 @@ namespace Terminal {
   // Useful to shorten our output to fit nicely
   short getColumns(bool error)
   {
-#ifdef _WIN32
+    #ifdef _WIN32
     DWORD fd = error
       ? STD_ERROR_HANDLE
       : STD_OUTPUT_HANDLE;
@@ -34,7 +34,7 @@ namespace Terminal {
     GetConsoleScreenBufferInfo(handle, &csbi);
     // csbi.srWindow.Right - csbi.srWindow.Left
     return csbi.dwMaximumWindowSize.X;
-#else
+    #else
     int fd = open("/dev/tty", O_RDWR);
     struct winsize ws;
     if (fd < 0 || ioctl(fd, TIOCGWINSZ, &ws) < 0) {
@@ -42,7 +42,7 @@ namespace Terminal {
     }
     close(fd);
     return ws.ws_col;
-#endif
+    #endif
   }
   // EO getColumns
 
@@ -50,7 +50,7 @@ namespace Terminal {
   // In all other cases we want monochrome ASCII output
   bool isConsoleAttached(bool error)
   {
-#ifdef _WIN32
+    #ifdef _WIN32
     DWORD fd = error
       ? STD_ERROR_HANDLE
       : STD_OUTPUT_HANDLE;
@@ -59,33 +59,33 @@ namespace Terminal {
     if (handle == INVALID_HANDLE_VALUE) return false;
     DWORD filetype = GetFileType(handle);
     return filetype == FILE_TYPE_CHAR;
-#else
+    #else
     return isatty(fileno(error ? stderr : stdout));
-#endif
+    #endif
   }
   // EO isConsoleAttached
 
   // Check that we print to a terminal with unicode support
   bool hasUnicodeSupport(bool error)
   {
-#ifdef _WIN32
+    #ifdef _WIN32
     UINT cp = GetConsoleOutputCP();
     if (cp == 0) return false;
     return cp == 65001;
-#else
+    #else
     return false;
-#endif
+    #endif
   }
   // EO hasUnicodeSupport
 
   // Check that we print to a terminal with color support
   bool hasColorSupport(bool error)
   {
-#ifdef _WIN32
+    #ifdef _WIN32
     return isConsoleAttached(error);
-#else
+    #else
     return isConsoleAttached(error);
-#endif
+    #endif
   }
   // EO hasColorSupport
 
@@ -96,7 +96,7 @@ namespace Terminal {
 
     if (output == 0) return;
 
-#ifdef _WIN32
+    #ifdef _WIN32
 
     DWORD fd = error
       ? STD_ERROR_HANDLE
@@ -112,61 +112,72 @@ namespace Terminal {
       if (output[0] == '\x1B' && output[1] == '[') {
 
         output += 2;
-        int fg = 0;
-        int bg = 0;
+        int one = 0;
+        int two = 0;
+
+        attribute &= ~(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
+        attribute &= ~(BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY);
 
         while (output[0] != '\0' && output[0] != ';' && output[0] != 'm') {
-          fg *= 10;
+          one *= 10;
           switch (*output) {
-          case '0': fg += 0; break;
-          case '1': fg += 1; break;
-          case '2': fg += 2; break;
-          case '3': fg += 3; break;
-          case '4': fg += 4; break;
-          case '5': fg += 5; break;
-          case '6': fg += 6; break;
-          case '7': fg += 7; break;
-          case '8': fg += 8; break;
-          case '9': fg += 9; break;
+          case '0': one += 0; break;
+          case '1': one += 1; break;
+          case '2': one += 2; break;
+          case '3': one += 3; break;
+          case '4': one += 4; break;
+          case '5': one += 5; break;
+          case '6': one += 6; break;
+          case '7': one += 7; break;
+          case '8': one += 8; break;
+          case '9': one += 9; break;
           default: break;
           }
           output += 1;
         }
 
-        attribute &= ~(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
-        if (fg == 31 || fg == 33 || fg == 35 || fg == 37 || fg == 0) attribute |= FOREGROUND_RED;
-        if (fg == 32 || fg == 33 || fg == 36 || fg == 37 || fg == 0) attribute |= FOREGROUND_GREEN;
-        if (fg == 34 || fg == 35 || fg == 36 || fg == 37 || fg == 0) attribute |= FOREGROUND_BLUE;
-        if (fg != 37 && fg != 0) attribute |= FOREGROUND_INTENSITY;
+        if (one == 31 || one == 33 || one == 35 || one == 37 || one == 0) attribute |= FOREGROUND_RED;
+        if (one == 32 || one == 33 || one == 36 || one == 37 || one == 0) attribute |= FOREGROUND_GREEN;
+        if (one == 34 || one == 35 || one == 36 || one == 37 || one == 0) attribute |= FOREGROUND_BLUE;
+        if (one == 41 || one == 43 || one == 45 || one == 47) attribute |= BACKGROUND_RED;
+        if (one == 42 || one == 43 || one == 46 || one == 47) attribute |= BACKGROUND_GREEN;
+        if (one == 44 || one == 45 || one == 46 || one == 47) attribute |= BACKGROUND_BLUE;
+
         if (output[0] == ';') {
 
           output += 1;
 
           while (output[0] != '\0' && output[0] != ';' && output[0] != 'm') {
-            bg *= 10;
+            two *= 10;
             switch (*output) {
-            case '0': bg += 0; break;
-            case '1': bg += 1; break;
-            case '2': bg += 2; break;
-            case '3': bg += 3; break;
-            case '4': bg += 4; break;
-            case '5': bg += 5; break;
-            case '6': bg += 6; break;
-            case '7': bg += 7; break;
-            case '8': bg += 8; break;
-            case '9': bg += 9; break;
+            case '0': two += 0; break;
+            case '1': two += 1; break;
+            case '2': two += 2; break;
+            case '3': two += 3; break;
+            case '4': two += 4; break;
+            case '5': two += 5; break;
+            case '6': two += 6; break;
+            case '7': two += 7; break;
+            case '8': two += 8; break;
+            case '9': two += 9; break;
             default: break;
             }
             output += 1;
           }
 
-          attribute &= ~(BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED);
-          if (bg == 31 || bg == 33 || bg == 35 || bg == 37) attribute |= BACKGROUND_RED;
-          if (bg == 32 || bg == 33 || bg == 36 || bg == 37) attribute |= BACKGROUND_GREEN;
-          if (bg == 34 || bg == 35 || bg == 36 || bg == 37) attribute |= BACKGROUND_BLUE;
-          if (fg != 37 && fg != 0) attribute |= BACKGROUND_INTENSITY;
+          if (two == 31 || two == 33 || two == 35 || two == 37 || two == 0) attribute |= FOREGROUND_RED;
+          if (two == 32 || two == 33 || two == 36 || two == 37 || two == 0) attribute |= FOREGROUND_GREEN;
+          if (two == 34 || two == 35 || two == 36 || two == 37 || two == 0) attribute |= FOREGROUND_BLUE;
+          if (two == 41 || two == 43 || two == 45 || two == 47) attribute |= BACKGROUND_RED;
+          if (two == 42 || two == 43 || two == 46 || two == 47) attribute |= BACKGROUND_GREEN;
+          if (two == 44 || two == 45 || two == 46 || two == 47) attribute |= BACKGROUND_BLUE;
 
         }
+
+        if (one == 1 && two > 30 && two < 50) attribute |= FOREGROUND_INTENSITY;
+        if (one == 1 && two > 40 && two < 50) attribute |= BACKGROUND_INTENSITY;
+
+        // attribute = BACKGROUND_GREEN | BACKGROUND_INTENSITY;
 
         if (output[0] == 'm') output += 1;
         // Flush before setting new color
@@ -190,7 +201,7 @@ namespace Terminal {
 
     fflush(error ? stderr : stdout);
 
-#else
+    #else
 
     if (error) {
       std::cerr << output;
@@ -199,8 +210,57 @@ namespace Terminal {
       std::cout << output;
     }
 
-#endif
+    #endif
 
   }
+  // EO print
+
+  // Count number of printable bytes/characters
+  size_t count_printable(const char* string)
+  {
+    size_t count = 0;
+    while (string && *string) {
+      if (string[0] == '\x1b' && string[1] == '[') {
+        while (*string != 0 && *string != 'm') {
+          string++;
+        }
+        string++;
+      }
+      else {
+        string += 1;
+        count += 1;
+      }
+    }
+    return count;
+  }
+  // EO count_printable
+
+  // Code for color testing rainbow for debugging
+  // 
+  // stream << getopt->compiler.getColor(Terminal::red) << "red" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::green) << "green" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::yellow) << "yellow" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::blue) << "blue" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::magenta) << "magenta" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::cyan) << "cyan" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bold_red) << "bold_red" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bold_green) << "bold_green" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bold_yellow) << "bold_yellow" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bold_blue) << "bold_blue" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bold_magenta) << "bold_magenta" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bold_cyan) << "bold_cyan" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_red) << "bg_red" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_green) << "bg_green" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_yellow) << "bg_yellow" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_blue) << "bg_blue" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_magenta) << "bg_magenta" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_cyan) << "bg_cyan" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_bold_red) << "bg_bold_red" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_bold_green) << "bg_bold_green" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_bold_yellow) << "bg_bold_yellow" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_bold_blue) << "bg_bold_blue" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_bold_magenta) << "bg_bold_magenta" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getColor(Terminal::bg_bold_cyan) << "bg_bold_cyan" << getopt->compiler.getColor(Terminal::reset) << "\n";
+
 
 }

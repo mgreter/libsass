@@ -127,6 +127,8 @@ jobs:
       env:
         MAKE_OPTS: LIBSASS_CPPSTD=${{ matrix.config.cppstd }}
       run: ./script/ci-build-libsass
+    - name: Check sassc help call
+      run: sassc/bin/sassc --help
 
 
   windows-msvc:
@@ -170,7 +172,9 @@ jobs:
     - name: Clone and checkout sass-spec repository
       run: git clone https://github.com/mgreter/sass-spec.git --branch refactor/libsass-4-alpha
     - name: Compile libsass ${{ matrix.config.build }} build for ${{ matrix.config.platform }}
-      run: msbuild /m:4 /p:"Configuration=${{ matrix.config.build }};Platform=${{ matrix.config.platform }}" sassc\win\sassc.sln
+      run: msbuild /m:4 /p:Configuration=${{ matrix.config.build }} /p:Platform=${{ matrix.config.platform }} sassc\win\sassc.sln
+    - name: Check sassc help call
+      run: sassc\bin\sassc.exe --help
     - name: Execute spec test runner
       if: matrix.config.build != 'Debug'
       run: ruby sass-spec/sass-spec.rb --probe-todo --impl libsass -c sassc/bin/sassc.exe -s sass-spec/spec
@@ -211,14 +215,16 @@ jobs:
     - name: Clone and checkout sass-spec repository
       run: git clone https://github.com/mgreter/sass-spec.git --branch refactor/libsass-4-alpha
     - name: Compile libsass ${{ matrix.config.build }} build for ${{ matrix.config.platform }}
-      run: make ${{ matrix.config.build }} BUILD=${{ matrix.config.build }} CC=gcc
+      run: make -j5 ${{ matrix.config.build }} BUILD=${{ matrix.config.build }} CC=gcc
     - name: Listening results
       run: dir lib
     - name: Copy library over to pass call test
       if: matrix.config.build == 'shared'
       run: copy lib\libsass.dll sassc\bin
     - name: Compile sassc ${{ matrix.config.build }} build for ${{ matrix.config.platform }}
-      run: make sassc BUILD=${{ matrix.config.build }} CC=gcc
+      run: make -j5 sassc BUILD=${{ matrix.config.build }} CC=gcc
+    - name: Check sassc help call
+      run: sassc\bin\sassc.exe --help
     - name: Execute spec test runner
       run: ruby sass-spec/sass-spec.rb --probe-todo --impl libsass -c sassc/bin/sassc.exe -s sass-spec/spec
 

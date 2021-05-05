@@ -123,12 +123,20 @@ namespace Sass {
 
   void Compiler::parse()
   {
-    // Do initial loading
-    entry_point->loadIfNeeded(*this);
-    // Now parse the entry point stylesheet
-    sheet = parseRoot(entry_point);
-    // Update the compiler state
-    state = SASS_COMPILER_PARSED;
+    // Only allow phase right after parsing
+    if (state == SASS_COMPILER_CREATED) {
+      // Check for valid entry point
+      if (entry_point == nullptr) {
+        throw Exception::ParserException(*this,
+          "No entry-point to compile given");
+      }
+      // Do initial loading
+      entry_point->loadIfNeeded(*this);
+      // Now parse the entry point stylesheet
+      sheet = parseRoot(entry_point);
+      // Update the compiler state
+      state = SASS_COMPILER_PARSED;
+    }
   }
 
   // parse root block from includes (Move to compiler)
@@ -285,7 +293,7 @@ namespace Sass {
           path = "file://" + path;
         }
         else {
-          // needs an additional slash
+          // needs additional slash
           path = "file:///" + path;
         }
         // Append item to json array
@@ -921,5 +929,12 @@ namespace Sass {
         File::abs2rel(import.abs_path));
   }
   // EO loadImport
+
+  // Update precision and epsilon etc.
+  void Compiler::setPrecision(int precision)
+  {
+    Logger::setPrecision(precision);
+    OutputOptions::setPrecision(precision);
+  }
 
 }

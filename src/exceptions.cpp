@@ -52,7 +52,9 @@ namespace Sass {
   sass::string toSentence(
     const StringVector& names,
     const sass::string& conjunction,
-    const uint8_t prefix)
+    const sass::string& prefix,
+    const sass::string& postfix,
+    const uint8_t quote)
   {
     sass::string buffer;
     size_t L = names.size(), i = 0;
@@ -69,8 +71,11 @@ namespace Sass {
           buffer += " ";
         }
       }
-      if (prefix) buffer += prefix;
+      buffer += prefix;
+      if (quote) buffer += quote;
       buffer += *it;
+      if (quote) buffer += quote;
+      buffer += postfix;
       it++; i++;
     }
     return buffer;
@@ -174,7 +179,7 @@ namespace Sass {
       sass::string msg("No ");
       msg += pluralize(Strings::argument, names.size());
       msg += " named ";
-      msg += toSentence(names, Strings::_or_, '$');
+      msg += toSentence(names, Strings::_or_, "$");
       msg += ".";
       return msg;
     }
@@ -197,7 +202,7 @@ namespace Sass {
         }
       }
       return "No argument named " +
-        toSentence(superfluous, "or", '$') + ".";
+        toSentence(superfluous, "or", "$") + ".";
     }
 
     sass::string formatTooManyArguments(const ValueFlatMap& given, const Sass::EnvKeySet& expected) {
@@ -208,12 +213,12 @@ namespace Sass {
         }
       }
       return "No argument named " +
-        toSentence(superfluous, "or", '$') + ".";
+        toSentence(superfluous, "or", "$") + ".";
     }
 
     sass::string formatTooManyArguments(const ValueFlatMap& superfluous) {
       return "No argument named " +
-        toSentence(getKeyVector(superfluous), "or", '$') + ".";
+        toSentence(getKeyVector(superfluous), "or", "$") + ".";
     }
 
     TooManyArguments::TooManyArguments(BackTraces traces, size_t given, size_t expected)

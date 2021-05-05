@@ -17,6 +17,8 @@
 
 namespace Sass {
 
+  void print_wrapped(sass::string const& input, size_t width, sass::ostream& os);
+
   // The logger belongs to context
   class Logger {
 
@@ -55,6 +57,7 @@ namespace Sass {
       sass::string& mid,
       sass::string& rhs);
 
+  public:
     // Helper function to ease color output. Returns the
     // passed color if color output is enable, otherwise
     // it will simply return an empty string.
@@ -64,6 +67,7 @@ namespace Sass {
       }
       return Constants::String::empty;
     }
+  private:
 
     // Write warning header to error stream
     void writeWarnHead(
@@ -109,7 +113,7 @@ namespace Sass {
     void setLogColumns(size_t columns = NPOS);
 
     // Precision for numbers to be printed
-    void setLogPrecision(int precision);
+    void setPrecision(int precision);
 
     // Print a warning without any SourceSpan (used by @warn)
     void addWarning(const sass::string& message);

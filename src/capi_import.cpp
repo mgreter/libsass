@@ -175,14 +175,14 @@ extern "C" {
     return ptr;
   }
 
-  // Append an additional import to the list container.
+  // Append additional import to the list container.
   void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport* import)
   {
     if (list == nullptr) return;
     if (import) list->push_back(import);
   }
 
-  // Append an additional import to the list container and takes ownership of the import.
+  // Append additional import to the list container and takes ownership of the import.
   void ADDCALL sass_import_list_emplace(struct SassImportList* list, struct SassImport* import)
   {
     sass_import_list_push(list, import);

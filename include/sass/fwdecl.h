@@ -23,6 +23,7 @@ extern "C" {
   struct SassImporter; // CAPI-struct
   struct SassImportList; // std::deque
   struct SassMapIterator; // CAPI-struct
+  struct SassGetOpt; // Helper
 
 #ifdef __cplusplus
 } // __cplusplus defined.

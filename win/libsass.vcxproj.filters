@@ -66,6 +66,9 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\fwdecl.h">
       <Filter>API Includes</Filter>
     </ClInclude>
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\getopt.h">
+      <Filter>API Includes</Filter>
+    </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\import.h">
       <Filter>API Includes</Filter>
     </ClInclude>
@@ -104,6 +107,9 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_import.hpp">
       <Filter>CAPI Headers</Filter>
     </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_getopt.hpp">
+      <Filter>CAPI Headers</Filter>
+    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_importer.hpp">
       <Filter>CAPI Headers</Filter>
     </ClInclude>
@@ -125,6 +131,9 @@
       <Filter>CAPI Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_error.cpp">
+      <Filter>CAPI Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_getopt.cpp">
       <Filter>CAPI Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_traces.cpp">

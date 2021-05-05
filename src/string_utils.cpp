@@ -135,6 +135,18 @@ namespace Sass {
     }
     // EO toUpperCase
 
+    // Replace all occurrences of `search` in string `str` with `replacement`.
+    void makeReplace(sass::string& str, const sass::string& search, const sass::string& replacement)
+    {
+      size_t pos = str.find(search);
+      while (pos != std::string::npos)
+      {
+        str.replace(pos, search.size(), replacement);
+        pos = str.find(search, pos + replacement.size());
+      }
+    }
+    // EO makeReplace
+
     // Return list of strings split by `delimiter`.
     // Optionally `trim` all results (default behavior).
     sass::vector<sass::string> split(sass::string str, char delimiter, bool trim)

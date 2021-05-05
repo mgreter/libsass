@@ -22,10 +22,16 @@ namespace Sass {
 
   class BackTrace;
 
+  sass::string toSentence(
+    const StringVector& names,
+    const sass::string& conjunction,
+    const sass::string& prefix = {},
+    const sass::string& postfix = {},
+    const uint8_t quote = 0);
+
   StringVector getKeyVector(const ValueFlatMap& names);
 
   sass::string pluralize(const sass::string& singular, size_t size, const sass::string& plural = "");
-  sass::string toSentence(const StringVector& names, const sass::string& conjunction = "and", const uint8_t prefix = 0);
 
   namespace Exception {
 

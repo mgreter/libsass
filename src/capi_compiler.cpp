@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <fstream>
+#include "logger.hpp"
 #include "compiler.hpp"
 #include "exceptions.hpp"
 
@@ -15,19 +16,19 @@ namespace Sass {
   // ToDo: maybe we should guard all C-API functions this way!?
   /////////////////////////////////////////////////////////////////////////
 
-  // Format the error and fill compiler error states
-  static int handle_error(Compiler& compiler, StackTraces* traces, const char* what, int status)
+  // Promote and format error onto compiler with given status, message and traces
+  int handle_error(Compiler& compiler, int status, const char* what, StackTraces* traces)
   {
 
-    sass::ostream formatted;
+    sass::ostream error;
     bool has_final_lf = false;
     Logger& logger(compiler);
-    formatted << "Error: ";
+    error << "Error: ";
     // Add message and ensure it is
     // added with a final line-feed.
     const char* msg = what;
     if (msg != nullptr) {
-      formatted << msg;
+      error << msg;
       while (*msg) {
         has_final_lf =
           *msg == '\r' ||
@@ -35,9 +36,12 @@ namespace Sass {
         ++msg;
       }
       if (!has_final_lf) {
-        formatted << STRMLF;
+        error << STRMLF;
       }
     }
+
+    sass::ostream formatted;
+    print_wrapped(error.str(), compiler.columns, formatted);
 
     // Clear the previous array
     compiler.error.traces.clear();
@@ -55,6 +59,7 @@ namespace Sass {
     compiler.error.status = status;
     if (what) compiler.error.what = what;
     compiler.error.formatted = formatted.str();
+    compiler.state = SASS_COMPILER_FAILED;
 
     // Return status again
     return status;
@@ -67,14 +72,14 @@ namespace Sass {
     // Re-throw last error
     try { throw; }
     // Catch LibSass specific error cases
-    catch (Exception::Base & e) { handle_error(compiler, &e.traces, e.what(), 1); }
+    catch (Exception::Base & e) { handle_error(compiler, 1, e.what(), &e.traces); }
     // Bad allocations can always happen, maybe we should exit in this case?
-    catch (std::bad_alloc & e) { handle_error(compiler, nullptr, e.what(), 2); }
+    catch (std::bad_alloc & e) { handle_error(compiler, 2, e.what()); }
     // Other errors should not really happen and indicate more severe issues!
-    catch (std::exception & e) { handle_error(compiler, nullptr, e.what(), 3); }
-    catch (sass::string & e) { handle_error(compiler, nullptr, e.c_str(), 4); }
-    catch (const char* e) { handle_error(compiler, nullptr, e, 4); }
-    catch (...) { handle_error(compiler, nullptr, "unknown", 5); }
+    catch (std::exception & e) { handle_error(compiler, 3, e.what()); }
+    catch (sass::string & e) { handle_error(compiler, 4, e.c_str()); }
+    catch (const char* what) { handle_error(compiler, 4, what); }
+    catch (...) { handle_error(compiler, 5, "unknown"); }
     // Return the error state
     return compiler.error.status;
   }
@@ -253,6 +258,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   #ifdef _MSC_VER
+  // Helper function to filter how to handle exceptions
   int filter(unsigned int code, struct _EXCEPTION_POINTERS* ep)
   {
     // Handle exceptions we can't handle otherwise
@@ -306,8 +312,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Wrap Structured Exceptions for MSVC (void on no MSVC compilers)
-  template <typename ...ARGS> void sass_wrap_msvc_exception(
-    Compiler& compiler, void (*fn)(Compiler& compiler, ARGS...), ARGS... args)
+  template <class T, typename ...ARGS> void sass_wrap_msvc_exception(
+    T& compiler, void (*fn)(T& compiler, ARGS...), ARGS... args)
   {
     #ifdef _MSC_VER
     __try {
@@ -323,8 +329,8 @@ namespace Sass {
   // EO sass_wrap_msvc_exception
 
   // Wrap C++ exceptions and add to logger if any occur
-  template <typename ...ARGS> void sass_wrap_exception(
-    Compiler& compiler, void (*fn)(Compiler& compiler, ARGS...), ARGS... args)
+  template <class T, typename ...ARGS> void sass_wrap_exception(
+    T& compiler, void (*fn)(T& compiler, ARGS...), ARGS... args)
   {
     Logger& logger(compiler);
     try { sass_wrap_msvc_exception(compiler, fn, args...); }
@@ -400,7 +406,7 @@ extern "C" {
   }
 
   // Execute all compiler steps and write/print results
-  int ADDCALL sass_compiler_execute(struct SassCompiler* compiler, bool quiet)
+  int ADDCALL sass_compiler_execute(struct SassCompiler* compiler)
   {
 
     // Execute all compiler phases
@@ -410,7 +416,7 @@ extern "C" {
     sass_compiler_render(compiler);
 
     // First print all warnings and deprecation messages
-    if (!quiet && sass_compiler_get_warn_string(compiler)) {
+    if (sass_compiler_get_warn_string(compiler)) {
       sass_print_stderr(sass_compiler_get_warn_string(compiler));
     }
 
@@ -484,9 +490,15 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   // Setter for output style (see `enum SassOutputStyle` for possible options).
-  void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle output_style)
+  void ADDCALL sass_compiler_set_input_syntax(struct SassCompiler* compiler, enum SassImportSyntax syntax)
   {
-    Compiler::unwrap(compiler).output_style = output_style;
+    Compiler::unwrap(compiler).input_syntax = syntax;
+  }
+
+  // Setter for output style (see `enum SassOutputStyle` for possible options).
+  void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle style)
+  {
+    Compiler::unwrap(compiler).output_style = style;
   }
 
   // Try to detect and set logger options for terminal colors, unicode and columns.
@@ -514,11 +526,9 @@ extern "C" {
   }
 
   // Setter for number precision (how floating point numbers are truncated).
-  void ADDCALL sass_compiler_set_precision(struct SassCompiler* context, int precision)
+  void ADDCALL sass_compiler_set_precision(struct SassCompiler* compiler, int precision)
   {
-    Compiler& compiler(Compiler::unwrap(context));
-    compiler.setPrecision(precision);
-    compiler.setLogPrecision(precision);
+    Compiler::unwrap(compiler).setPrecision(precision);
   }
 
   // Getter for compiler entry point (which file or data to parse first).

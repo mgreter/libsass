@@ -109,6 +109,10 @@ namespace Sass {
   {
   public:
 
+    // Change default input syntax for entry point
+    // Only applied if entry point has AUTO syntax
+    enum SassImportSyntax input_syntax;
+
     // Output style for the generated CSS code
     // A value from above SASS_STYLE_* constants
     enum SassOutputStyle output_style;
@@ -132,6 +136,7 @@ namespace Sass {
     InspectOptions(
       enum SassOutputStyle style = SASS_STYLE_NESTED,
       int precision = SassDefaultPrecision) :
+      input_syntax(SASS_IMPORT_AUTO),
       output_style(style),
       precision(precision)
     {

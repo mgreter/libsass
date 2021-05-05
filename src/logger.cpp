@@ -55,11 +55,11 @@ namespace Sass {
   // EO setLogColumns
 
   // Precision for numbers to be printed
-  void Logger::setLogPrecision(int precision)
+  void Logger::setPrecision(int precision)
   {
     epsilon = std::pow(0.1, precision + 1);
   }
-  // EO setLogPrecision
+  // EO setPrecision
 
   // Write warning header to error stream
   void Logger::writeWarnHead(bool deprecation)
@@ -79,7 +79,7 @@ namespace Sass {
 
   // Print the `input` string onto the output stream `os` and
   // wrap words around to fit into the given column `width`.
-  void wrap(sass::string const& input, size_t width, sass::ostream& os)
+  void print_wrapped(sass::string const& input, size_t width, sass::ostream& os)
   {
     sass::istream in(input);
 
@@ -100,6 +100,16 @@ namespace Sass {
         }
         in.ignore(1);
       }
+      // Check if new line starts with white-space
+      while (Character::isSpaceOrTab(in.peek())) {
+        in.ignore(1);
+        // Preserve if we have multiple white-space
+        if (Character::isSpaceOrTab(in.peek())) os << ' ';
+        while (Character::isSpaceOrTab(in.peek())) {
+          in.ignore(1);
+          os << ' ';
+        }
+      }
     }
     if (current != 0) {
       os << STRMLF;
@@ -113,7 +123,7 @@ namespace Sass {
     writeWarnHead(false);
     logstrm << ": ";
 
-    wrap(message, 80, logstrm);
+    print_wrapped(message, columns, logstrm);
     StackTraces stack(callStack.begin(), callStack.end());
 		writeStackTraces(logstrm, stack, "    ", true, 0);
   }
@@ -139,10 +149,8 @@ namespace Sass {
     logstrm << ", column " << pstate.getColumn();
     logstrm << " of " << pstate.getDebugPath() << ':' << STRMLF;
 
-    // Might be expensive to call?
-    // size_t cols = Terminal::getWidth();
-    // size_t width = std::min<size_t>(cols, 80);
-    wrap(message, 80, logstrm);
+    // Capped at 80 to keep specs backward compatible
+    print_wrapped(message, 80, logstrm);
 
     logstrm << STRMLF;
 

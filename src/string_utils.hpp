@@ -48,6 +48,9 @@ namespace Sass {
     // Return new string converted to uppercase.
     sass::string toLowerCase(const sass::string& str);
 
+    // Replace all occurrences of `search` in string `str` with `replacement`.
+    void makeReplace(sass::string& str, const sass::string& search, const sass::string& replacement);
+
     // Return list of strings split by `delimiter`.
     // Optionally `trim` all results (default behavior).
     sass::vector<sass::string> split(sass::string str, char delimiter, bool trim = true);

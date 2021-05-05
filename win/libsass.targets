@@ -5,6 +5,7 @@
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\enums.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\error.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\fwdecl.h" />
+    <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\getopt.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\import.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\importer.h" />
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\function.h" />
@@ -19,6 +20,7 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_error.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_traces.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_import.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_getopt.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_importer.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_compiler.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_variable.hpp" />
@@ -28,6 +30,7 @@
   <ItemGroup Label="CAPI Sources">
     <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_sass.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_error.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_getopt.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_traces.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_import.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_importer.cpp" />
