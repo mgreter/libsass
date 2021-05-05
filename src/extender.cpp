@@ -69,7 +69,7 @@ namespace Sass {
 
     for (auto complex : source->elements()) {
       // Extension.oneOff(complex as ComplexSelector)
-      extenders[complex] = Extension(complex);
+      extenders[complex] = complex;
     }
 
     for (auto complex : targets->elements()) {

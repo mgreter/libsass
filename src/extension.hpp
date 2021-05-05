@@ -64,6 +64,18 @@ namespace Sass {
       isOriginal(false)
     {}
 
+    // Copy assignment operator
+    Extension& operator=(const Extension& other)
+    {
+      extender = other.extender;
+      target = other.target;
+      specificity = other.specificity;
+      isOptional = other.isOptional;
+      isOriginal = other.isOriginal;
+      mediaContext = other.mediaContext;
+      return *this;
+    }
+
     // Asserts that the [mediaContext] for a selector is 
     // compatible with the query context for this extender.
     void assertCompatibleMediaContext(CssMediaRuleObj mediaContext, BackTraces& traces) const;

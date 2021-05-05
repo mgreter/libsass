@@ -5,7 +5,6 @@
 
 #include "source.hpp"
 #include "ast_nodes.hpp"
-#include "debugger.hpp"
 
 /////////////////////////////////////////////////////////////////////////
 // Most UAs don't allow very detailed navigation, although LibSass
@@ -163,11 +162,6 @@ namespace Sass {
       return;
     }
     const SourceSpan& pstate = node->pstate();
-    auto fin = pstate.position + pstate.span;
-    // std::cerr << "Close: "
-    //   << position.line << ":" << position.column << " -> "
-    //   << fin.line << ":" << fin.column
-    //   << "\n";
     if (pstate.getSrcIdx() != sass::string::npos) {
       auto source_end = pstate.position + pstate.span;
       if (moveNextSrc || moveNextDst) {

@@ -628,7 +628,6 @@ namespace Sass {
   void Inspect::visitTypeSelector(TypeSelector* type)
   {
     add_open_mapping(type, true);
-    SelectorList* list = (SelectorList *) type;
     acceptNameSpaceSelector(type);
     add_close_mapping(type, true);
   }

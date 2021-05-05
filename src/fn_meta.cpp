@@ -11,8 +11,6 @@
 #include "ast_expressions.hpp"
 #include "string_utils.hpp"
 
-#include "debugger.hpp"
-
 namespace Sass {
 
   namespace Functions {
