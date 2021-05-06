@@ -81,6 +81,7 @@ else
 	STATIC_ALL       ?= 0
 	STATIC_LIBGCC    ?= 0
 	STATIC_LIBSTDCPP ?= 0
+	MKDIR += -p
 endif
 
 ifndef SASS_LIBSASS_PATH

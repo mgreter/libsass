@@ -123,9 +123,9 @@ namespace Sass {
     writeWarnHead(false);
     logstrm << ": ";
 
-    print_wrapped(message, columns, logstrm);
+    print_wrapped(message, 80, logstrm);
     StackTraces stack(callStack.begin(), callStack.end());
-		writeStackTraces(logstrm, stack, "    ", true, 0);
+    writeStackTraces(logstrm, stack, "    ", true, 0);
   }
   // EO addWarning
 
@@ -155,7 +155,7 @@ namespace Sass {
     logstrm << STRMLF;
 
     StackTraces stack(callStack.begin(), callStack.end());
-		writeStackTraces(logstrm, stack, "    ", true);
+    writeStackTraces(logstrm, stack, "    ", true);
 
   }
   // EO printWarning
@@ -274,9 +274,9 @@ namespace Sass {
               << getColor(Terminal::reset)
               << STRMLF;
           }
-      }
-      // Last line might get another indicator line
-      else if (i == lines.size() - 1) {
+        }
+        // Last line might get another indicator line
+        else if (i == lines.size() - 1) {
 
           if (end.column < lines[i].size()) {
 
@@ -313,7 +313,7 @@ namespace Sass {
               << getColor(Terminal::reset)
               << STRMLF;
           }
-        } 
+        }
         else {
           // Just print the code line
           stream
@@ -444,7 +444,7 @@ namespace Sass {
 
     // Get the ellipsis character(s) either in unicode or ASCII
     size_t ellipsis_len = support_unicode ? 1 : 3;
-    sass::string ellipsis(support_unicode ? "\xE2\x80\xA6": "...");
+    sass::string ellipsis(support_unicode ? "\xE2\x80\xA6" : "...");
 
     // Normalize tab characters to spaces for better counting
     for (size_t i = line.length(); i != std::string::npos; i -= 1) {
@@ -556,7 +556,7 @@ namespace Sass {
   // Print `amount` of `traces` to output stream `os`.
   void Logger::writeStackTraces(sass::ostream& os, StackTraces traces,
     sass::string indent, bool showPos, size_t amount)
-	{
+  {
     sass::sstream strm;
 
     // bool first = true;
@@ -619,11 +619,11 @@ namespace Sass {
       }
 
       if (showPos) {
-				os << indent;
-				os << std::left << std::setfill(' ')
-           << std::setw(max + 2) << traced[i].first;
-				os << traced[i].second; 
-				os << STRMLF;
+        os << indent;
+        os << std::left << std::setfill(' ')
+          << std::setw(max + 2) << traced[i].first;
+        os << traced[i].second;
+        os << STRMLF;
       }
 
     }

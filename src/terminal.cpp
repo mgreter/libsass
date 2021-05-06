@@ -20,14 +20,14 @@ namespace Terminal {
   // Useful to shorten our output to fit nicely
   short getColumns(bool error)
   {
-    #ifdef _WIN32
-    DWORD fd = error
-      ? STD_ERROR_HANDLE
-      : STD_OUTPUT_HANDLE;
     // First check if console is attached
     if (!isConsoleAttached(error)) {
       return SassDefaultColumns;
     }
+    #ifdef _WIN32
+    DWORD fd = error
+      ? STD_ERROR_HANDLE
+      : STD_OUTPUT_HANDLE;
     // Get information of the screen buffer
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     HANDLE handle = GetStdHandle(fd);

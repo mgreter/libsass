@@ -83,7 +83,7 @@ const struct SassOptionEnum style_options[] = {
   { "compact", SASS_STYLE_COMPACT },
   { "expanded", SASS_STYLE_EXPANDED },
   { "nested", SASS_STYLE_NESTED },
-  nullptr
+  { nullptr }
 };
 
 const struct SassOptionEnum format_options[] = {
@@ -91,7 +91,7 @@ const struct SassOptionEnum format_options[] = {
   { "css", SASS_IMPORT_CSS },
   { "sass", SASS_IMPORT_SASS },
   { "scss", SASS_IMPORT_SCSS },
-  nullptr
+  { nullptr }
 };
 
 const struct SassOptionEnum srcmap_options[] = {
@@ -99,7 +99,7 @@ const struct SassOptionEnum srcmap_options[] = {
   { "create", SASS_SRCMAP_CREATE },
   { "link", SASS_SRCMAP_EMBED_LINK },
   { "embed", SASS_SRCMAP_EMBED_JSON },
-  nullptr
+  { nullptr }
 };
 
 void getopt_set_input_format(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.input_syntax = value.syntax; }
@@ -159,6 +159,7 @@ void cli_sass_compiler_input_file_arg(struct SassGetOpt* getopt, const char* pat
     ? sass_make_stdin_import("stream://stdin")
     : sass_make_file_import(path);
   sass_compiler_set_entry_point(getopt->compiler.wrap(), entry);
+  sass_delete_import(entry);
 }
 
 void cli_sass_compiler_output_file_arg(struct SassGetOpt* getopt, const char* path)
@@ -171,7 +172,7 @@ sass::string format_option(struct SassGetOpt* getopt, struct SassOption& option)
 {
   sass::sstream line;
   if (option.shrt) {
-    line << getopt->compiler.getColor(Terminal::green);
+    line << getopt->compiler.getColor(Terminal::bold_magenta);
     line << "-" << option.shrt;
     line << getopt->compiler.getColor(Terminal::reset);
     if (option.name) line << ", ";

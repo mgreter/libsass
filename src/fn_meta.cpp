@@ -426,8 +426,8 @@ namespace Sass {
         if (String * str = function->isaString()) {
           sass::string name = str->value();
           compiler.addDeprecation(
-            "Passing a string to call() is deprecated and will be illegal in LibSass "
-            "4.1.0. Use call(get-function(" + str->inspect() + ")) instead.",
+            "Passing a string to call() is deprecated and will be illegal in LibSass 4.1.0.\n"
+            "Use call(get-function(" + str->inspect() + ")) instead.",
             str->pstate());
 
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);

@@ -44,15 +44,15 @@ fi
 if [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
   MAKE_OPTS="$MAKE_OPTS -j1 V=1"
 else
-  MAKE_OPTS="$MAKE_OPTS -j5 V=1"
+  MAKE_OPTS="$MAKE_OPTS -j8 V=1"
 fi
 
 if [ "x$PREFIX" == "x" ]; then
-  if [ "x$TRAVIS_BUILD_DIR" == "x" ]; then
-    PREFIX=$SASS_LIBSASS_PATH/build
-  else
-    PREFIX=$TRAVIS_BUILD_DIR/build
-  fi
+  #if [ "x$TRAVIS_BUILD_DIR" == "x" ]; then
+    PREFIX=$SASS_LIBSASS_PATH/installed
+  #else
+  #  PREFIX=$TRAVIS_BUILD_DIR/build
+  #fi
 fi
 
 # enable address sanitation
@@ -71,13 +71,18 @@ echo SASS_LIBSASS_PATH: $SASS_LIBSASS_PATH
 echo TRAVIS_BUILD_DIR: $TRAVIS_BUILD_DIR
 echo SASS_SASSC_PATH: $SASS_SASSC_PATH
 echo SASS_SPEC_PATH: $SASS_SPEC_PATH
+echo EXTRA_CFLAGS: $EXTRA_CFLAGS
+echo EXTRA_CXXFLAGS: $EXTRA_CXXFLAGS
+echo EXTRA_LDFLAGS: $EXTRA_LDFLAGS
 echo INSTALL_LOCATION: $PREFIX
 
 if [ "x$AUTOTOOLS" == "xyes" ]; then
 
   echo -en 'travis_fold:start:configure\r'
   autoreconf --force --install
-  ./configure --enable-tests $COVERAGE_OPT \
+  mkdir -p build
+  cd build
+  ../configure --enable-tests $COVERAGE_OPT \
     --disable-silent-rules \
     --with-sassc-dir=$SASS_SASSC_PATH \
     --with-sass-spec-dir=$SASS_SPEC_PATH \
@@ -85,20 +90,29 @@ if [ "x$AUTOTOOLS" == "xyes" ]; then
     ${SHARED_OPT}
   echo -en 'travis_fold:end:configure\r'
 
-  make $MAKE_OPTS clean
+  echo "MAKE CLEAN"
+
+  PREFIX="$PREFIX" make $MAKE_OPTS clean
+
+  echo "MAKE INSTALL"
+
+  # install to prefix directory
+  PREFIX="$PREFIX" make $MAKE_OPTS install
+
+  cd ..
 
 else
 
-  make $MAKE_OPTS clean
+  PREFIX="$PREFIX" make $MAKE_OPTS clean
 
   # Run C++ unit tests
   # make $MAKE_OPTS -C test clean
   # make $MAKE_OPTS -C test test
 
-fi
+  # install to prefix directory
+  PREFIX="$PREFIX" make $MAKE_OPTS install
 
-# install to prefix directory
-PREFIX="$PREFIX" make $MAKE_OPTS install
+fi
 
 ls -la $PREFIX/*
 

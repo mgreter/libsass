@@ -60,7 +60,7 @@
 
 // Default output character columns
 #ifndef SassDefaultColumns
-#define SassDefaultColumns 80
+#define SassDefaultColumns 120
 #endif
 
 /////////////////////////////////////////////////////////////////////////

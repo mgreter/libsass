@@ -64,24 +64,28 @@ namespace Sass
       extern const char blue[];
       extern const char magenta[];
       extern const char cyan[];
+      extern const char white[];
       extern const char bold_red[];
       extern const char bold_green[];
       extern const char bold_yellow[];
       extern const char bold_blue[];
       extern const char bold_magenta[];
       extern const char bold_cyan[];
+      extern const char bold_white[];
       extern const char bg_red[];
       extern const char bg_green[];
       extern const char bg_yellow[];
       extern const char bg_blue[];
       extern const char bg_magenta[];
       extern const char bg_cyan[];
+      extern const char bg_white[];
       extern const char bg_bold_red[];
       extern const char bg_bold_green[];
       extern const char bg_bold_yellow[];
       extern const char bg_bold_blue[];
       extern const char bg_bold_magenta[];
       extern const char bg_bold_cyan[];
+      extern const char bg_bold_white[];
 
     } // namespace Terminal
 
