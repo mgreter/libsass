@@ -40,6 +40,16 @@ namespace Sass {
     bool support_colors = false;
     bool support_unicode = false;
 
+    // Helper function to ease color output. Returns the
+    // passed color if color output is enable, otherwise
+    // it will simply return an empty string.
+    inline const char* getTerm(const char* color) {
+      if (support_colors) {
+        return color;
+      }
+      return Constants::String::empty;
+    }
+
   private:
 
     // Split the line to three parts for error reporting.
@@ -57,16 +67,6 @@ namespace Sass {
       sass::string& mid,
       sass::string& rhs);
 
-  public:
-    // Helper function to ease color output. Returns the
-    // passed color if color output is enable, otherwise
-    // it will simply return an empty string.
-    inline const char* getColor(const char* color) {
-      if (support_colors) {
-        return color;
-      }
-      return Constants::String::empty;
-    }
   private:
 
     // Write warning header to error stream

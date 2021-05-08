@@ -237,30 +237,30 @@ namespace Terminal {
 
   // Code for color testing rainbow for debugging
   // 
-  // stream << getopt->compiler.getColor(Terminal::red) << "red" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::green) << "green" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::yellow) << "yellow" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::blue) << "blue" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::magenta) << "magenta" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::cyan) << "cyan" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bold_red) << "bold_red" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bold_green) << "bold_green" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bold_yellow) << "bold_yellow" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bold_blue) << "bold_blue" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bold_magenta) << "bold_magenta" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bold_cyan) << "bold_cyan" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_red) << "bg_red" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_green) << "bg_green" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_yellow) << "bg_yellow" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_blue) << "bg_blue" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_magenta) << "bg_magenta" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_cyan) << "bg_cyan" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_bold_red) << "bg_bold_red" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_bold_green) << "bg_bold_green" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_bold_yellow) << "bg_bold_yellow" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_bold_blue) << "bg_bold_blue" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_bold_magenta) << "bg_bold_magenta" << getopt->compiler.getColor(Terminal::reset) << "\n";
-  // stream << getopt->compiler.getColor(Terminal::bg_bold_cyan) << "bg_bold_cyan" << getopt->compiler.getColor(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::red) << "red" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::green) << "green" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::yellow) << "yellow" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::blue) << "blue" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::magenta) << "magenta" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::cyan) << "cyan" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bold_red) << "bold_red" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bold_green) << "bold_green" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bold_yellow) << "bold_yellow" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bold_blue) << "bold_blue" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bold_magenta) << "bold_magenta" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bold_cyan) << "bold_cyan" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_red) << "bg_red" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_green) << "bg_green" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_yellow) << "bg_yellow" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_blue) << "bg_blue" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_magenta) << "bg_magenta" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_cyan) << "bg_cyan" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_bold_red) << "bg_bold_red" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_bold_green) << "bg_bold_green" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_bold_yellow) << "bg_bold_yellow" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_bold_blue) << "bg_bold_blue" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_bold_magenta) << "bg_bold_magenta" << getopt->compiler.getTerm(Terminal::reset) << "\n";
+  // stream << getopt->compiler.getTerm(Terminal::bg_bold_cyan) << "bg_bold_cyan" << getopt->compiler.getTerm(Terminal::reset) << "\n";
 
 
 }

@@ -12,20 +12,53 @@
 
 using namespace Sass;
 
-struct SassOptionEnum
+/////////////////////////////////////////////////////////////////////////
+// This file implements something very similar to GNU (long) getopt.
+// It supports parsing a list of string arguments to configure a compiler.
+// Corresponds exactly to how SassC will parse `argv` command line
+// arguments and makes this feature available to all implementors.
+/////////////////////////////////////////////////////////////////////////
+// So far we support boolean, string and enumeration options and we
+// might extend this list if the need arises. Boolean options don't
+// allow any argument, but can be inverted with the `--no-` prefix.
+// Other options may have an additional argument and also a default.
+/////////////////////////////////////////////////////////////////////////
+// Some of the key features are:
+// - Support for boolean options with [--no-] prefix
+// - Short options don't support exclamation `!` mark yet
+// - Supports name shortening, if target can be identified uniquely
+/////////////////////////////////////////////////////////////////////////
+// You may also use this API to completely use different or additional
+// options. Although part of LibSass it could also be used standalone.
+// APIs are quite raw and not optimized for multi purpose though.
+/////////////////////////////////////////////////////////////////////////
+
+
+// Single enumeration item for sass options
+// Maps an option to the given enum integer.
+struct SassGetOptEnum
 {
-  const char* string;
+public:
   int enumid;
+  const char* string;
+  SassGetOptEnum(const char* name, int id) :
+    enumid(id),
+    string(name)
+  {}
 };
 
-struct SassOption {
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+class SassOption {
+public:
   const char shrt = '\0';
   const char* name;
   const char* desc;
   const bool boolean = false;
   const char* argument = nullptr;
   const bool optional = false;
-  const struct SassOptionEnum* enums;
+  const struct SassGetOptEnum* enums;
   void (*cb) (struct SassGetOpt* getopt, union SassOptionValue value);
   SassOption(
     const char shrt = '\0',
@@ -34,7 +67,7 @@ struct SassOption {
     const bool boolean = false,
     const char* argument = nullptr,
     const bool optional = false,
-    const struct SassOptionEnum* enums = nullptr,
+    const struct SassGetOptEnum* enums = nullptr,
     void (*cb) (struct SassGetOpt* getopt, union SassOptionValue value) = nullptr
   ) :
     shrt(shrt),
@@ -47,6 +80,9 @@ struct SassOption {
     cb(cb)
   {}
 };
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 
 struct SassArgument {
   bool optional = false;
@@ -63,45 +99,55 @@ struct SassArgument {
   {}
 };
 
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
 struct SassGetOpt {
   Compiler& compiler;
   sass::string wasAssignment;
   bool lastArgWasShort = false;
   bool needsArgumentWasShort = false;
-  const struct SassOption* lastArg = nullptr;
-  const struct SassOption* needsArgument = nullptr;
+  const SassOption* lastArg = nullptr;
+  const SassOption* needsArgument = nullptr;
   sass::vector<sass::string> args = {};
-  sass::vector<struct SassOption> options;
+  sass::vector<SassOption> options;
   sass::vector<struct SassArgument> arguments;
   SassGetOpt(Compiler& compiler) :
     compiler(compiler)
   {}
 };
 
-const struct SassOptionEnum style_options[] = {
-  { "compressed", SASS_STYLE_COMPRESSED },
-  { "compact", SASS_STYLE_COMPACT },
-  { "expanded", SASS_STYLE_EXPANDED },
-  { "nested", SASS_STYLE_NESTED },
-  { nullptr }
-};
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 
-const struct SassOptionEnum format_options[] = {
-  { "auto", SASS_IMPORT_AUTO },
-  { "css", SASS_IMPORT_CSS },
-  { "sass", SASS_IMPORT_SASS },
+// Enums for input format option
+const struct SassGetOptEnum format_options[] = {
   { "scss", SASS_IMPORT_SCSS },
-  { nullptr }
+  { "sass", SASS_IMPORT_SASS },
+  { "css", SASS_IMPORT_CSS },
+  { "auto", SASS_IMPORT_AUTO },
+  { nullptr, 0 }
 };
 
-const struct SassOptionEnum srcmap_options[] = {
+// Enums for output style option
+const struct SassGetOptEnum style_options[] = {
+  { "nested", SASS_STYLE_NESTED },
+  { "expanded", SASS_STYLE_EXPANDED },
+  { "compact", SASS_STYLE_COMPACT },
+  { "compressed", SASS_STYLE_COMPRESSED },
+  { nullptr, 0 }
+};
+
+// Enums for source-map mode option
+const struct SassGetOptEnum srcmap_options[] = {
   { "none", SASS_SRCMAP_NONE },
   { "create", SASS_SRCMAP_CREATE },
   { "link", SASS_SRCMAP_EMBED_LINK },
   { "embed", SASS_SRCMAP_EMBED_JSON },
-  { nullptr }
+  { nullptr, 0 }
 };
 
+// Simple proxy functions to call out to compiler (or set certain options directly)
 void getopt_set_input_format(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.input_syntax = value.syntax; }
 void getopt_set_output_style(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.output_style = value.style; }
 void getopt_add_include_path(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.addIncludePaths(value.string); }
@@ -111,8 +157,8 @@ void getopt_set_srcmap_file_urls(struct SassGetOpt* getopt, union SassOptionValu
 void getopt_set_srcmap_contents(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.embed_contents = value.boolean; }
 void getopt_set_srcmap_root(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.root = value.boolean; }
 void getopt_set_srcmap_path(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.path = value.boolean; }
-void getopt_set_unicode(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_unicode = value.boolean; }
-void getopt_set_colors(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_colors = value.boolean; }
+void getopt_set_term_unicode(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_unicode = value.boolean; }
+void getopt_set_term_colors(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_colors = value.boolean; }
 
 void getopt_error(struct SassGetOpt* getopt, const char* what)
 {
@@ -121,6 +167,7 @@ void getopt_error(struct SassGetOpt* getopt, const char* what)
   }
 }
 
+// Precision setter has specific validation (no corresponding type in GetOpt parser)
 void getopt_set_precision(struct SassGetOpt* getopt, union SassOptionValue value)
 {
   // The GetOpt API does not yet know integers
@@ -129,10 +176,7 @@ void getopt_set_precision(struct SassGetOpt* getopt, union SassOptionValue value
     getopt->compiler.setPrecision(std::stoi(value.string));
   }
   catch (std::exception&) {
-    sass::sstream strm;
-    strm << "option '--precision' is not a valid integer";
-    sass::string msg(strm.str());
-    getopt_error(getopt, msg.c_str());
+    getopt_error(getopt, "option '--precision' is not a valid integer");
     return; // return after error
   }
 }
@@ -148,6 +192,7 @@ void cli_sass_compiler_version(struct SassGetOpt* getopt, union SassOptionValue 
   getopt_print_help(getopt, std::cerr);
   exit(0);
 }
+
 void cli_sass_compiler_help(struct SassGetOpt* getopt, union SassOptionValue value) {
   getopt_print_help(getopt, std::cerr);
   exit(0);
@@ -168,37 +213,38 @@ void cli_sass_compiler_output_file_arg(struct SassGetOpt* getopt, const char* pa
 }
 
 
-sass::string format_option(struct SassGetOpt* getopt, struct SassOption& option)
+sass::string format_option(struct SassGetOpt* getopt, SassOption& option)
 {
+  Compiler& compiler(getopt->compiler);
   sass::sstream line;
   if (option.shrt) {
-    line << getopt->compiler.getColor(Terminal::bold_magenta);
+    line << getopt->compiler.getTerm(Terminal::bold_magenta);
     line << "-" << option.shrt;
-    line << getopt->compiler.getColor(Terminal::reset);
+    line << getopt->compiler.getTerm(Terminal::reset);
     if (option.name) line << ", ";
   }
   else {
     line << "    ";
   }
   if (option.name) {
-    line << getopt->compiler.getColor(Terminal::green);
+    line << getopt->compiler.getTerm(Terminal::green);
     line << "--";
-    line << getopt->compiler.getColor(Terminal::reset);
+    line << getopt->compiler.getTerm(Terminal::reset);
     if (option.boolean) {
-      line << getopt->compiler.getColor(Terminal::blue);
+      line << getopt->compiler.getTerm(Terminal::blue);
       line << "[no-]";
-      line << getopt->compiler.getColor(Terminal::reset);
+      line << getopt->compiler.getTerm(Terminal::reset);
     }
-    line << getopt->compiler.getColor(Terminal::green);
+    line << getopt->compiler.getTerm(Terminal::green);
     line << option.name;
-    line << getopt->compiler.getColor(Terminal::reset);
+    line << getopt->compiler.getTerm(Terminal::reset);
   }
   if (option.argument) {
     if (option.optional) line << "[";
     line << "=";
-    line << getopt->compiler.getColor(Terminal::cyan);
+    line << getopt->compiler.getTerm(Terminal::cyan);
     line << option.argument;
-    line << getopt->compiler.getColor(Terminal::reset);
+    line << getopt->compiler.getTerm(Terminal::reset);
     if (option.optional) line << "]";
   }
   return line.str();
@@ -208,13 +254,13 @@ void getopt_print_help(struct SassGetOpt* getopt, std::ostream& stream)
 {
   size_t longest = 20;
   // Determine longest option to align them all
-  for (struct SassOption& option : getopt->options) {
+  for (SassOption& option : getopt->options) {
     sass::string fmt(format_option(getopt, option));
     size_t len = Terminal::count_printable(fmt.c_str()) + 2;
     if (len > longest) longest = len;
   }
   // Print out each option line by line
-  for (struct SassOption& option : getopt->options) {
+  for (SassOption& option : getopt->options) {
     sass::string fmt(format_option(getopt, option));
     size_t len = Terminal::count_printable(fmt.c_str());
     stream << "  " << fmt;
@@ -230,23 +276,23 @@ void getopt_print_help(struct SassGetOpt* getopt, std::ostream& stream)
       }
       stream << std::setw(longest + 4) << "";
       if (option.argument) {
-        stream << getopt->compiler.getColor(Terminal::cyan);
+        stream << getopt->compiler.getTerm(Terminal::cyan);
         stream << option.argument;
-        stream << getopt->compiler.getColor(Terminal::reset);
+        stream << getopt->compiler.getTerm(Terminal::reset);
         stream << " must be ";
       }
       stream << toSentence(names, "or",
-        getopt->compiler.getColor(Terminal::yellow),
-        getopt->compiler.getColor(Terminal::reset), '\'');
-      stream << "\n";
+        getopt->compiler.getTerm(Terminal::yellow),
+        getopt->compiler.getTerm(Terminal::reset),
+      '\'') << "\n";
     }
   }
 }
 
-sass::vector<const struct SassOption*> find_short_options(struct SassGetOpt* getopt, const char arg)
+sass::vector<const SassOption*> find_short_options(struct SassGetOpt* getopt, const char arg)
 {
-  sass::vector<const struct SassOption*> matches;
-  for (struct SassOption& option : getopt->options) {
+  sass::vector<const SassOption*> matches;
+  for (SassOption& option : getopt->options) {
     if (option.shrt == arg) {
       matches.push_back(&option);
     }
@@ -254,10 +300,10 @@ sass::vector<const struct SassOption*> find_short_options(struct SassGetOpt* get
   return matches;
 }
 
-sass::vector<const struct SassOption*> find_long_options(struct SassGetOpt* getopt, const sass::string& arg)
+sass::vector<const SassOption*> find_long_options(struct SassGetOpt* getopt, const sass::string& arg)
 {
-  sass::vector<const struct SassOption*> matches;
-  for (const struct SassOption& option : getopt->options) {
+  sass::vector<const SassOption*> matches;
+  for (const SassOption& option : getopt->options) {
     if (StringUtils::startsWithIgnoreCase(option.name, arg)) {
       if (arg == option.name) return { &option };
       matches.push_back(&option);
@@ -275,10 +321,10 @@ sass::vector<const struct SassOption*> find_long_options(struct SassGetOpt* geto
   return matches;
 }
 
-sass::vector<const struct SassOptionEnum*> find_options_enum(
-  const struct SassOptionEnum* enums, const sass::string& arg)
+sass::vector<const struct SassGetOptEnum*> find_options_enum(
+  const struct SassGetOptEnum* enums, const sass::string& arg)
 {
-  sass::vector<const struct SassOptionEnum*> matches;
+  sass::vector<const struct SassGetOptEnum*> matches;
   while (enums && enums->string) {
     if (StringUtils::startsWithIgnoreCase(enums->string, arg)) {
       matches.push_back(enums);
@@ -304,9 +350,9 @@ void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
   for (size_t i = 0; i < have_size; i += 1) {
     if (want_size <= i) {
       sass::sstream strm;
-      sass::string& value(getopt->args[i]);
+      sass::string value(getopt->args[i]);
       StringUtils::makeReplace(value, "'", "\\'");
-      strm << "extra argument '" << value;
+      strm << "extra argument '" << value << "'";
       sass::string msg(strm.str());
       getopt_error(getopt, msg.c_str());
       return; // return after error
@@ -318,8 +364,9 @@ void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
   }
   for (size_t i = have_size; i < requires; i += 1) {
     sass::sstream strm;
-    strm << "missing required argument '"
-      << getopt->arguments[i].name << "'";
+    sass::string value(getopt->arguments[i].name);
+    StringUtils::makeReplace(value, "'", "\\'");
+    strm << "missing required argument '" << value << "'";
     sass::string msg(strm.str());
     getopt_error(getopt, msg.c_str());
     return; // return after error
@@ -335,14 +382,14 @@ void getopt_check_required_option(struct SassGetOpt* getopt)
   if (getopt->needsArgument) {
     sass::sstream strm;
     if (getopt->needsArgumentWasShort) {
-      strm << "option '-" <<
-        getopt->needsArgument->shrt <<
-        "' requires an argument'";
+      sass::string value(1, getopt->needsArgument->shrt);
+      // StringUtils::makeReplace(value, "'", "\\'"); // only a char
+      strm << "option '-" << value << "' requires an argument'";
     }
     else {
-      strm << "option '--" <<
-        getopt->needsArgument->name <<
-        "' requires an argument'";
+      sass::string value(getopt->needsArgument->name);
+      StringUtils::makeReplace(value, "'", "\\'");
+      strm << "option '--" << value << "' requires an argument'";
     }
     sass::string msg(strm.str());
     getopt_error(getopt, msg.c_str());
@@ -350,17 +397,24 @@ void getopt_check_required_option(struct SassGetOpt* getopt)
   }
 }
 
+// Function that must be consecutively called for every argument.
+// Ensures to properly handle cases where a mandatory or optional
+// argument, if required by the previous option, is handled correctly.
+// This is a bit different to "official" GNU GetOpt, but should be
+// reasonably well and support more advanced usages than before.
 void getopt_parse(struct SassGetOpt* getopt, const char* value)
 {
   if (value == nullptr) return;
   if (getopt->compiler.state) return;
   sass::string arg(value);
   StringUtils::makeTrimmed(arg);
-  // if (arg.empty()) return;
   union SassOptionValue result {};
-  if (arg != "-" && arg != "--" && arg[0] == '-' && getopt->wasAssignment.empty()) {
+
+  if (arg != "-" && arg != "--" &&
+    arg[0] == '-' && getopt->wasAssignment.empty())
+  {
     getopt_check_required_option(getopt);
-    sass::vector<const struct SassOption*> opts;
+    sass::vector<const SassOption*> opts;
 
     // Check if we have some assignment
     size_t assign = arg.find_first_of('=');
@@ -378,6 +432,7 @@ void getopt_parse(struct SassGetOpt* getopt, const char* value)
     if (arg[1] == '-') {
       arg.erase(0, 2);
       opts = find_long_options(getopt, arg);
+      getopt_check_required_option(getopt);
     }
     // Short argument
     else {
@@ -387,6 +442,8 @@ void getopt_parse(struct SassGetOpt* getopt, const char* value)
         for (size_t i = 0; i < arg.size(); i += 1) {
           sass::string split("-"); split += arg[i];
           sass_getopt_parse(getopt, split.c_str());
+          getopt_check_required_option(getopt);
+          // break on first error
         }
         return;
       }
@@ -408,7 +465,9 @@ void getopt_parse(struct SassGetOpt* getopt, const char* value)
       }
       else {
         // Should never happen if you configured your options right
-        strm << "option '-" << arg << "' is ambiguous (internal error)";
+        // Triggered by sassc.exe -MP
+        strm << "option '-" << arg << "' is ambiguous1 (internal error)";
+        for (auto opt : opts) strm << "'--" << opt->name << "'" << std::setw(4);
       }
       sass::string msg(strm.str());
       getopt_error(getopt, msg.c_str());
@@ -448,8 +507,8 @@ void getopt_parse(struct SassGetOpt* getopt, const char* value)
           enums += 1;
         }
         strm << Sass::toSentence(names, "or",
-          getopt->compiler.getColor(Terminal::yellow),
-          getopt->compiler.getColor(Terminal::reset), '\'') << ")";
+          getopt->compiler.getTerm(Terminal::yellow),
+          getopt->compiler.getTerm(Terminal::reset), '\'') << ")";
         sass::string msg(strm.str());
         getopt_error(getopt, msg.c_str());
         return; // return after error
@@ -470,8 +529,8 @@ void getopt_parse(struct SassGetOpt* getopt, const char* value)
           names.push_back(match->string);
         }
         strm << toSentence(names, "or",
-          getopt->compiler.getColor(Terminal::yellow),
-          getopt->compiler.getColor(Terminal::reset), '\'') << ")";
+          getopt->compiler.getTerm(Terminal::yellow),
+          getopt->compiler.getTerm(Terminal::reset), '\'') << ")";
         sass::string msg(strm.str());
         getopt_error(getopt, msg.c_str());
         return; // return after error
@@ -567,7 +626,7 @@ extern "C" {
     // Make argument optional
     const bool optional,
     // Arguments must be one of this enum
-    const struct SassOptionEnum* enums,
+    const struct SassGetOptEnum* enums,
     // Callback function, where we pass back the given option value
     void (*cb) (struct SassGetOpt* getopt, union SassOptionValue value))
   {
@@ -592,18 +651,21 @@ extern "C" {
   // Utility function to tell LibSass to register its default options
   void ADDCALL sass_getopt_populate_options(struct SassGetOpt* getopt)
   {
-    sass_getopt_register_option(getopt, 't', "style", "Set output style (nested, expanded, compact or compressed).", false, "STYLE", false, style_options, getopt_set_output_style);
-    sass_getopt_register_option(getopt, 'f', "format", "Set explicit input syntax (scss, sass, css or auto).", false, "SYNTAX", true, format_options, getopt_set_input_format);
-    sass_getopt_register_option(getopt, 'l', "line-comments", "Emit comments showing original line numbers.", true, nullptr, false, nullptr, cli_sass_compiler_set_line_numbers);
-    sass_getopt_register_option(getopt, 'I', "include-path", "Add include path to look for imports.", false, "PATH", false, nullptr, getopt_add_include_path);
-    sass_getopt_register_option(getopt, 'P', "plugin-path", "Add plugin path to auto load plugins.", false, "PATH", false, nullptr, getopt_load_plugins);
-    sass_getopt_register_option(getopt, 'm', "sourcemap", "Set how to create and emit source mappings.", false, "TYPE", true, srcmap_options, getopt_set_srcmap_mode);
-    sass_getopt_register_option(getopt, '\0', "sourcemap-file-urls", "Emit absolute file:// urls in includes array.", true, nullptr, true, nullptr, getopt_set_srcmap_file_urls);
-    sass_getopt_register_option(getopt, 'C', "sourcemap-contents", "Embed contents of imported files in source map.", true, nullptr, true, nullptr, getopt_set_srcmap_contents);
-    sass_getopt_register_option(getopt, 'M', "sourcemap-path", "Set path where source map file is saved.", false, "PATH", false, nullptr, getopt_set_srcmap_path);
-    sass_getopt_register_option(getopt, 'P', "precision", "Set the precision for numbers.", false, "{0-12}", false, nullptr, getopt_set_precision);
-    sass_getopt_register_option(getopt, '\0', "unicode", "Enable/Disable terminal unicode support.", true, nullptr, false, nullptr, getopt_set_unicode);
-    sass_getopt_register_option(getopt, '\0', "colors", "Enable/Disable terminal ANSI color support.", true, nullptr, false, nullptr, getopt_set_colors);
+
+    /* enum: style */ sass_getopt_register_option(getopt, 't', "style", "Set output style (nested, expanded, compact or compressed).", false, "STYLE", false, style_options, getopt_set_output_style);
+    /* enum: format */ sass_getopt_register_option(getopt, 'f', "format", "Set explicit input syntax (scss, sass, css or auto).", false, "SYNTAX", true, format_options, getopt_set_input_format);
+    /* bool */ sass_getopt_register_option(getopt, 'l', "line-comments", "Emit comments showing original line numbers.", true, nullptr, false, nullptr, cli_sass_compiler_set_line_numbers);
+    /* path */ sass_getopt_register_option(getopt, 'I', "include-path", "Add include path to look for imports.", false, "PATH", false, nullptr, getopt_add_include_path);
+    /* path */ sass_getopt_register_option(getopt, 'P', "plugin-path", "Add plugin path to auto load plugins.", false, "PATH", false, nullptr, getopt_load_plugins);
+    /* enum: mode */ sass_getopt_register_option(getopt, 'm', "sourcemap", "Set how to create and emit source mappings.", false, "TYPE", true, srcmap_options, getopt_set_srcmap_mode);
+    /* bool */ sass_getopt_register_option(getopt, '\0', "sourcemap-file-urls", "Emit absolute file:// urls in includes array.", true, nullptr, true, nullptr, getopt_set_srcmap_file_urls);
+    /* bool */ sass_getopt_register_option(getopt, 'C', "sourcemap-contents", "Embed contents of imported files in source map.", true, nullptr, true, nullptr, getopt_set_srcmap_contents);
+    /* path */ sass_getopt_register_option(getopt, 'M', "sourcemap-path", "Set path where source map file is saved.", false, "PATH", false, nullptr, getopt_set_srcmap_path);
+    /* int */ sass_getopt_register_option(getopt, 'p', "precision", "Set the precision for numbers.", false, "{0-12}", false, nullptr, getopt_set_precision);
+    /* bool */ // sass_getopt_register_option(getopt, '\0', "unicode", "Enable or disable unicode in generated css output.", true, nullptr, false, nullptr, getopt_set_unicode);
+    /* bool */ sass_getopt_register_option(getopt, '\0', "term-unicode", "Enable or disable terminal unicode output.", true, nullptr, false, nullptr, getopt_set_term_unicode);
+    /* bool */ sass_getopt_register_option(getopt, '\0', "term-colors", "Enable or disable terminal ANSI color output.", true, nullptr, false, nullptr, getopt_set_term_colors);
+
   }
   // EO sass_getopt_populate_options
 

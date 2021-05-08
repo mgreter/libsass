@@ -487,7 +487,6 @@ namespace Sass {
           }
         }
 
-
         if (StringUtils::startsWith(url->value(), "sass:", 5)) {
 
           if (hasWith) {

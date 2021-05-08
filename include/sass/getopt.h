@@ -15,7 +15,7 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   // Just forward declare
-  struct SassOptionEnum;
+  struct SassGetOptEnum;
 
   // Struct must be known in order to access it in the callback
   // We don't expect this to change much once it is proven good
@@ -69,7 +69,7 @@ extern "C" {
     // Make argument optional
     const bool optional,
     // Arguments must be one of this enum
-    const struct SassOptionEnum* enums,
+    const struct SassGetOptEnum* enums,
     // Callback function, where we pass back the given option value
     void (*cb) (struct SassGetOpt* getopt, union SassOptionValue value));
 

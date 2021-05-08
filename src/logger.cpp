@@ -65,10 +65,10 @@ namespace Sass {
   void Logger::writeWarnHead(bool deprecation)
   {
     if (support_colors) {
-      logstrm << getColor(Terminal::yellow);
+      logstrm << getTerm(Terminal::yellow);
       if (!deprecation) logstrm << "Warning";
       else logstrm << "Deprecation Warning";
-      logstrm << getColor(Terminal::reset);
+      logstrm << getTerm(Terminal::reset);
     }
     else {
       if (!deprecation) logstrm << "WARNING";
@@ -209,11 +209,11 @@ namespace Sass {
 
       // Write intro line
       stream
-        << getColor(Terminal::blue)
+        << getTerm(Terminal::blue)
         << std::right << std::setfill(' ')
         << std::setw(padding) << ' '
         << ' ' << top
-        << getColor(Terminal::reset)
+        << getTerm(Terminal::reset)
         << STRMLF;
 
       for (size_t i = 0; i < lines.size(); i++) {
@@ -223,11 +223,11 @@ namespace Sass {
 
         // Write the line number and the code
         stream
-          << getColor(Terminal::blue)
+          << getTerm(Terminal::blue)
           << std::right << std::setfill(' ')
           << std::setw(padding) << (beg.line + i + 1)
           << ' ' << middle
-          << getColor(Terminal::reset)
+          << getTerm(Terminal::reset)
           << ' ';
 
         // Report the first line
@@ -243,17 +243,17 @@ namespace Sass {
             // Print the initial code line
             auto line_beg = lines[i].begin();
             utf8::advance(line_beg, beg.column, lines[i].end());
-            lines[i].insert(line_beg - lines[i].begin(), getColor(Terminal::red));
-            stream << "  " << lines[i] << getColor(Terminal::reset) << STRMLF;
+            lines[i].insert(line_beg - lines[i].begin(), getTerm(Terminal::red));
+            stream << "  " << lines[i] << getTerm(Terminal::reset) << STRMLF;
 
             // Print the line beneath
             stream
-              << getColor(Terminal::blue)
+              << getTerm(Terminal::blue)
               << std::right << std::setfill(' ')
               << std::setw(padding) << ' '
               << ' ' << middle << ' '
-              << getColor(Terminal::reset)
-              << getColor(Terminal::red)
+              << getTerm(Terminal::reset)
+              << getTerm(Terminal::red)
               << upper;
             // This needs a loop unfortunately
             size_t cols = beg.column;
@@ -263,15 +263,15 @@ namespace Sass {
             // Final indicator
             stream
               << '^'
-              << getColor(Terminal::reset)
+              << getTerm(Terminal::reset)
               << STRMLF;
           }
           // Just print the code line
           else {
             stream
-              << getColor(Terminal::red)
+              << getTerm(Terminal::red)
               << upper << ' ' << lines[i]
-              << getColor(Terminal::reset)
+              << getTerm(Terminal::reset)
               << STRMLF;
           }
         }
@@ -283,17 +283,17 @@ namespace Sass {
             // Print the final code line
             auto line_beg = lines[i].begin();
             utf8::advance(line_beg, end.column, lines[i].end());
-            lines[i].insert(line_beg - lines[i].begin(), getColor(Terminal::reset));
-            stream << getColor(Terminal::red) << middle << ' ' << lines[i] << STRMLF;
+            lines[i].insert(line_beg - lines[i].begin(), getTerm(Terminal::reset));
+            stream << getTerm(Terminal::red) << middle << ' ' << lines[i] << STRMLF;
 
             // Print the line beneath
             stream
-              << getColor(Terminal::blue)
+              << getTerm(Terminal::blue)
               << std::right << std::setfill(' ')
               << std::setw(padding) << ' '
               << ' ' << middle << ' '
-              << getColor(Terminal::reset)
-              << getColor(Terminal::red)
+              << getTerm(Terminal::reset)
+              << getTerm(Terminal::red)
               << lower;
             // This needs a loop unfortunately
             for (size_t n = 0; n < end.column; n++) {
@@ -302,35 +302,35 @@ namespace Sass {
             // Final indicator
             stream
               << '^'
-              << getColor(Terminal::reset)
+              << getTerm(Terminal::reset)
               << STRMLF;
           }
           else {
             // Just print the code line
             stream
-              << getColor(Terminal::red)
+              << getTerm(Terminal::red)
               << lower << ' ' << lines[i]
-              << getColor(Terminal::reset)
+              << getTerm(Terminal::reset)
               << STRMLF;
           }
         }
         else {
           // Just print the code line
           stream
-            << getColor(Terminal::red)
+            << getTerm(Terminal::red)
             << middle << ' ' << lines[i]
-            << getColor(Terminal::reset)
+            << getTerm(Terminal::reset)
             << STRMLF;
         }
       }
 
       // Write outro line
       stream
-        << getColor(Terminal::blue)
+        << getTerm(Terminal::blue)
         << std::right << std::setfill(' ')
         << std::setw(padding) << ' '
         << ' ' << bottom
-        << getColor(Terminal::reset)
+        << getTerm(Terminal::reset)
         << STRMLF;
 
     }
@@ -380,55 +380,55 @@ namespace Sass {
       stream
 
         // Write the leading line
-        << getColor(Terminal::blue)
+        << getTerm(Terminal::blue)
         << std::right << std::setfill(' ')
         << std::setw(padding) << ' '
         << ' ' << top
-        << getColor(Terminal::reset)
+        << getTerm(Terminal::reset)
 
         << STRMLF
 
         // Write the line number
-        << getColor(Terminal::blue)
+        << getTerm(Terminal::blue)
         << std::right << std::setfill(' ')
         << std::setw(padding) << (beg.line + 1)
         << ' ' << middle
-        << getColor(Terminal::reset)
+        << getTerm(Terminal::reset)
 
         << ' '
 
         // Write the parts
         << lhs
-        << getColor(Terminal::red)
+        << getTerm(Terminal::red)
         << mid
-        << getColor(Terminal::reset)
+        << getTerm(Terminal::reset)
         << rhs
 
         << STRMLF
 
         // Write left part of marker line
-        << getColor(Terminal::blue)
+        << getTerm(Terminal::blue)
         << std::right << std::setfill(' ')
         << std::setw(padding) << ' '
         << ' ' << middle
-        << getColor(Terminal::reset)
+        << getTerm(Terminal::reset)
 
         << ' '
 
         // Write the actual marker
         << sass::string(lhs_len, ' ')
-        << getColor(Terminal::red)
+        << getTerm(Terminal::red)
         << sass::string(mid_len ? mid_len : 1, '^')
-        << getColor(Terminal::reset)
+        << getTerm(Terminal::reset)
 
         << STRMLF
 
         // Write the trailing line
-        << getColor(Terminal::blue)
+        << getTerm(Terminal::blue)
         << std::right << std::setfill(' ')
         << std::setw(padding) << ' '
         << ' ' << bottom
-        << getColor(Terminal::reset)
+        << getTerm(Terminal::reset)
 
         << STRMLF;
 

@@ -134,7 +134,7 @@ jobs:
     - name: Call SassC make install
       run: sudo EXTRA_CFLAGS="$EXTRA_CFLAGS" EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS" EXTRA_LDFLAGS="$EXTRA_LDFLAGS" make -C sassc install
     - name: Check sassc help call
-      run: sassc --colors --help
+      run: sassc --term-colors --help
 
 
   windows-msvc:
@@ -180,7 +180,7 @@ jobs:
     - name: Compile libsass ${{ matrix.config.build }} build for ${{ matrix.config.platform }}
       run: msbuild /m:4 /p:Configuration=${{ matrix.config.build }} /p:Platform=${{ matrix.config.platform }} sassc\win\sassc.sln
     - name: Check sassc help call
-      run: sassc\bin\sassc.exe --colors --help
+      run: sassc\bin\sassc.exe --term-colors --help
     - name: Execute spec test runner
       if: matrix.config.build != 'Debug'
       run: ruby sass-spec/sass-spec.rb --probe-todo --impl libsass -c sassc/bin/sassc.exe -s sass-spec/spec
@@ -230,7 +230,7 @@ jobs:
     - name: Compile sassc ${{ matrix.config.build }} build for ${{ matrix.config.platform }}
       run: make -j5 sassc BUILD=${{ matrix.config.build }} CC=gcc
     - name: Check sassc help call
-      run: sassc\bin\sassc.exe --colors --help
+      run: sassc\bin\sassc.exe --term-colors --help
     - name: Execute spec test runner
       run: ruby sass-spec/sass-spec.rb --probe-todo --impl libsass -c sassc/bin/sassc.exe -s sass-spec/spec
 
