@@ -193,17 +193,17 @@ jobs:
       # fail-fast: false
       matrix:
         config:
-          - {build: shared, platform: x64, cflags: '-g -fsanitize=address'}
-          - {build: static, platform: x64, cflags: '-g -fsanitize=address'}
-          - {build: shared, platform: x86, cflags: '-g -fsanitize=address'}
-          - {build: static, platform: x86, cflags: '-g -fsanitize=address'}
+          - {build: shared, platform: x64}
+          - {build: static, platform: x64}
+          - {build: shared, platform: x86}
+          - {build: static, platform: x86}
 
     env:
       ASAN_OPTIONS: ${{ matrix.config.asan }}
       EXTRA_CFLAGS: ${{ matrix.config.cflags }}
       EXTRA_CXXFLAGS: ${{ matrix.config.cflags }}
-      SASS_LIBSASS_PATH: libsass
-      COVERAGE: no
+      #SASS_LIBSASS_PATH: libsass
+      #COVERAGE: no
 
     steps:
     - name: Change git config to preserve line-endings

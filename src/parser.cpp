@@ -674,12 +674,15 @@ namespace Sass {
     error("Expected " + name + ".",
       scanner.rawSpanFrom(start));
   }
+  // EO expectIdentifier
   
-  // Throws an error associated with [pstate].
-  void Parser::error(sass::string message, SourceSpan pstate) {
+  // Throws a parser error associated with [pstate].
+  void Parser::error(sass::string message, SourceSpan pstate)
+  {
     callStackFrame frame(compiler, BackTrace(pstate));
     throw Exception::ParserException(compiler, message);
   }
+  // EO error
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
