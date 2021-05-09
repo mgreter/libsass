@@ -304,7 +304,7 @@ namespace Sass {
     if (isIndented() && styles->empty()) {
       compiler.addWarning(
         "This selector doesn't have any properties and won't be rendered.",
-        itpl->pstate());
+        itpl ? itpl->pstate() : SourceSpan{});
     }
 
     return styles.detach();

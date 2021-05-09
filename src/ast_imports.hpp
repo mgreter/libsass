@@ -54,12 +54,7 @@ namespace Sass {
   // They also don't allow any supports or media queries.
   class IncludeImport final : public ImportBase, public ModRule
   {
-  private:
-    ADD_PROPERTY(bool, wasExported33);
   public:
-
-    const sass::vector<ResolvedImport>* candidates22 = nullptr;
-
     IncludeImport(const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,

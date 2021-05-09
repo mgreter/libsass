@@ -196,13 +196,15 @@ namespace Sass {
   public:
 
     // Value copy constructor
-    Statement(const SourceSpan& pstate)
-      : AstNode(pstate)
+    Statement(const SourceSpan& pstate) :
+      AstNode(pstate),
+      tabs_(0)
     {}
 
     // Value move constructor
-    Statement(SourceSpan&& pstate)
-      : AstNode(std::move(pstate))
+    Statement(SourceSpan&& pstate) :
+      AstNode(std::move(pstate)),
+      tabs_(0)
     {}
 
     // Copy constructor

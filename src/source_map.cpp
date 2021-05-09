@@ -96,7 +96,7 @@ namespace Sass {
   {
     if (out.srcmap) {
       Offset size(out.srcmap->position);
-      for (Mapping mapping : out.srcmap->mappings) {
+      for (const Mapping& mapping : out.srcmap->mappings) {
         if (mapping.target.line > size.line) {
           throw(std::runtime_error("prepend sourcemap has illegal line"));
         }

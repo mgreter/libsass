@@ -124,7 +124,8 @@ namespace Sass {
     Callable(SourceSpan::internal("[EXTERNAL]")),
     envkey_(fname),
     declaration_(parameters),
-    lambda_(lambda)
+    lambda_(lambda),
+    cookie_(nullptr)
   {}
 
   // Equality comparator (needed for `get-function` value)
