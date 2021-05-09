@@ -17,6 +17,7 @@ namespace Sass {
     indentation(0),
     scheduled_space(0),
     scheduled_linefeed(0),
+    force_next_mapping(false),
     scheduled_delimiter(false),
     scheduled_mapping(nullptr),
     in_custom_property(false),
