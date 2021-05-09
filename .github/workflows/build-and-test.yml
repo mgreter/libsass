@@ -44,8 +44,8 @@ jobs:
     env:
       ASAN_OPTIONS: ${{ matrix.config.asan }}
       AUTOTOOLS: ${{ matrix.config.autotools }}
-      EXTRA_CFLAGS: ${{ matrix.config.cflags }}
-      EXTRA_CXXFLAGS: ${{ matrix.config.cflags }}
+      EXTRA_CFLAGS: ${{ matrix.config.cflags }} -DDEBUG_SHARED_PTR
+      EXTRA_CXXFLAGS: ${{ matrix.config.cflags }} -DDEBUG_SHARED_PTR
       EXTRA_LDFLAGS: ${{ matrix.config.cflags }}
       SASS_LIBSASS_PATH: libsass
       COVERAGE: no
@@ -178,7 +178,7 @@ jobs:
     - name: Clone and checkout sass-spec repository
       run: git clone https://github.com/mgreter/sass-spec.git --branch refactor/libsass-4-alpha
     - name: Compile libsass ${{ matrix.config.build }} build for ${{ matrix.config.platform }}
-      run: msbuild /m:4 /p:Configuration=${{ matrix.config.build }} /p:Platform=${{ matrix.config.platform }} sassc\win\sassc.sln
+      run: msbuild /m:4 /p:Configuration=${{ matrix.config.build }} /p:Platform=${{ matrix.config.platform }} /p:DefineConstants="DEBUG_SHARED_PTR" sassc\win\sassc.sln
     - name: Check sassc help call
       run: sassc\bin\sassc.exe --term-colors --help
     - name: Execute spec test runner
@@ -193,10 +193,17 @@ jobs:
       # fail-fast: false
       matrix:
         config:
-          - {build: shared, platform: x64}
-          - {build: static, platform: x64}
-          - {build: shared, platform: x86}
-          - {build: static, platform: x86}
+          - {build: shared, platform: x64, cflags: '-g -fsanitize=address'}
+          - {build: static, platform: x64, cflags: '-g -fsanitize=address'}
+          - {build: shared, platform: x86, cflags: '-g -fsanitize=address'}
+          - {build: static, platform: x86, cflags: '-g -fsanitize=address'}
+
+    env:
+      ASAN_OPTIONS: ${{ matrix.config.asan }}
+      EXTRA_CFLAGS: ${{ matrix.config.cflags }} -DDEBUG_SHARED_PTR
+      EXTRA_CXXFLAGS: ${{ matrix.config.cflags }} -DDEBUG_SHARED_PTR
+      SASS_LIBSASS_PATH: libsass
+      COVERAGE: no
 
     steps:
     - name: Change git config to preserve line-endings

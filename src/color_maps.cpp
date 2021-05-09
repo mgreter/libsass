@@ -8,7 +8,10 @@
 namespace Sass
 {
 
-	namespace ColorNames
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  namespace ColorNames
 	{
 		const char aliceblue[] = "aliceblue";
 		const char antiquewhite[] = "antiquewhite";
@@ -161,7 +164,10 @@ namespace Sass
 		const char transparent[] = "transparent";
 	} // namespace ColorNames
 
-	namespace Colors
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  namespace Colors
 	{
 		const SourceSpan color_table(SourceSpan::internal("[COLOR TABLE]"));
 		const ColorRgba aliceblue(color_table, 240, 248, 255, 1);
@@ -315,7 +321,10 @@ namespace Sass
 		const ColorRgba transparent(color_table, 0, 0, 0, 0);
 	} // namespace Colors
 
-	static const auto* const colors_to_names = new std::unordered_map<int, const char*>{
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  static const auto* const colors_to_names = new std::unordered_map<int, const char*>{
 		{240 * 0x10000 + 248 * 0x100 + 255, ColorNames::aliceblue},
 		{250 * 0x10000 + 235 * 0x100 + 215, ColorNames::antiquewhite},
 		{0 * 0x10000 + 255 * 0x100 + 255, ColorNames::cyan},
@@ -455,6 +464,9 @@ namespace Sass
 		{255 * 0x10000 + 255 * 0x100 + 0, ColorNames::yellow},
 		{154 * 0x10000 + 205 * 0x100 + 50, ColorNames::yellowgreen},
 		{102 * 0x10000 + 51 * 0x100 + 153, ColorNames::rebeccapurple}};
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 	static const auto* const names_to_colors =
 		new std::unordered_map<sass::string, const ColorRgba*>{
@@ -608,6 +620,9 @@ namespace Sass
 			{ColorNames::rebeccapurple, &Colors::rebeccapurple},
 			{ColorNames::transparent, &Colors::transparent}};
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
 	const ColorRgba* name_to_color(const char* key)
 	{
 		return name_to_color(sass::string(key));
@@ -648,9 +663,7 @@ namespace Sass
 		return nullptr;
 	}
 
-	const char* color_to_name(const double key)
-	{
-		return color_to_name((int)key);
-	}
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 } // namespace Sass

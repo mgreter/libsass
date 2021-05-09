@@ -721,7 +721,7 @@ namespace Sass {
             ColorRgbaObj rgba = color->toRGBA();
             double numval = rgba->r() * 0x10000
               + rgba->g() * 0x100 + rgba->b();
-            if (const char* disp = color_to_name(numval)) {
+            if (const char* disp = color_to_name((int)numval)) {
               sass::sstream msg;
               msg << "You probably don't mean to use the color value ";
               msg << disp << " in interpolation here.\nIt may end up represented ";

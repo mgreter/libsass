@@ -320,7 +320,6 @@ namespace Sass {
   const ColorRgba* name_to_color(const char*);
   const ColorRgba* name_to_color(const sass::string&);
   const char* color_to_name(const int);
-  const char* color_to_name(const double);
 
 }
 

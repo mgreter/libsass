@@ -799,8 +799,8 @@ namespace Sass {
     // otherwise get the possible resolved color name
     else {
       double numval = r * 0x10000 + g * 0x100 + b;
-      if (color_to_name(numval))
-        res_name = color_to_name(numval);
+      if (color_to_name((int)numval))
+        res_name = color_to_name((int)numval);
     }
 
     sass::sstream hexlet;

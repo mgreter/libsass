@@ -126,10 +126,6 @@ namespace Sass {
     ModRule(
       prev, url,
       import)
-    // sheet_(sheet),
-    // prev_(prev),
-    // url_(url),
-    // module_(nullptr)
   {}
 
   //////////////////////////////////////////////////////////////////////
