@@ -114,7 +114,7 @@ namespace Sass {
     return containsDoubleQuote ? $apos : $quote;
   }
 
-  PlainCssCallable2::PlainCssCallable2(
+  PlainCssFunction::PlainCssFunction(
     SourceSpan pstate,
     Interpolation* itpl,
     CallableArguments* args,

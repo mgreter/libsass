@@ -173,7 +173,7 @@ extern "C" {
 
   // Getters and setters for Sass_List values
   struct SassValue* ADDCALL sass_list_get_value(struct SassValue* v, size_t i) { return Value::wrap(getList(v)->at(i)); } 
-  void ADDCALL sass_list_set_value(struct SassValue* v, size_t i, struct SassValue* value) { getList(v)->at(i) = getValue(value); }
+  void ADDCALL sass_list_set_value(struct SassValue* v, size_t i, struct SassValue* value) { getList(v)->set(i, getValue(value)); }
 
   // Getters and setters for Sass_Error
   const char* ADDCALL sass_error_get_message(struct SassValue* v) { return getError(v)->message().c_str(); };

@@ -702,10 +702,7 @@ namespace Sass {
     // Check if we have any parent
     // Meaning we append to the root
     if (!current->parent()) {
-      auto& target(current->elements());
-      target.insert(target.end(),
-        children.begin(),
-        children.end());
+      current->concat(children);
       return;
     }
     // Process all children to be added

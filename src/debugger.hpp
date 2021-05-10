@@ -933,7 +933,7 @@ inline void debug_ast(AstNode* node, std::string ind)
   }
 
 
-  else if (PlainCssCallable2* ruleset = Cast<PlainCssCallable2>(node)) {
+  else if (PlainCssFunction* ruleset = Cast<PlainCssFunction>(node)) {
     std::cerr << ind << "PlainCssCallable " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";

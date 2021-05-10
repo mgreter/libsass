@@ -65,7 +65,7 @@ namespace Sass {
     LOCAL_PTR(Root, modctx, root);
 
     // Get reference to (not yet) parsed children
-    StatementVector& children(root->elements());
+    StatementVector& children(root->elements43());
 
     // Check seems a bit esoteric but works
     if (compiler.included_sources.size() == 1) {
@@ -2965,9 +2965,8 @@ namespace Sass {
 
       // Plain Css as it's interpolated
       if (identifier->getPlainString().empty()) {
-        PlainCssCallable2Obj fn = SASS_MEMORY_NEW(PlainCssCallable2,
+        return SASS_MEMORY_NEW(PlainCssFunction,
           scanner.relevantSpanFrom(start), itpl, args, ns);
-        return fn.detach();
       }
 
       return SASS_MEMORY_NEW(FunctionExpression,
@@ -2980,9 +2979,8 @@ namespace Sass {
 
       // Plain Css as it's interpolated
       if (identifier->getPlainString().empty()) {
-        PlainCssCallable2Obj fn = SASS_MEMORY_NEW(PlainCssCallable2,
+        return SASS_MEMORY_NEW(PlainCssFunction,
           scanner.relevantSpanFrom(start), identifier, args, ns);
-        return fn.detach();
       }
 
       FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
@@ -3285,9 +3283,8 @@ namespace Sass {
 
     // Plain Css as it's interpolated
     if (itpl->getPlainString().empty()) {
-      PlainCssCallable2Obj fn = SASS_MEMORY_NEW(PlainCssCallable2,
+      return SASS_MEMORY_NEW(PlainCssFunction,
         scanner.relevantSpanFrom(start), itpl, args, "");
-      return fn.detach();
     }
 
     return SASS_MEMORY_NEW(FunctionExpression,

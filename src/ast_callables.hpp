@@ -1,6 +1,11 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// This file was deliberately split from `ast_callable.hpp`. It contains
+// all the specialized implementations for callables. These often need
+// access to higher level classes, which poses include dependency issues
+// if everything would be defined in a single header file.
+/*****************************************************************************/
 #ifndef SASS_AST_CALLABLES_HPP
 #define SASS_AST_CALLABLES_HPP
 
@@ -18,15 +23,14 @@
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
+  // Internal callables provided by LibSass itself.
   /////////////////////////////////////////////////////////////////////////
-
   class BuiltInCallable final : public Callable {
 
-    // The function name
+    // Name of this callable/function
     ADD_CONSTREF(EnvKey, envkey);
 
-    ADD_CONSTREF(CallableSignatureObj, parameters);
-
+    // Pair of signature and callback
     ADD_REF(SassFnPair, function);
 
   public:
@@ -37,7 +41,7 @@ namespace Sass {
     // Throws a [SassFormatException] if parsing fails.
     BuiltInCallable(
       const EnvKey& fname,
-      CallableSignature* parameters,
+      CallableSignature* signature,
       const SassFnSig& callback);
 
     // Return callback with matching signature
@@ -53,15 +57,16 @@ namespace Sass {
     // Equality comparator (needed for `get-function` value)
     bool operator==(const Callable& rhs) const override final;
 
+    // Define isaBuiltInCallable up-cast function
     IMPLEMENT_ISA_CASTER(BuiltInCallable);
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // Internal callable with multiple signatures to choose from.
   /////////////////////////////////////////////////////////////////////////
-
   class BuiltInCallables final : public Callable {
 
-    // The function name
+    // Name of this callable/function
     ADD_CONSTREF(EnvKey, envkey);
 
     // The overloads declared for this callable.
@@ -91,12 +96,13 @@ namespace Sass {
     // Equality comparator (needed for `get-function` value)
     bool operator==(const Callable& rhs) const override final;
 
+    // Define isaBuiltInCallables up-cast function
     IMPLEMENT_ISA_CASTER(BuiltInCallables);
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // User defined callable from sass code (functions and mixins)
   /////////////////////////////////////////////////////////////////////////
-
   class UserDefinedCallable final : public Callable
   {
   private:
@@ -126,13 +132,13 @@ namespace Sass {
     // Equality comparator (needed for `get-function` value)
     bool operator==(const Callable& rhs) const override final;
 
+    // Define isaUserDefinedCallable up-cast function
     IMPLEMENT_ISA_CASTER(UserDefinedCallable);
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // External callable defined on the C-API side.
   /////////////////////////////////////////////////////////////////////////
-
-  // ToDo: this could be struct SassFunction!?
   class ExternalCallable final : public Callable
   {
   private:
@@ -154,11 +160,6 @@ namespace Sass {
       CallableSignature* parameters,
       SassFunctionLambda function);
 
-    // Destructor
-    ~ExternalCallable() override final {
-      // sass_delete_function(function_);
-    }
-
     // The main entry point to execute the function (implemented in each specialization)
     Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate) override final;
 
@@ -168,6 +169,7 @@ namespace Sass {
     // Equality comparator (needed for `get-function` value)
     bool operator==(const Callable& rhs) const override final;
 
+    // Define isaExternalCallable up-cast function
     IMPLEMENT_ISA_CASTER(ExternalCallable);
   };
 

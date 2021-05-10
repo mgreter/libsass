@@ -47,7 +47,7 @@ namespace Sass {
 
   class Callable;
   class UserDefinedCallable;
-  class PlainCssCallable2;
+  class PlainCssFunction;
   class ExternalCallable;
   class BuiltInCallables;
   class BuiltInCallable;
@@ -227,7 +227,7 @@ namespace Sass {
   IMPL_MEM_OBJ(CssSupportsRule);
   IMPL_MEM_OBJ(Callable);
   IMPL_MEM_OBJ(UserDefinedCallable);
-  IMPL_MEM_OBJ(PlainCssCallable2);
+  IMPL_MEM_OBJ(PlainCssFunction);
   IMPL_MEM_OBJ(ExternalCallable);
   IMPL_MEM_OBJ(BuiltInCallable);
   IMPL_MEM_OBJ(BuiltInCallables);

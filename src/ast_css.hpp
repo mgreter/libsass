@@ -308,6 +308,7 @@ namespace Sass {
       return SASS_MEMORY_NEW_DBG(CssAtRule, this);
     }
 
+    // Define isaCssAtRule up-cast function
     IMPLEMENT_ISA_CASTER(CssAtRule);
   };
 
@@ -390,6 +391,7 @@ namespace Sass {
       return SASS_MEMORY_NEW_DBG(CssStyleRule, this, childless);
     }
 
+    // Define isaCssStyleRule up-cast function
     IMPLEMENT_ISA_CASTER(CssStyleRule);
   };
 
@@ -429,6 +431,7 @@ namespace Sass {
       return SASS_MEMORY_NEW_DBG(CssSupportsRule, this, childless);
     }
 
+    // Define isaCssSupportsRule up-cast function
     IMPLEMENT_ISA_CASTER(CssSupportsRule);
   };
 
@@ -539,6 +542,7 @@ namespace Sass {
       return SASS_MEMORY_NEW_DBG(CssMediaRule, this, childless);
     }
 
+    // Define isaCssMediaRule up-cast function
     IMPLEMENT_ISA_CASTER(CssMediaRule);
   };
   // EO CssMediaRule

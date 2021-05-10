@@ -1212,7 +1212,7 @@ namespace Sass {
     strm += ")";
   }
 
-  Value* Eval::visitCssFunction(PlainCssCallable2* cssfn)
+  Value* Eval::visitCssFunction(PlainCssFunction* cssfn)
   {
     // return ex->expression();
     if (cssfn->itpl()) {

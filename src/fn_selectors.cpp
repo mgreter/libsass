@@ -105,7 +105,7 @@ namespace Sass {
                   "Can't append " + slist->inspect() + " to " +
                   reduced->inspect() + ".");
               }
-              complex->at(0) = compound;
+              complex->set(0, compound);
             }
             else {
               throw Exception::RuntimeException(compiler,

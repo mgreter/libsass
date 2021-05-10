@@ -43,7 +43,7 @@ namespace Sass {
         if (eval.assigne && eval.assigne->ptr() == input && input->refcount < AssignableRefCount) {
           if (List* lst = input->isaList()) {
             size_t idx = input->sassIndexToListIndex(index, compiler, "n");
-            lst->at(idx) = arguments[2];
+            lst->set(idx, arguments[2]);
             return lst;
           }
         }
@@ -103,12 +103,11 @@ namespace Sass {
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
         if (eval.assigne && eval.assigne->ptr() == list2 && list2->refcount < AssignableRefCount) {
           if (List* lst = list2->isaList()) {
-            ValueVector& values(lst->elements());
             lst->separator(separator);
             lst->hasBrackets(bracketed);
             auto it2 = list2->iterator();
-            values.insert(values.end(),
-              it2.begin(), it2.end());
+            // Doesn't need make_move_iterator!?
+            lst->concat({ it2.begin(), it2.end() });
             return lst;
           }
         }

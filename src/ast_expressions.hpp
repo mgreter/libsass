@@ -320,7 +320,7 @@ namespace Sass {
   // A plain css function (not executed, simply put back in)
   /////////////////////////////////////////////////////////////////////////
 
-  class PlainCssCallable2 final : public Expression
+  class PlainCssFunction final : public Expression
   {
   private:
     ADD_CONSTREF(InterpolationObj, itpl);
@@ -328,7 +328,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, ns);
   public:
     // Value constructor
-    PlainCssCallable2(
+    PlainCssFunction(
       SourceSpan pstate,
       Interpolation* itpl,
       CallableArguments* args,
@@ -349,8 +349,8 @@ namespace Sass {
   public:
     InvocationExpression(SourceSpan&& pstate,
       CallableArguments* arguments) :
-      arguments_(arguments),
-      Expression(std::move(pstate))
+      Expression(std::move(pstate)),
+      arguments_(arguments)
     {}
   };
 

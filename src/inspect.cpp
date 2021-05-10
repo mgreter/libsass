@@ -310,7 +310,7 @@ namespace Sass {
   void Inspect::visitCssRoot(CssRoot* block)
   {
     for (size_t i = 0, L = block->size(); i < L; ++i) {
-      (*block)[i]->accept(this); // XX
+      block->get(i)->accept(this); // XX
     }
 
   }
@@ -483,7 +483,7 @@ namespace Sass {
 
     schedule_mapping(complex->last());
 
-    for (SelectorComponentObj& item : complex->elements()) {
+    for (const SelectorComponentObj& item : complex->elements()) {
       if (many) append_mandatory_space();
       if (SelectorCombinator* combinator = item->isaSelectorCombinator()) {
         visitSelectorCombinator(combinator);
@@ -509,7 +509,7 @@ namespace Sass {
       }
     }
 
-    for (SimpleSelectorObj& item : compound->elements()) {
+    for (const SimpleSelectorObj& item : compound->elements()) {
       item->accept(this);
     }
 
@@ -611,7 +611,7 @@ namespace Sass {
     for (size_t i = 0, L = list->size(); i < L; ++i) {
 
       if (i == 0) append_indentation();
-      if ((*list)[i] == nullptr) continue;
+      if (list->get(i) == nullptr) continue;
       if (list->get(i)->hasPreLineFeed()) {
         append_optional_linefeed();
       }

@@ -253,9 +253,8 @@ namespace Sass {
     
     // Plain Css as it's interpolated
     if (name->getPlainString().empty()) {
-      PlainCssCallable2Obj fn = SASS_MEMORY_NEW(PlainCssCallable2,
+      return SASS_MEMORY_NEW(PlainCssFunction,
         scanner.relevantSpanFrom(start), name, args, "");
-      return fn.detach();
     }
 
     return SASS_MEMORY_NEW(FunctionExpression,

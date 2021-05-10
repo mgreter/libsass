@@ -28,7 +28,7 @@ namespace Sass {
     virtual T visitMapExpression(MapExpression*) = 0;
     virtual T visitNullExpression(NullExpression*) = 0;
     virtual T visitNumberExpression(NumberExpression*) = 0;
-    virtual T visitCssFunction(PlainCssCallable2*) = 0;
+    virtual T visitCssFunction(PlainCssFunction*) = 0;
     virtual T visitParenthesizedExpression(ParenthesizedExpression*) = 0;
     virtual T visitParentExpression(ParentExpression*) = 0;
     virtual T visitStringExpression(StringExpression*) = 0;

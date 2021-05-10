@@ -587,7 +587,7 @@ namespace Sass {
   {
     ListObj list = SASS_MEMORY_NEW(List,
       pstate(), {}, SASS_COMMA);
-    list->elements().reserve(size());
+//    list->reserve(size());
     for (ComplexSelector* complex : elements()) {
       list->append(complex->toList());
     }
@@ -647,10 +647,9 @@ namespace Sass {
               name += simple_front->name();
               simple_back->name(name);
               // Replace with modified simple selector
-              tail->elements().back() = simple_back;
+              tail->set_last(simple_back);
               // Append rest of selector components
-              tail->elements().insert(tail->end(),
-                begin() + 1, end());
+              tail->concat({ begin() + 1, end() });
             }
             else {
               // Append us to parent
@@ -663,7 +662,7 @@ namespace Sass {
           }
           // Reset the parent selector tail with
           // the combination of parent plus ourself
-          complex->elements().back() = tail;
+          complex->elements43().back() = tail;
           // Append to results
           rv.emplace_back(complex);
         }

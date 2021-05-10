@@ -304,7 +304,7 @@ protected:
     Value* visitMapExpression(MapExpression*);
     Value* visitNullExpression(NullExpression*);
     Value* visitNumberExpression(NumberExpression*);
-    Value* visitCssFunction(PlainCssCallable2*);
+    Value* visitCssFunction(PlainCssFunction*);
     Value* visitParenthesizedExpression(ParenthesizedExpression*);
     Value* visitParentExpression(ParentExpression*);
     Value* visitStringExpression(StringExpression*);

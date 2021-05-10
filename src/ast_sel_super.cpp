@@ -241,7 +241,7 @@ namespace Sass {
 
     }
     else if (name == "not") {
-      for (ComplexSelectorObj& complex : pseudo1->selector()->elements()) {
+      for (const ComplexSelectorObj& complex : pseudo1->selector()->elements()) {
         if (!pseudoNotIsSuperselectorOfCompound(pseudo1, compound2, complex)) return false;
       }
       return true;

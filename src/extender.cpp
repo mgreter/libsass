@@ -191,7 +191,7 @@ namespace Sass {
 
       SelectorListObj res = extendList(selector, extensions, mediaContext);
 
-      selector->elementsM(res->elements());
+      if (res) *selector = std::move(*res);
 
     }
 
@@ -400,7 +400,7 @@ namespace Sass {
       // If no extends actually happened (for example because unification
       // failed), we don't need to re-register the selector.
       if (ObjEqualityFn(oldValue, ext)) continue;
-      rule->elementsM(std::move(ext->elements()));
+      *rule = std::move(*ext);
       registerSelector(rule, rule);
 
     }
@@ -640,7 +640,6 @@ namespace Sass {
             cplx->hasPreLineFeed(true);
           }
         }
-        cplx->elementsM(std::move(components));
 
         // Make sure that copies of [complex] retain their status
         // as "original" selectors. This includes selectors that
@@ -869,9 +868,9 @@ namespace Sass {
       }
 
       for (SelectorComponentVector& components : complexes) {
-        auto sel = SASS_MEMORY_NEW(ComplexSelector, compound->pstate());
+        auto sel = SASS_MEMORY_NEW(ComplexSelector,
+          compound->pstate(), std::move(components));
         sel->hasPreLineFeed(lineBreak);
-        sel->elementsM(std::move(components));
         unifiedPaths.emplace_back(sel);
       }
 

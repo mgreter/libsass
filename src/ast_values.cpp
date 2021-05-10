@@ -1316,8 +1316,8 @@ namespace Sass {
     auto kv = elements_.begin() + idx;
     // ToDo: really can't re-use memory?
     if (false && itpair->size() == 2) {
-      itpair->get(0) = kv->first;
-      itpair->get(1) = kv->second;
+      itpair->set(0, kv->first);
+      itpair->set(1, kv->second);
     }
     else {
       itpair = SASS_MEMORY_NEW(

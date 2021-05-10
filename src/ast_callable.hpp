@@ -22,8 +22,8 @@ namespace Sass {
   typedef sass::vector<SassFnPair> SassFnPairs;
 
   /////////////////////////////////////////////////////////////////////////
+  // Base class for everything that can be called on demand.
   /////////////////////////////////////////////////////////////////////////
-
   class Callable : public AstNode
   {
   public:
@@ -46,13 +46,12 @@ namespace Sass {
     // Declare up-casting methods
     DECLARE_ISA_CASTER(BuiltInCallable);
     DECLARE_ISA_CASTER(BuiltInCallables);
-    DECLARE_ISA_CASTER(PlainCssCallable2);
     DECLARE_ISA_CASTER(UserDefinedCallable);
     DECLARE_ISA_CASTER(ExternalCallable);
   };
 
   /////////////////////////////////////////////////////////////////////////
-  // Individual argument objects for mixin and function calls.
+  // Individual argument object for function signatures.
   /////////////////////////////////////////////////////////////////////////
   class Argument final : public AstNode
   {
@@ -76,7 +75,7 @@ namespace Sass {
 
   //////////////////////////////////////////////////////////////////////
   // Object for the function signature holding which parameters a
-  // callable can have or expects and to which variable it's assigned.
+  // callable can have or expects, with optional rest arguments.
   //////////////////////////////////////////////////////////////////////
   class CallableSignature final : public AstNode
   {
@@ -86,7 +85,6 @@ namespace Sass {
     ADD_REF(sass::vector<ArgumentObj>, arguments);
 
     // The name of the rest argument (as in `$args...`),
-    // or `null` if none was declared.
     ADD_CONSTREF(EnvKey, restArg);
 
     // This is only used for debugging

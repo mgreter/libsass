@@ -52,25 +52,34 @@ namespace Sass {
       if (!childless) elements_ = std::move(vec);
     }
 
-    // Allow destructor overloading
-    // virtual ~Vectorized() {};
-
     // Some simple method delegations
-    T& last() { return elements_.back(); }
-    T& first() { return elements_.front(); }
-    const T& last() const { return elements_.back(); }
-    const T& first() const { return elements_.front(); }
-    bool empty() const { return elements_.empty(); }
     void clear() { return elements_.clear(); }
     size_t size() const { return elements_.size(); }
+    bool empty() const { return elements_.empty(); }
+    const T& at(size_t i) const { return elements_.at(i); }
+    const T& get(size_t i) const { return elements_[i]; }
+    const T& last() const { return elements_.back(); }
+    const T& first() const { return elements_.front(); }
+
+    // Setter to ensure we reset hash value
+    void set(size_t i, const T& value) {
+      hash_ = 0; // reset hash
+      elements_.at(i) = value;
+    }
+
+    // Setter to ensure we reset hash value
+    void set_last(const T& value) {
+      hash_ = 0; // reset hash
+      elements_.back() = value;
+    }
 
     // Check underlying containers for equality
-    // Note: maybe we could gain some speed by checking
-    // the computed hash first, before doing full test?
     bool operator== (const Vectorized<V>& rhs) const
     {
       // Abort early if sizes do not match
       if (size() != rhs.size()) return false;
+      // Abort early if hashes exist and don't match
+      if (hash_ && rhs.hash_ && hash_ != rhs.hash_) return false;
       // Otherwise test each node for object equality in order
       return std::equal(begin(), end(), rhs.begin(), ObjEqualityFn<T>);
     }
@@ -80,15 +89,6 @@ namespace Sass {
     {
       return !(*this == rhs);
     }
-
-    T& at(size_t i) { return elements_.at(i); }
-    T& get(size_t i) { return elements_[i]; }
-    T& operator[](size_t i) { return elements_[i]; }
-
-    const T& at(size_t i) const { return elements_.at(i); }
-    const T& get(size_t i) const { return elements_[i]; }
-    // ToDo: might insert am item? (update ordered list)
-    const T& operator[](size_t i) const { return elements_[i]; }
 
     // Implicitly get the sass::vector from our object
     // Makes the Vector directly assignable to sass::vector
@@ -102,13 +102,14 @@ namespace Sass {
     // You are responsible to make a copy if needed
     // Note: since this returns the real object, we can't
     // Note: guarantee that the hash will not get out of sync
-    sass::vector<T>& elements() { return elements_; }
+    sass::vector<T>& elements43() { return elements_; }
     const sass::vector<T>& elements() const { return elements_; }
 
     // Insert all items from compatible vector
     void concat(const sass::vector<T>& v)
     {
       if (v.empty()) return;
+      hash_ = 0; // reset hash
       elements_.insert(end(),
         v.begin(), v.end());
     }
@@ -117,6 +118,7 @@ namespace Sass {
     void concat(sass::vector<T>&& v)
     {
       if (v.empty()) return;
+      hash_ = 0; // reset hash
       elements_.insert(elements_.end(),
         std::make_move_iterator(v.begin()),
         std::make_move_iterator(v.end()));
@@ -133,6 +135,7 @@ namespace Sass {
     // Insert one item on the front
     void unshift(const T& element)
     {
+      hash_ = 0; // reset hash
       elements_.insert(begin(),
         std::copy(element));
     }
@@ -140,6 +143,7 @@ namespace Sass {
     // Insert one item on the front
     void unshift(T&& element)
     {
+      hash_ = 0; // reset hash
       elements_.insert(begin(),
         std::move(element));
     }
@@ -147,6 +151,7 @@ namespace Sass {
     // Remove and return item on the front
     T shift() {
       T head = first();
+      hash_ = 0; // reset hash
       elements_.erase(begin());
       return head;
     }
@@ -154,6 +159,7 @@ namespace Sass {
     // Remove and return item on the back
     T pop() {
       T tail = last();
+      hash_ = 0; // reset hash
       elements_.pop_back();
       return tail;
     }
@@ -162,6 +168,7 @@ namespace Sass {
     // ToDo: rename this to push?
     void append(const T& element)
     {
+      hash_ = 0; // reset hash
       elements_.emplace_back(element);
     }
 
@@ -169,6 +176,7 @@ namespace Sass {
     // ToDo: rename this to push?
     void append(T&& element)
     {
+      hash_ = 0; // reset hash
       elements_.emplace_back(std::move(element));
     }
 
@@ -200,18 +208,6 @@ namespace Sass {
         }
       }
       return false;
-    }
-
-    // This might be better implemented as `operator=`?
-    void elementsM(const sass::vector<T>& e)
-    {
-      elements_ = e;
-    }
-
-    // This might be better implemented as `operator=`?
-    void elementsM(sass::vector<T>&& e)
-    {
-      elements_ = std::move(e);
     }
 
     template <typename P>
@@ -374,14 +370,14 @@ namespace Sass {
       return elements_;
     }
 
-    const sass::vector<K> keys() const {
+    sass::vector<K> keys() const {
       sass::vector<T> list;
       for (auto kv : elements_) {
         list.emplace_back(kv.first);
       }
       return list;
     }
-    const sass::vector<T> values() const {
+    sass::vector<T> values() const {
       sass::vector<T> list;
       for (auto kv : elements_) {
         list.emplace_back(kv.second);

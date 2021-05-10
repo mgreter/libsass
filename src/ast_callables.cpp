@@ -22,12 +22,12 @@ namespace Sass {
 
   BuiltInCallable::BuiltInCallable(
     const EnvKey& envkey,
-    CallableSignature* parameters,
+    CallableSignature* signature,
     const SassFnSig& callback) :
     Callable(SourceSpan::internal("[BUILTIN]")),
     envkey_(envkey),
     // Create a single entry in overloaded function
-    function_(SassFnPair{ parameters, callback })
+    function_(SassFnPair{ signature, callback })
   {}
 
   // Return callback with matching signature
@@ -170,7 +170,7 @@ namespace Sass {
     }
   }
 
-  // Parse source into arguments
+  // Parse `source` into signature
   CallableSignature* CallableSignature::parse(
     Compiler& context, SourceData* source)
   {

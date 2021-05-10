@@ -133,7 +133,7 @@ namespace Sass {
       if (unified == nullptr) {
         return nullptr;
       }
-      rhs->elements()[0] = unified;
+      rhs->set(0, unified);
     }
     else if (!isUniversal() || (hasNs_ && ns_ != "*")) {
       rhs->insert(rhs->begin(), this);
@@ -257,18 +257,19 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   SelectorList* SelectorList::unifyWith(SelectorList* rhs)
   {
-    SelectorList* slist = SASS_MEMORY_NEW(SelectorList, pstate());
+    sass::vector<ComplexSelectorObj> selectors;
     // Unify all of children with RHS's children,
     // storing the results in `unified_complex_selectors`
-    for (ComplexSelectorObj& seq1 : elements()) {
-      for (ComplexSelectorObj& seq2 : rhs->elements()) {
+    for (const ComplexSelectorObj& seq1 : elements()) {
+      for (const ComplexSelectorObj& seq2 : rhs->elements()) {
         if (SelectorListObj unified = seq1->unifyWith(seq2)) {
           std::move(unified->begin(), unified->end(),
-            std::inserter(slist->elements(), slist->end()));
+            std::inserter(selectors, selectors.end()));
         }
       }
     }
-    return slist;
+    return SASS_MEMORY_NEW(SelectorList,
+      pstate(), std::move(selectors));
   }
   // EO SelectorList::unifyWith(SelectorList*)
 
