@@ -25,7 +25,7 @@ namespace Sass {
     // The function name
     ADD_CONSTREF(EnvKey, envkey);
 
-    ADD_CONSTREF(ArgumentDeclarationObj, parameters);
+    ADD_CONSTREF(CallableSignatureObj, parameters);
 
     ADD_REF(SassFnPair, function);
 
@@ -37,7 +37,7 @@ namespace Sass {
     // Throws a [SassFormatException] if parsing fails.
     BuiltInCallable(
       const EnvKey& fname,
-      ArgumentDeclaration* parameters,
+      CallableSignature* parameters,
       const SassFnSig& callback);
 
     // Return callback with matching signature
@@ -45,7 +45,7 @@ namespace Sass {
       const ArgumentResults& evaluated);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
+    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }
@@ -83,7 +83,7 @@ namespace Sass {
       const ArgumentResults& evaluated);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
+    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }
@@ -118,7 +118,7 @@ namespace Sass {
       UserDefinedCallable* content);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
+    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }
@@ -140,7 +140,7 @@ namespace Sass {
     // Name of this callable (used for reporting)
     ADD_CONSTREF(EnvKey, envkey);
     // The declaration (parameters this function takes).
-    ADD_CONSTREF(ArgumentDeclarationObj, declaration);
+    ADD_CONSTREF(CallableSignatureObj, declaration);
     // The attached external callback reference
     ADD_PROPERTY(SassFunctionLambda, lambda);
     // The attached external data cookie
@@ -151,7 +151,7 @@ namespace Sass {
     // Value constructor
     ExternalCallable(
       const EnvKey& fname,
-      ArgumentDeclaration* parameters,
+      CallableSignature* parameters,
       SassFunctionLambda function);
 
     // Destructor
@@ -160,7 +160,7 @@ namespace Sass {
     }
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) override final;
+    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate) override final;
 
     // Return the function name
     const sass::string& name() const override final { return envkey_.norm(); }

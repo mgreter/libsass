@@ -53,9 +53,8 @@ namespace Sass {
   class BuiltInCallable;
 
   class ArgumentResults;
-  class CallableInvocation;
-  class ArgumentInvocation;
-  class ArgumentDeclaration;
+  class CallableArguments;
+  class CallableSignature;
   class CallableDeclaration;
   class FunctionRule;
   class IncludeRule;
@@ -255,9 +254,8 @@ namespace Sass {
   IMPL_MEM_OBJ(SilentComment);
   IMPL_MEM_OBJ(ParentStatement);
   IMPL_MEM_OBJ(CssParentNode);
-  IMPL_MEM_OBJ(CallableInvocation);
-  IMPL_MEM_OBJ(ArgumentInvocation);
-  IMPL_MEM_OBJ(ArgumentDeclaration);
+  IMPL_MEM_OBJ(CallableArguments);
+  IMPL_MEM_OBJ(CallableSignature);
   IMPL_MEM_OBJ(IfRule);
   IMPL_MEM_OBJ(ForRule);
   IMPL_MEM_OBJ(EachRule);
@@ -365,7 +363,6 @@ namespace Sass {
   DECLARE_BASE_CAST(Statement)
   DECLARE_BASE_CAST(ParentStatement)
   DECLARE_BASE_CAST(CssParentNode)
-  DECLARE_BASE_CAST(CallableInvocation)
   DECLARE_BASE_CAST(Value)
   DECLARE_BASE_CAST(Callable)
   DECLARE_BASE_CAST(Color)

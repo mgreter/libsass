@@ -420,8 +420,8 @@ namespace Sass {
             ValueExpression, map->pstate(), map);
         }
 
-        ArgumentInvocationObj invocation = SASS_MEMORY_NEW(
-          ArgumentInvocation, pstate, ExpressionVector{}, {}, restArg, kwdRest);
+        CallableArgumentsObj invocation = SASS_MEMORY_NEW(
+          CallableArguments, pstate, ExpressionVector{}, {}, restArg, kwdRest);
 
         if (String * str = function->isaString()) {
           sass::string name = str->value();

@@ -324,14 +324,14 @@ namespace Sass {
   {
   private:
     ADD_CONSTREF(InterpolationObj, itpl);
-    ADD_CONSTREF(ArgumentInvocationObj, args);
+    ADD_CONSTREF(CallableArgumentsObj, args);
     ADD_CONSTREF(sass::string, ns);
   public:
     // Value constructor
     PlainCssCallable2(
       SourceSpan pstate,
       Interpolation* itpl,
-      ArgumentInvocation* args,
+      CallableArguments* args,
       const sass::string& ns);
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
@@ -343,14 +343,13 @@ namespace Sass {
   // Base class for `IfExpression` and `FunctionExpression`
   /////////////////////////////////////////////////////////////////////////
 
-  class InvocationExpression :
-    public CallableInvocation,
-    public Expression
+  class InvocationExpression : public Expression
   {
+    ADD_CONSTREF(CallableArgumentsObj, arguments);
   public:
     InvocationExpression(SourceSpan&& pstate,
-      ArgumentInvocation* arguments) :
-      CallableInvocation(arguments),
+      CallableArguments* arguments) :
+      arguments_(arguments),
       Expression(std::move(pstate))
     {}
   };
@@ -361,9 +360,9 @@ namespace Sass {
   class IfExpression final : public InvocationExpression
   {
   public:
-    static ArgumentDeclarationObj prototype;
+    static CallableSignatureObj prototype;
     IfExpression(SourceSpan pstate,
-      ArgumentInvocation* arguments) :
+      CallableArguments* arguments) :
       InvocationExpression(std::move(pstate), arguments)
     {
     }
@@ -397,7 +396,7 @@ namespace Sass {
   public:
     FunctionExpression(SourceSpan pstate,
       const sass::string& name,
-      ArgumentInvocation* arguments,
+      CallableArguments* arguments,
       bool withinLoop,
       const sass::string& ns = "");
 

@@ -967,7 +967,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     debug_ast(ruleset->arguments(), ind + "$");
     debug_block(ruleset, ind + " ");
   }
-  else if (ArgumentDeclaration* args = Cast<ArgumentDeclaration>(node)) {
+  else if (CallableSignature* args = Cast<CallableSignature>(node)) {
     std::cerr << ind << "MixinRArgumentDeclarationule " << args;
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";
@@ -1023,9 +1023,9 @@ inline void debug_ast(AstNode* node, std::string ind)
     // sass::string name(expression->name());
     // if (env && env->has(name)) debug_ast(Cast<Expression>((*env)[name]), ind + " -> ");
   }
-  else if (Cast<ArgumentInvocation>(node)) {
-    ArgumentInvocation* arguments = Cast<ArgumentInvocation>(node);
-    std::cerr << ind << "ArgumentInvocation " << arguments;
+  else if (Cast<CallableArguments>(node)) {
+    CallableArguments* arguments = Cast<CallableArguments>(node);
+    std::cerr << ind << "CallableArguments " << arguments;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << std::endl;
     // std::cerr << ind << " positional: " << debug_vec(arguments->positional()) << "\n";

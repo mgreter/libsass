@@ -360,7 +360,7 @@ namespace Sass {
   CallableDeclaration::CallableDeclaration(
     SourceSpan&& pstate,
     const EnvKey& name,
-    ArgumentDeclaration* arguments,
+    CallableSignature* arguments,
     StatementVector&& children,
     SilentComment* comment,
     EnvRefs* idxs) :
@@ -380,10 +380,10 @@ namespace Sass {
     SourceSpan&& pstate,
     const EnvKey& name,
     const sass::string& ns,
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     ContentBlock* content) :
     Statement(std::move(pstate)),
-    CallableInvocation(arguments),
+    arguments_(arguments),
     ns_(ns),
     name_(name),
     content_(content)
@@ -399,7 +399,7 @@ namespace Sass {
 
   ContentBlock::ContentBlock(
     SourceSpan&& pstate,
-    ArgumentDeclaration* arguments,
+    CallableSignature* arguments,
     EnvRefs* idxs,
     StatementVector&& children,
     SilentComment* comment) :
@@ -417,7 +417,7 @@ namespace Sass {
   FunctionRule::FunctionRule(
     SourceSpan&& pstate,
     const EnvKey& name,
-    ArgumentDeclaration* arguments,
+    CallableSignature* arguments,
     EnvRefs* idxs,
     StatementVector&& children,
     SilentComment* comment) :
@@ -434,7 +434,7 @@ namespace Sass {
   MixinRule::MixinRule(
     SourceSpan&& pstate,
     const sass::string& name,
-    ArgumentDeclaration* arguments,
+    CallableSignature* arguments,
     EnvRefs* idxs,
     StatementVector&& children,
     SilentComment* comment) :
@@ -490,7 +490,7 @@ namespace Sass {
 
   ContentRule::ContentRule(
     SourceSpan&& pstate,
-    ArgumentInvocation* arguments) :
+    CallableArguments* arguments) :
     Statement(std::move(pstate)),
     arguments_(arguments)
   {}

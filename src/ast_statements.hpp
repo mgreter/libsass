@@ -371,13 +371,13 @@ namespace Sass {
     // The comment immediately preceding this declaration.
     ADD_CONSTREF(SilentCommentObj, comment);
     // The declared arguments this callable accepts.
-    ADD_CONSTREF(ArgumentDeclarationObj, arguments);
+    ADD_CONSTREF(CallableSignatureObj, arguments);
   public:
     // Value constructor
     CallableDeclaration(
       SourceSpan&& pstate,
       const EnvKey& name,
-      ArgumentDeclaration* arguments,
+      CallableSignature* arguments,
       StatementVector&& children = {},
       SilentComment* comment = nullptr,
       EnvRefs* idxs = nullptr);
@@ -400,7 +400,7 @@ namespace Sass {
     // Value constructor
     ContentBlock(
       SourceSpan&& pstate,
-      ArgumentDeclaration* arguments = nullptr,
+      CallableSignature* arguments = nullptr,
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {},
       SilentComment* comment = nullptr);
@@ -426,7 +426,7 @@ namespace Sass {
     FunctionRule(
       SourceSpan&& pstate,
       const EnvKey& name,
-      ArgumentDeclaration* arguments,
+      CallableSignature* arguments,
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {},
       SilentComment* comment = nullptr);
@@ -454,7 +454,7 @@ namespace Sass {
     MixinRule(
       SourceSpan&& pstate,
       const sass::string& name,
-      ArgumentDeclaration* arguments,
+      CallableSignature* arguments,
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {},
       SilentComment* comment = nullptr);
@@ -550,11 +550,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   class ContentRule final : public Statement
   {
-    ADD_CONSTREF(ArgumentInvocationObj, arguments);
+    ADD_CONSTREF(CallableArgumentsObj, arguments);
   public:
     // Value constructor
     ContentRule(SourceSpan&& pstate,
-      ArgumentInvocation* arguments);
+      CallableArguments* arguments);
     bool hasContent() const override final { return true; }
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
@@ -778,9 +778,12 @@ namespace Sass {
   ///////////////////////////////////////////
   // The @include mixin invocation rule
   ///////////////////////////////////////////
-  class IncludeRule final : public Statement,
-    public CallableInvocation
+  class IncludeRule final : public Statement
   {
+
+    // The arguments passed to the callable.
+    ADD_CONSTREF(CallableArgumentsObj, arguments);
+
   private:
 
     // The namespace of the mixin being invoked, or
@@ -805,7 +808,7 @@ namespace Sass {
       SourceSpan&& pstate,
       const EnvKey& name,
       const sass::string& ns,
-      ArgumentInvocation* arguments,
+      CallableArguments* arguments,
       ContentBlock* content = nullptr);
 
     bool hasContent() const override final;

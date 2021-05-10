@@ -86,7 +86,7 @@ namespace Sass {
     // Argument declaration is tricky in terms of scoping.
     // The variable before the colon is defined on the new frame.
     // But the right side is evaluated in the parent scope.
-    ArgumentDeclaration* parseArgumentDeclaration();
+    CallableSignature* parseArgumentDeclaration();
 
     // Whether this is a plain CSS stylesheet.
     virtual bool plainCss() const { return false; }
@@ -347,7 +347,7 @@ namespace Sass {
     // Consumes an argument invocation. If [mixin] is `true`, this is parsed 
     // as a mixin invocation. Mixin invocations don't allow the Microsoft-style
     // `=` operator at the top level, but function invocations do.
-    ArgumentInvocation* readArgumentInvocation(bool mixin = false);
+    CallableArguments* readArgumentInvocation(bool mixin = false);
 
     // Consumes an expression. If [bracketList] is true, parses this expression as
     // the contents of a bracketed list. If [singleEquals] is true, allows the

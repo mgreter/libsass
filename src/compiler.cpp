@@ -530,7 +530,7 @@ namespace Sass {
     EnvRoot root(*this);
     SourceDataObj source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", "(" + signature + ")");
-    ArgumentDeclaration* args = ArgumentDeclaration::parse(*this, source);
+    CallableSignature* args = CallableSignature::parse(*this, source);
     auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     auto& mixins(varRoot.intMixin);
     uint32_t offset((uint32_t)mixins.size());
@@ -557,7 +557,7 @@ namespace Sass {
     EnvRoot root(*this);
     SourceDataObj source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", "(" + signature + ")");
-    auto args = ArgumentDeclaration::parse(*this, source);
+    auto args = CallableSignature::parse(*this, source);
     auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     auto& functions(varRoot.intFunction);
     uint32_t offset((uint32_t)functions.size());
@@ -577,7 +577,7 @@ namespace Sass {
       EnvRoot root(*this);
       SourceDataObj source = SASS_MEMORY_NEW(SourceString,
         "sass://signature", "(" + overload.first + ")");
-      auto args = ArgumentDeclaration::parse(*this, source);
+      auto args = CallableSignature::parse(*this, source);
       pairs.emplace_back(std::make_pair(args, overload.second));
     }
     auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);

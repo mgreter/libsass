@@ -248,7 +248,7 @@ namespace Sass {
     Interpolation* name = SASS_MEMORY_NEW(Interpolation, identifier->pstate());
     name->append(SASS_MEMORY_NEW(StringExpression, identifier->pstate(), identifier));
 
-    ArgumentInvocation* args = SASS_MEMORY_NEW(ArgumentInvocation,
+    CallableArguments* args = SASS_MEMORY_NEW(CallableArguments,
       scanner.rawSpanFrom(start), std::move(arguments), {});
     
     // Plain Css as it's interpolated

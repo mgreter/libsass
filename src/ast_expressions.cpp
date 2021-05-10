@@ -117,7 +117,7 @@ namespace Sass {
   PlainCssCallable2::PlainCssCallable2(
     SourceSpan pstate,
     Interpolation* itpl,
-    ArgumentInvocation* args,
+    CallableArguments* args,
     const sass::string& ns) :
     Expression(std::move(pstate)),
     itpl_(itpl),
@@ -267,7 +267,7 @@ namespace Sass {
   FunctionExpression::FunctionExpression(
     SourceSpan pstate,
     const sass::string& name,
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     bool withinLoop,
     const sass::string& ns) :
     InvocationExpression(

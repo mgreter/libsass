@@ -311,13 +311,13 @@ namespace Sass {
     sass::string name = readIdentifier();
     scanWhitespace();
 
-    ArgumentDeclarationObj arguments;
+    CallableSignatureObj arguments;
     if (scanner.peekChar() == $lparen) {
       arguments = parseArgumentDeclaration();
     }
     else {
       // Dart-sass creates this one too
-      arguments = SASS_MEMORY_NEW(ArgumentDeclaration,
+      arguments = SASS_MEMORY_NEW(CallableSignature,
         scanner.relevantSpan(), sass::vector<ArgumentObj>()); // empty declaration
     }
 
@@ -363,7 +363,7 @@ namespace Sass {
 
     scanWhitespace();
 
-    ArgumentDeclarationObj arguments = parseArgumentDeclaration();
+    CallableSignatureObj arguments = parseArgumentDeclaration();
 
     if (inMixin || inContentBlock) {
       error("Mixins may not contain function declarations.",

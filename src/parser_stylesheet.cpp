@@ -925,12 +925,12 @@ namespace Sass {
 
     scanWhitespace();
 
-    ArgumentInvocationObj args;
+    CallableArgumentsObj args;
     if (scanner.peekChar() == $lparen) {
       args = readArgumentInvocation(true);
     }
     else {
-      args = SASS_MEMORY_NEW(ArgumentInvocation,
+      args = SASS_MEMORY_NEW(CallableArguments,
         scanner.relevantSpan(), ExpressionVector(), {});
     }
 
@@ -1426,7 +1426,7 @@ namespace Sass {
     }
 
     scanWhitespace();
-    ArgumentInvocationObj arguments;
+    CallableArgumentsObj arguments;
     if (scanner.peekChar() == $lparen) {
       arguments = readArgumentInvocation(true);
     }
@@ -1434,7 +1434,7 @@ namespace Sass {
 
     EnvFrame local(compiler, true);
 
-    ArgumentDeclarationObj contentArguments;
+    CallableSignatureObj contentArguments;
     if (scanIdentifier("using")) {
       scanWhitespace();
       contentArguments = parseArgumentDeclaration();
@@ -1444,7 +1444,7 @@ namespace Sass {
     // ToDo: Add checks to allow to omit arguments fully
     if (!arguments) {
       SourceSpan pstate(scanner.relevantSpanFrom(start));
-      arguments = SASS_MEMORY_NEW(ArgumentInvocation,
+      arguments = SASS_MEMORY_NEW(CallableArguments,
         std::move(pstate), {}, {});
     }
 
@@ -1460,7 +1460,7 @@ namespace Sass {
       if (contentArguments.isNull()) {
         // Dart-sass creates this one too
         contentArguments = SASS_MEMORY_NEW(
-          ArgumentDeclaration,
+          CallableSignature,
           scanner.relevantSpan());
       }
       Offset start(scanner.offset);
@@ -1684,7 +1684,7 @@ namespace Sass {
   // Argument declaration is tricky in terms of scoping.
   // The variable before the colon is defined on the new frame.
   // But the right side is evaluated in the parent scope.
-  ArgumentDeclaration* StylesheetParser::parseArgumentDeclaration()
+  CallableSignature* StylesheetParser::parseArgumentDeclaration()
   {
 
     Offset start(scanner.offset);
@@ -1734,7 +1734,7 @@ namespace Sass {
     scanner.expectChar($rparen);
 
     return SASS_MEMORY_NEW(
-      ArgumentDeclaration,
+      CallableSignature,
       scanner.relevantSpanFrom(start),
       std::move(arguments),
       std::move(restArgument));
@@ -1745,7 +1745,7 @@ namespace Sass {
   // Consumes an argument invocation. If [mixin] is `true`, this is parsed 
   // as a mixin invocation. Mixin invocations don't allow the Microsoft-style
   // `=` operator at the top level, but function invocations do.
-  ArgumentInvocation* StylesheetParser::readArgumentInvocation(bool mixin)
+  CallableArguments* StylesheetParser::readArgumentInvocation(bool mixin)
   {
 
     Offset start(scanner.offset);
@@ -1806,7 +1806,7 @@ namespace Sass {
     scanner.expectChar($rparen);
 
     return SASS_MEMORY_NEW(
-      ArgumentInvocation,
+      CallableArguments,
       scanner.relevantSpanFrom(start),
       std::move(positional),
       std::move(named),
@@ -2868,7 +2868,7 @@ namespace Sass {
 
     if (!plain.empty()) {
       if (plain == "if") {
-        ArgumentInvocation* invocation = readArgumentInvocation();
+        CallableArguments* invocation = readArgumentInvocation();
         return SASS_MEMORY_NEW(IfExpression,
           invocation->pstate(), invocation);
       }
@@ -2960,7 +2960,7 @@ namespace Sass {
           scanner.relevantSpanFrom(start));
       }
 
-      ArgumentInvocation* args = readArgumentInvocation();
+      CallableArguments* args = readArgumentInvocation();
       sass::string name(identifier->getPlainString());
 
       // Plain Css as it's interpolated
@@ -2976,7 +2976,7 @@ namespace Sass {
         args, inLoopDirective, name);
     }
     else if (next == $lparen) {
-      ArgumentInvocation* args = readArgumentInvocation();
+      CallableArguments* args = readArgumentInvocation();
 
       // Plain Css as it's interpolated
       if (identifier->getPlainString().empty()) {
@@ -3281,7 +3281,7 @@ namespace Sass {
     }
 
     SourceSpan pstate(scanner.relevantSpanFrom(start));
-    ArgumentInvocation* args = readArgumentInvocation();
+    CallableArguments* args = readArgumentInvocation();
 
     // Plain Css as it's interpolated
     if (itpl->getPlainString().empty()) {

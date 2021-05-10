@@ -145,26 +145,26 @@ namespace Sass {
     // Call built-in function with no overloads
     Value* execute(
       BuiltInCallable* callable,
-      ArgumentInvocation* arguments,
+      CallableArguments* arguments,
       const SourceSpan& pstate);
 
     // Call built-in function with overloads
     Value* execute(
       BuiltInCallables* callable,
-      ArgumentInvocation* arguments,
+      CallableArguments* arguments,
       const SourceSpan& pstate);
 
     // Used for user functions and also by
     // mixin includes and content includes.
     Value* execute(
       UserDefinedCallable* callable,
-      ArgumentInvocation* arguments,
+      CallableArguments* arguments,
       const SourceSpan& pstate);
 
     // Call external C-API function
     Value* execute(
       ExternalCallable* callable,
-      ArgumentInvocation* arguments,
+      CallableArguments* arguments,
       const SourceSpan& pstate);
 
     /////////////////////////////////////////////////////////////////////////
@@ -220,13 +220,13 @@ namespace Sass {
 
     // Call built-in function with no overloads
     Value* _runBuiltInCallable(
-      ArgumentInvocation* arguments,
+      CallableArguments* arguments,
       BuiltInCallable* callable,
       const SourceSpan& pstate);
 
     // Call built-in function with overloads
     Value* _runBuiltInCallables(
-      ArgumentInvocation* arguments,
+      CallableArguments* arguments,
       BuiltInCallables* callable,
       const SourceSpan& pstate);
 
@@ -239,20 +239,20 @@ namespace Sass {
     // Used for user functions and also by
     // mixin includes and content includes.
     Value* _runUserDefinedCallable(
-      ArgumentInvocation* evaled,
+      CallableArguments* evaled,
       UserDefinedCallable* callable,
       const SourceSpan& pstate);
 
     // Call external C-API function
     Value* _runExternalCallable(
-      ArgumentInvocation* arguments,
+      CallableArguments* arguments,
       ExternalCallable* callable,
       const SourceSpan& pstate);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
   private:
-    ArgumentResults _evaluateArguments(ArgumentInvocation* arguments);
+    ArgumentResults _evaluateArguments(CallableArguments* arguments);
     void _addRestValueMap(ValueFlatMap& values, Map* map, const SourceSpan& nodeForSpan);
     void _addRestExpressionMap(ExpressionFlatMap& values, Map* map, const SourceSpan& pstate);
 
@@ -267,7 +267,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    void _evaluateMacroArguments(CallableInvocation& invocation,
+    void _evaluateMacroArguments(CallableArguments* arguments,
       ExpressionVector& positional,
       ExpressionFlatMap& named);
 
@@ -290,7 +290,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
     public:
-    void renderArgumentInvocation(sass::string& strm, ArgumentInvocation* args);
+    void renderArgumentInvocation(sass::string& strm, CallableArguments* args);
 protected:
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

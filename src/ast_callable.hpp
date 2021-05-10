@@ -18,7 +18,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   typedef Value* (*SassFnSig)(FN_PROTOTYPE2);
-  typedef std::pair<ArgumentDeclarationObj, SassFnSig> SassFnPair;
+  typedef std::pair<CallableSignatureObj, SassFnSig> SassFnPair;
   typedef sass::vector<SassFnPair> SassFnPairs;
 
   /////////////////////////////////////////////////////////////////////////
@@ -31,10 +31,13 @@ namespace Sass {
     // Value constructor
     Callable(const SourceSpan& pstate);
 
-    // The main entry point to execute the function (implemented in each specialization)
-    virtual Value* execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate) = 0;
+    // The main entry point to execute the function
+    // Must be implemented in each specialization
+    virtual Value* execute(Eval& eval,
+      CallableArguments* arguments,
+      const SourceSpan& pstate) = 0;
 
-    // Return the function name
+    // Return name of this callable/function
     virtual const sass::string& name() const = 0;
 
     // Equality comparator (needed for `get-function` value)
@@ -72,9 +75,10 @@ namespace Sass {
   };
 
   //////////////////////////////////////////////////////////////////////
+  // Object for the function signature holding which parameters a
+  // callable can have or expects and to which variable it's assigned.
   //////////////////////////////////////////////////////////////////////
-
-  class ArgumentDeclaration final : public AstNode
+  class CallableSignature final : public AstNode
   {
   private:
 
@@ -91,18 +95,18 @@ namespace Sass {
   public:
 
     // Value constructor
-    ArgumentDeclaration(SourceSpan&& pstate,
+    CallableSignature(SourceSpan&& pstate,
       sass::vector<ArgumentObj>&& arguments = {},
       EnvKey&& restArg = {});
 
-    // Check if signature is void
+    // Checks if signature is void
     bool isEmpty() const {
       return arguments_.empty()
         && restArg_.empty();
     }
 
-    // Parse source into arguments
-    static ArgumentDeclaration* parse(
+    // Parse `source` into signature
+    static CallableSignature* parse(
       Compiler& context, SourceData* source);
 
     // Throws a [SassScriptException] if [positional] and
@@ -120,19 +124,23 @@ namespace Sass {
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // Object for the actual function arguments to pass to the function
+  // invocation. It must be valid in regard to the callable signature
+  // of the invoked function (will throw an error otherwise).
   /////////////////////////////////////////////////////////////////////////
-
-  class ArgumentInvocation final : public AstNode
+  class CallableArguments final : public AstNode
   {
   private:
 
     // The arguments passed by position.
     ADD_REF(ExpressionVector, positional);
 
-    // The argument expressions passed by name.
+    // The arguments passed by name.
     ADD_REF(ExpressionFlatMap, named);
 
-    // The first rest argument (as in `$args...`).
+    // Optional rest argument (as in `$args...`).
+    // Supports only one rest arg and it must be last.
+    // ToDo: explain difference between restArg and kwdRest.
     ADD_CONSTREF(ExpressionObj, restArg);
 
     // The second rest argument, which is expected to only contain a keyword map.
@@ -142,15 +150,15 @@ namespace Sass {
 
   public:
 
-    // Value constructor
-    ArgumentInvocation(const SourceSpan& pstate,
+    // Value move constructor
+    CallableArguments(SourceSpan&& pstate,
       ExpressionVector&& positional,
       ExpressionFlatMap&& named,
       Expression* restArgs = nullptr,
       Expression* kwdRest = nullptr);
 
-    // Value constructor
-    ArgumentInvocation(SourceSpan&& pstate,
+    // Partial value move constructor
+    CallableArguments(const SourceSpan& pstate,
       ExpressionVector&& positional,
       ExpressionFlatMap&& named,
       Expression* restArgs = nullptr,
@@ -163,8 +171,10 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   // The result of evaluating arguments to a function or mixin.
+  // It's basically the same as `CallableArguments` but with all
+  // based values already evaluated in order to check compliance
+  // with the expected callable signature.
   /////////////////////////////////////////////////////////////////////////
-
   class ArgumentResults final {
 
     // Arguments passed by position.
@@ -173,10 +183,10 @@ namespace Sass {
     // Arguments passed by name.
     // A list implementation is often more efficient
     // I don't expect any function to have many arguments
-    // Normally the trade-off is around 8 items in the list
+    // Normally trade-off starts around 8 items in the list
     ADD_REF(ValueFlatMap, named);
 
-    // The separator used for the rest argument list, if any.
+    // Separator used for rest argument list, if any.
     ADD_REF(SassSeparator, separator);
 
   public:
@@ -205,27 +215,6 @@ namespace Sass {
       named_.clear();
       positional_.clear();
     }
-
-  };
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  class CallableInvocation
-  {
-
-  private:
-
-    // The arguments passed to the callable.
-    ADD_CONSTREF(ArgumentInvocationObj, arguments);
-
-  public:
-
-    // Value constructor
-    CallableInvocation(
-      ArgumentInvocation* arguments) :
-      arguments_(arguments)
-    {}
 
   };
 

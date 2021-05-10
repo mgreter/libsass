@@ -24,7 +24,6 @@ namespace Sass {
   IMPLEMENT_BASE_CAST(Statement);
   IMPLEMENT_BASE_CAST(ParentStatement);
   IMPLEMENT_BASE_CAST(CssParentNode);
-  IMPLEMENT_BASE_CAST(CallableInvocation);
   IMPLEMENT_BASE_CAST(CallableDeclaration);
   IMPLEMENT_BASE_CAST(Value);
   IMPLEMENT_BASE_CAST(Color);

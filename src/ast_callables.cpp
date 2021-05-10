@@ -22,7 +22,7 @@ namespace Sass {
 
   BuiltInCallable::BuiltInCallable(
     const EnvKey& envkey,
-    ArgumentDeclaration* parameters,
+    CallableSignature* parameters,
     const SassFnSig& callback) :
     Callable(SourceSpan::internal("[BUILTIN]")),
     envkey_(envkey),
@@ -119,7 +119,7 @@ namespace Sass {
 
   ExternalCallable::ExternalCallable(
     const EnvKey& fname,
-    ArgumentDeclaration* parameters,
+    CallableSignature* parameters,
     SassFunctionLambda lambda) :
     Callable(SourceSpan::internal("[EXTERNAL]")),
     envkey_(fname),
@@ -156,7 +156,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ArgumentDeclaration::ArgumentDeclaration(
+  CallableSignature::CallableSignature(
     SourceSpan&& pstate,
     sass::vector<ArgumentObj>&& arguments,
     EnvKey&& restArg) :
@@ -171,7 +171,7 @@ namespace Sass {
   }
 
   // Parse source into arguments
-  ArgumentDeclaration* ArgumentDeclaration::parse(
+  CallableSignature* CallableSignature::parse(
     Compiler& context, SourceData* source)
   {
     ScssParser parser(context, source);
@@ -180,7 +180,7 @@ namespace Sass {
 
   // Throws a [SassScriptException] if [positional] and
   // [names] aren't valid for this argument declaration.
-  void ArgumentDeclaration::verify(
+  void CallableSignature::verify(
     size_t positional,
     const ValueFlatMap& names,
     const SourceSpan& pstate,
@@ -237,7 +237,7 @@ namespace Sass {
 
   // Returns whether [positional] and [names]
   // are valid for this argument declaration.
-  bool ArgumentDeclaration::matches(
+  bool CallableSignature::matches(
     const ArgumentResults& evaluated) const
   {
     size_t namedUsed = 0; Argument* argument;
@@ -265,7 +265,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  ArgumentInvocation::ArgumentInvocation(
+  CallableArguments::CallableArguments(
     const SourceSpan& pstate,
     ExpressionVector&& positional,
     ExpressionFlatMap&& named,
@@ -278,7 +278,7 @@ namespace Sass {
     kwdRest_(kwdRest)
   {}
 
-  ArgumentInvocation::ArgumentInvocation(
+  CallableArguments::CallableArguments(
     SourceSpan&& pstate,
     ExpressionVector&& positional,
     ExpressionFlatMap&& named,
@@ -292,7 +292,7 @@ namespace Sass {
   {}
 
   // Returns whether this invocation passes no arguments.
-  bool ArgumentInvocation::isEmpty() const
+  bool CallableArguments::isEmpty() const
   {
     return positional_.empty()
       && named_.empty()
@@ -332,22 +332,22 @@ namespace Sass {
   // Implement the execute dispatch to evaluator
   /////////////////////////////////////////////////////////////////////////
 
-  Value* BuiltInCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
+  Value* BuiltInCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
   {
     return eval.execute(this, arguments, pstate);
   }
 
-  Value* BuiltInCallables::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
+  Value* BuiltInCallables::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
   {
     return eval.execute(this, arguments, pstate);
   }
 
-  Value* UserDefinedCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
+  Value* UserDefinedCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
   {
     return eval.execute(this, arguments, pstate);
   }
 
-  Value* ExternalCallable::execute(Eval& eval, ArgumentInvocation* arguments, const SourceSpan& pstate)
+  Value* ExternalCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
   {
     return eval.execute(this, arguments, pstate);
   }

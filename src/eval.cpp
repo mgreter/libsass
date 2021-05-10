@@ -153,7 +153,7 @@ namespace Sass {
   // Call built-in function with no overloads
   //*************************************************//
   Value* Eval::_runBuiltInCallable(
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     BuiltInCallable* callable,
     const SourceSpan& pstate)
   {
@@ -166,7 +166,7 @@ namespace Sass {
   // Call built-in function with overloads
   //*************************************************//
   Value* Eval::_runBuiltInCallables(
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     BuiltInCallables* callable,
     const SourceSpan& pstate)
   {
@@ -191,7 +191,7 @@ namespace Sass {
 
     // Get some items from passed parameters
     const SassFnSig& callback(function.second);
-    const ArgumentDeclaration* prototype(function.first);
+    const CallableSignature* prototype(function.first);
     if (!callback) throw std::runtime_error("Mixin declaration has no callback");
     if (!prototype) throw std::runtime_error("Mixin declaration has no prototype");
     const sass::vector<ArgumentObj>& parameters(prototype->arguments());
@@ -281,7 +281,7 @@ namespace Sass {
   // mixin includes and content includes.
   //*************************************************//
   Value* Eval::_runUserDefinedCallable(
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     UserDefinedCallable* callable,
     const SourceSpan& pstate)
   {
@@ -292,7 +292,7 @@ namespace Sass {
 
     // Get some items from passed parameters
     CallableDeclaration* declaration(callable->declaration());
-    ArgumentDeclaration* prototype(declaration->arguments());
+    CallableSignature* prototype(declaration->arguments());
     if (!prototype) throw std::runtime_error("Mixin declaration has no prototype");
     const sass::vector<ArgumentObj>& parameters(prototype->arguments());
 
@@ -389,7 +389,7 @@ namespace Sass {
   // Call external C-API function
   //*************************************************//
   Value* Eval::_runExternalCallable(
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     ExternalCallable* callable,
     const SourceSpan& pstate)
   {
@@ -399,7 +399,7 @@ namespace Sass {
     // Get some items from passed parameters
     const EnvKey& name(callable->envkey());
     SassFunctionLambda lambda(callable->lambda());
-    ArgumentDeclaration* prototype(callable->declaration());
+    CallableSignature* prototype(callable->declaration());
     if (!lambda) throw std::runtime_error("C-API declaration has no callback");
     if (!prototype) throw std::runtime_error("C-API declaration has no prototype");
     const sass::vector<ArgumentObj>& parameters(prototype->arguments());
@@ -519,7 +519,7 @@ namespace Sass {
   //*************************************************//
   Value* Eval::execute(
     BuiltInCallable* callable,
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     const SourceSpan& pstate)
   {
     const EnvKey& key(callable->envkey());
@@ -540,7 +540,7 @@ namespace Sass {
   //*************************************************//
   Value* Eval::execute(
     BuiltInCallables* callable,
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     const SourceSpan& pstate)
   {
     const EnvKey& key(callable->envkey());
@@ -562,7 +562,7 @@ namespace Sass {
   //*************************************************//
   Value* Eval::execute(
     UserDefinedCallable* callable,
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     const SourceSpan& pstate)
   {
     LOCAL_FLAG(inMixin, false);
@@ -584,7 +584,7 @@ namespace Sass {
   //*************************************************//
   Value* Eval::execute(
     ExternalCallable* callable,
-    ArgumentInvocation* arguments,
+    CallableArguments* arguments,
     const SourceSpan& pstate)
   {
     const EnvKey& key(callable->envkey());
@@ -604,7 +604,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   ArgumentResults Eval::_evaluateArguments(
-    ArgumentInvocation* arguments)
+    CallableArguments* arguments)
   {
     ArgumentResults results;
     // Get some items from passed parameters
@@ -788,12 +788,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   void Eval::_evaluateMacroArguments(
-    CallableInvocation& invocation,
+    CallableArguments* arguments,
     ExpressionVector& positional,
     ExpressionFlatMap& named)
   {
-
-    ArgumentInvocation* arguments = invocation.arguments();
 
     if (arguments->restArg()) {
 
@@ -1140,7 +1138,7 @@ namespace Sass {
   // This operates similar to a function call
   Value* Eval::visitIfExpression(IfExpression* node)
   {
-    ArgumentInvocation* arguments = node->arguments();
+    CallableArguments* arguments = node->arguments();
     callStackFrame frame(logger, node->pstate());
     // We need to make copies here to preserve originals
     // We could optimize this further, but impact is slim
@@ -1148,7 +1146,7 @@ namespace Sass {
     ExpressionVector positional(arguments->positional());
     // Rest arguments must be evaluated in all cases
     // evaluateMacroArguments is only used for this
-    _evaluateMacroArguments(*node, positional, named);
+    _evaluateMacroArguments(node->arguments(), positional, named);
     ExpressionObj condition = getArgument(positional, named, 0, Keys::condition);
     ExpressionObj ifTrue = getArgument(positional, named, 1, Keys::ifTrue);
     ExpressionObj ifFalse = getArgument(positional, named, 2, Keys::ifFalse);
@@ -1185,7 +1183,7 @@ namespace Sass {
     }
   }
 
-  void Eval::renderArgumentInvocation(sass::string& strm, ArgumentInvocation* args)
+  void Eval::renderArgumentInvocation(sass::string& strm, CallableArguments* args)
   {
     if (!args->named().empty()) {
       callStackFrame frame(traces,
