@@ -8,6 +8,8 @@
 #include <wincrypt.h>
 #else
 #include <random>
+#include <thread>
+#include <ctime>
 #endif
 
 namespace Sass {
@@ -36,9 +38,23 @@ namespace Sass {
       CryptGenRandom(hp, sizeof(seed), (BYTE*)&seed);
       CryptReleaseContext(hp, 0);
       #else
-      // Get seed via C++11 API
-      std::random_device rd;
-      seed = rd();
+      // Try to get random number from system
+      try {
+        // Get seed via C++11 API
+        std::random_device rd;
+        seed = rd();
+      }
+      // On certain system this can throw since either
+      // underlying hardware or software can be buggy.
+      // https://github.com/sass/libsass/issues/3151
+      catch (std::exception&) {
+      }
+      // Don't trust anyone to be random, so we
+      // add a little entropy of our own.
+      seed ^= std::time(NULL) ^ std::clock() ^
+        std::hash<std::thread::id>()
+        (std::this_thread::get_id());
+      // Return entropy
       #endif
     }
     // Use some sensible default
