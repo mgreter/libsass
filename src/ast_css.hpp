@@ -15,6 +15,7 @@
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
+  // Base class for all css related AST nodes.
   /////////////////////////////////////////////////////////////////////////
 
   class CssNode : public AstNode,
@@ -35,17 +36,16 @@ namespace Sass {
     // Copy constructor
     CssNode(const CssNode* ptr);
 
-    // Virtual destructor
-    // virtual ~CssNode() {}
-
     // Needed here to avoid ambiguity from base-classes!??
     virtual void accept(CssVisitor<void>* visitor) override = 0;
 
+    // Return if node should be printed (to be specialized).
     virtual bool isInvisibleCss() const { return false; }
 
     // Returns the at-rule name for [node], or `null` if it's not an at-rule.
     virtual const sass::string& getAtRuleName() const { return Strings::empty; }
 
+    // Is this really obsolete now?
     // size_t tabs() const { return 0; }
     // void tabs(size_t tabs) const { }
 
@@ -54,8 +54,10 @@ namespace Sass {
     DECLARE_ISA_CASTER(CssStyleRule);
     DECLARE_ISA_CASTER(CssSupportsRule);
   };
+  // EO CssNode
 
   /////////////////////////////////////////////////////////////////////////
+  // Base class for css nodes that can have children and a parent.
   /////////////////////////////////////////////////////////////////////////
 
   class CssParentNode : public CssNode,
@@ -80,33 +82,30 @@ namespace Sass {
       const CssParentNode* ptr,
       bool childless = false);
 
-    void addChildAt(CssParentNode* node,
-      bool doStrangeStuff = false);
+    // Adds [node] as a child of the given [parent]. The parent
+    // is copied unless it's the latter most child of its parent.
+    void addChildAt(CssParentNode* node, bool outOfOrder = false);
 
-    void addNode(CssNode* element);
-
+    // Return false if a single item is visible
     bool isInvisibleCss() const override;
-
 
     // Must be implemented in derived classes
     virtual CssParentNode* copy(SASS_MEMORY_ARGS bool childless) const = 0;
 
-    // 
+    // Returns if items should bubble further up (to be specialized)
+    virtual bool bubbles(bool stopAtMediaRule = false) const { return false; }
 
+    // Helper function to bubble through parents
     CssParentNode* bubbleThrough(bool stopAtMediaRule = false)
     {
       return parent_ && bubbles(stopAtMediaRule) ?
         parent_->bubbleThrough(stopAtMediaRule) : this;
     }
 
-    // Media rules are sometimes transparent, sometimes not
-    virtual bool bubbles(bool stopAtMediaRule = false) const {
-      return false;
-    }
-
     // Declare up-casting methods
     DECLARE_ISA_CASTER(CssAtRule);
   };
+  // EO CssParentNode
 
   /////////////////////////////////////////////////////////////////////////
   // A plain CSS string
@@ -128,6 +127,7 @@ namespace Sass {
     bool empty() const { return text_.empty(); }
 
   };
+  // EO CssString
 
   /////////////////////////////////////////////////////////////////////////
   // A plain list of CSS strings
@@ -147,18 +147,20 @@ namespace Sass {
       StringVector&& texts);
 
   };
+  // EO CssStringList
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  class CssComment final : public CssNode {
+  class CssComment final : public CssNode
+  {
+  private:
     ADD_CONSTREF(sass::string, text);
     ADD_CONSTREF(bool, isPreserved);
   public:
-    CssComment(const SourceSpan& pstate, const sass::string& text, bool preserve = false);
+    CssComment(const SourceSpan& pstate,
+      const sass::string& text,
+      bool preserve = false);
     CssComment(const CssComment* ptr);
 
     // Css visitor and rendering entry function
@@ -166,33 +168,40 @@ namespace Sass {
       return visitor->visitCssComment(this);
     }
   };
+  // EO CssComment
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  class CssDeclaration final : public CssNode {
+  class CssDeclaration final : public CssNode
+  {
+  private:
     // The name of this declaration.
     ADD_CONSTREF(CssStringObj, name);
     // The value of this declaration.
     ADD_CONSTREF(ValueObj, value);
     ADD_CONSTREF(bool, is_custom_property);
   public:
-    CssDeclaration(const CssDeclaration* ptr);
-    CssDeclaration(const SourceSpan& pstate, CssString* name, Value* value,
+    CssDeclaration(const SourceSpan& pstate,
+      CssString* name, Value* value,
       bool is_custom_property = false);
+    CssDeclaration(const CssDeclaration* ptr);
 
     // Css visitor and rendering entry function
     void accept(CssVisitor<void>* visitor) override final {
       return visitor->visitCssDeclaration(this);
     }
   };
+  // EO CssDeclaration
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   // A css import is static in nature and
   // can only have one single import url.
-  class CssImport final : public CssNode {
+  class CssImport final : public CssNode
+  {
+  private:
 
     // The url including quotes.
     ADD_CONSTREF(CssStringObj, url);
@@ -226,6 +235,7 @@ namespace Sass {
     }
 
   };
+  // EO CssImport
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -254,6 +264,7 @@ namespace Sass {
     }
 
   };
+  // EO CssRoot
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -298,7 +309,6 @@ namespace Sass {
       return name()->text();
     }
 
-
     // Css visitor and rendering entry function
     void accept(CssVisitor<void>* visitor) override final {
       return visitor->visitCssAtRule(this);
@@ -311,6 +321,7 @@ namespace Sass {
     // Define isaCssAtRule up-cast function
     IMPLEMENT_ISA_CASTER(CssAtRule);
   };
+  // EO CssAtRule
 
   /////////////////////////////////////////////////////////////////////////
   // A block within a `@keyframes` rule.
@@ -394,6 +405,7 @@ namespace Sass {
     // Define isaCssStyleRule up-cast function
     IMPLEMENT_ISA_CASTER(CssStyleRule);
   };
+  // EO CssStyleRule
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -434,6 +446,7 @@ namespace Sass {
     // Define isaCssSupportsRule up-cast function
     IMPLEMENT_ISA_CASTER(CssSupportsRule);
   };
+  // EO CssSupportsRule
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -451,7 +464,7 @@ namespace Sass {
     ADD_CONSTREF(sass::string, modifier);
 
     // Feature queries, including parentheses.
-    ADD_REF(StringVector, features);
+    ADD_CONSTREF(StringVector, features);
 
   public:
 
@@ -490,6 +503,7 @@ namespace Sass {
     CssMediaQuery* merge(CssMediaQuery* other);
 
   };
+  // EO CssMediaQuery
 
   /////////////////////////////////////////////////////////////////////////
   // A plain CSS `@media` rule after it has been evaluated.
@@ -550,8 +564,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-
 }
-
 
 #endif

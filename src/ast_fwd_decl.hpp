@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "sass/values.h"
-#include "memory/shared_ptr.hpp"
+#include "shared_ptr.hpp"
 
 /////////////////////////////////////////////
 // Forward declarations for the AST visitors.
@@ -47,7 +47,9 @@ namespace Sass {
 
   class Callable;
   class UserDefinedCallable;
-  class PlainCssFunction;
+  class CssFnExpression;
+  class InvocationExpression;
+  class IfExpression;
   class ExternalCallable;
   class BuiltInCallables;
   class BuiltInCallable;
@@ -90,7 +92,6 @@ namespace Sass {
   class CssNode;
   class CssString;
   class CssStringList;
-  // class CssSelectors;
   class CssMediaRule;
   class CssMediaQuery;
   class CssAtRule;
@@ -164,7 +165,7 @@ namespace Sass {
   class SupportsNegation;
   class SupportsDeclaration;
   class SupportsInterpolation;
-  
+
   class AtRootQuery;
   class Argument;
   class Selector;
@@ -177,7 +178,7 @@ namespace Sass {
   class AttributeSelector;
 
   class PseudoSelector;
-  
+
   class SelectorComponent;
   class SelectorCombinator;
   class CompoundSelector;
@@ -214,10 +215,8 @@ namespace Sass {
   IMPL_MEM_OBJ(CssNode);
   IMPL_MEM_OBJ(CssStringList);
   IMPL_MEM_OBJ(CssString);
-  // IMPL_MEM_OBJ(CssSelectors);
   IMPL_MEM_OBJ(CssMediaRule);
   IMPL_MEM_OBJ(CssMediaQuery);
-  // IMPLEMENT_AST_OPERATORS(CssNode);
   IMPL_MEM_OBJ(CssAtRule);
   IMPL_MEM_OBJ(CssComment);
   IMPL_MEM_OBJ(CssDeclaration);
@@ -227,7 +226,7 @@ namespace Sass {
   IMPL_MEM_OBJ(CssSupportsRule);
   IMPL_MEM_OBJ(Callable);
   IMPL_MEM_OBJ(UserDefinedCallable);
-  IMPL_MEM_OBJ(PlainCssFunction);
+  IMPL_MEM_OBJ(CssFnExpression);
   IMPL_MEM_OBJ(ExternalCallable);
   IMPL_MEM_OBJ(BuiltInCallable);
   IMPL_MEM_OBJ(BuiltInCallables);
@@ -235,7 +234,7 @@ namespace Sass {
   IMPL_MEM_OBJ(CallableDeclaration);
   IMPL_MEM_OBJ(FunctionRule);
   IMPL_MEM_OBJ(IncludeRule);
-  IMPL_MEM_OBJ(ContentBlock); 
+  IMPL_MEM_OBJ(ContentBlock);
   IMPL_MEM_OBJ(MixinRule);
   IMPL_MEM_OBJ(AtRule);
   IMPL_MEM_OBJ(AtRootRule);
@@ -380,12 +379,6 @@ namespace Sass {
   class Logger;
   class Compiler;
   class SourceSpan;
-
-  #define FN_PROTOTYPE2 \
-    const SourceSpan& pstate, \
-    const ValueVector& arguments, \
-    Compiler& compiler, \
-    Eval& eval \
 
 }
 

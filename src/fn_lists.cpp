@@ -39,25 +39,23 @@ namespace Sass {
         Value* input = arguments[0];
         Value* index = arguments[1];
 
+        size_t idx = input->
+          sassIndexToListIndex(
+            index, compiler, "n");
+
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
         if (eval.assigne && eval.assigne->ptr() == input && input->refcount < AssignableRefCount) {
           if (List* lst = input->isaList()) {
-            size_t idx = input->sassIndexToListIndex(index, compiler, "n");
             lst->set(idx, arguments[2]);
             return lst;
           }
         }
         #endif
-
-        auto it = input->iterator();
-        size_t idx = input->
-          sassIndexToListIndex(
-            index, compiler, "n");
-        ValueVector values(it.begin(), it.end());
-        values[idx] = arguments[2];
-        return SASS_MEMORY_NEW(List,
-          input->pstate(), std::move(values),
+        List* list = SASS_MEMORY_NEW(List,
+          input->pstate(), { input->start(), input->stop() },
           input->separator(), input->hasBrackets());
+        list->set(idx, arguments[2]);
+        return list;
       }
 
       /*******************************************************************/
@@ -105,21 +103,18 @@ namespace Sass {
           if (List* lst = list2->isaList()) {
             lst->separator(separator);
             lst->hasBrackets(bracketed);
-            auto it2 = list2->iterator();
-            // Doesn't need make_move_iterator!?
-            lst->concat({ it2.begin(), it2.end() });
+            lst->elements().insert(lst->end(),
+              list2->start(), list2->stop());
             return lst;
           }
         }
         #endif
 
         ValueVector values;
-        auto it1 = list1->iterator();
         values.insert(values.end(),
-          it1.begin(), it1.end());
-        auto it2 = list2->iterator();
+          list1->start(), list1->stop());
         values.insert(values.end(),
-          it2.begin(), it2.end());
+          list2->start(), list2->stop());
         return SASS_MEMORY_NEW(List, pstate,
           std::move(values), separator, bracketed);
       }
@@ -159,9 +154,8 @@ namespace Sass {
         #endif
 
         ValueVector values;
-        auto it = list->iterator();
         values.insert(values.end(),
-          it.begin(), it.end());
+          list->start(), list->stop());
         values.emplace_back(value);
         return SASS_MEMORY_NEW(List,
           list->pstate(), std::move(values),
@@ -174,11 +168,10 @@ namespace Sass {
       {
         size_t shortest = sass::string::npos;
         sass::vector<ValueVector> lists;
-        for (Value* arg : arguments[0]->iterator()) {
-          Values it = arg->iterator();
+        for (Value* arg : arguments[0]->start()) {
           ValueVector inner;
           inner.reserve(arg->lengthAsList());
-          std::copy(it.begin(), it.end(),
+          std::copy(arg->start(), arg->stop(),
             std::back_inserter(inner));
           shortest = std::min(shortest, inner.size());
           lists.emplace_back(inner);

@@ -15,9 +15,9 @@
 namespace Sass {
 
   //////////////////////////////////////////////////////////////////////
+  // Static imports are plain css imports with `url()`
   //////////////////////////////////////////////////////////////////////
 
-  // Static imports are plain css imports with `url()`
   class StaticImport final : public ImportBase
   {
   private:
@@ -39,26 +39,33 @@ namespace Sass {
 
   public:
 
-    // Object constructor by values
+    // Value constructor
     StaticImport(const SourceSpan& pstate,
       InterpolationObj url,
       SupportsConditionObj supports = {},
       InterpolationObj media = {});
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(StaticImport);
   };
   // EO class StaticImport
 
+  //////////////////////////////////////////////////////////////////////
   // Dynamic import beside its name must have a static url
   // We do not support to load sass partials programmatic
   // They also don't allow any supports or media queries.
+  //////////////////////////////////////////////////////////////////////
+
   class IncludeImport final : public ImportBase, public ModRule
   {
   public:
+
+    // Value constructor
     IncludeImport(const SourceSpan& pstate,
       const sass::string& prev,
       const sass::string& url,
       Import* import);
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(IncludeImport);
   };

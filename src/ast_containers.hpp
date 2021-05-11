@@ -9,14 +9,16 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Base class/container for AST nodes that should behave like vectors.
   /////////////////////////////////////////////////////////////////////////
+
   template <typename V>
   class Vectorized {
 
   protected:
 
-    // The main underlying container
     typedef SharedPtr<V> T;
     typedef Vectorized Klass;
+
+    // The main underlying container
     sass::vector<T> elements_;
 
     // Hash is only calculated once and afterwards the value
@@ -37,19 +39,76 @@ namespace Sass {
     // Copy constructor from other Vectorized
     Vectorized(const Vectorized<V>* vec, bool childless = false)
     {
-      if (!childless) elements_ = vec->elements_;
+      if (!childless) {
+        hash_ = vec->hash_;
+        elements_ = vec->elements_;
+      }
+    }
+
+    // Copy constructor from other base vector
+    Vectorized(const Vectorized<V>& vec, bool childless = false)
+    {
+      if (!childless) {
+        hash_ = vec.hash_;
+        elements_ = vec.elements_;
+      }
     }
 
     // Copy constructor from other base vector
     Vectorized(const sass::vector<T>& vec, bool childless = false)
     {
-      if (!childless) elements_ = vec;
+      if (!childless) {
+        elements_ = vec;
+      }
+    }
+
+    // Move constructor from other base Vectorized
+    Vectorized(Vectorized<T>&& vec, bool childless = false)
+    {
+      if (!childless) {
+        hash_ = vec.hash_;
+        elements_ = std::move(vec.elements_);
+      }
     }
 
     // Move constructor from other base vector
     Vectorized(sass::vector<T>&& vec, bool childless = false)
     {
-      if (!childless) elements_ = std::move(vec);
+      if (!childless) {
+        elements_ = std::move(vec);
+      }
+    }
+
+    // Copy constructor from other base Vectorized
+    Vectorized<V>& operator=(const Vectorized<V>& other)
+    {
+      this->hash_ = other.hash_;
+      this->elements_ = other.elements_;
+      return *this;
+    }
+
+    // Copy constructor from other base vector
+    Vectorized<V>& operator=(const sass::vector<T>& other)
+    {
+      this->hash_ = 0;
+      this->elements_ = other;
+      return *this;
+    }
+
+    // Move constructor from other base Vectorized
+    Vectorized<V>& operator=(Vectorized<V>&& other)
+    {
+      this->hash_ = other.hash_;
+      this->elements_ = std::move(other.elements_);
+      return *this;
+    }
+
+    // Move constructor from other base vector
+    Vectorized<V>& operator=(sass::vector<T>&& other)
+    {
+      this->hash_ = 0;
+      this->elements_ = std::move(other);
+      return *this;
     }
 
     // Some simple method delegations
@@ -69,7 +128,7 @@ namespace Sass {
     }
 
     // Setter to ensure we reset hash value
-    void set_last(const T& value) {
+    void setLast(const T& value) {
       hash_ = 0; // reset hash
       elements_.back() = value;
     }
@@ -96,14 +155,14 @@ namespace Sass {
     // You are responsible to make a copy if needed
     // Note: since this returns the real object, we can't
     // Note: guarantee that the hash will not get out of sync
-    operator sass::vector<T>& () { return elements_; }
-    operator const sass::vector<T>& () const { return elements_; }
+    // operator sass::vector<T>& () { hash_ = 0; return elements_; }
+    // operator const sass::vector<T>& () const { return elements_; }
 
     // Explicitly request all elements as a real sass::vector
     // You are responsible to make a copy if needed
     // Note: since this returns the real object, we can't
     // Note: guarantee that the hash will not get out of sync
-    sass::vector<T>& elements43() { return elements_; }
+    sass::vector<T>& elements() { hash_ = 0;  return elements_; }
     const sass::vector<T>& elements() const { return elements_; }
 
     // Insert all items from compatible vector
@@ -129,7 +188,7 @@ namespace Sass {
     void concat(const Vectorized<V>* v)
     {
       if (v != nullptr) {
-        return concat(*v);
+        return concat(v->elements_);
       }
     }
 
@@ -211,18 +270,6 @@ namespace Sass {
       return false;
     }
 
-    // This might be better implemented as `operator=`?
-    void elementsN(const sass::vector<T>& e)
-    {
-      elements_ = e;
-    }
-
-    // This might be better implemented as `operator=`?
-    void elementsM(sass::vector<T>&& e)
-    {
-      elements_ = std::move(e);
-    }
-
     template <typename P>
     typename sass::vector<T>::iterator insert(P position, const T& val) {
       return elements_.insert(position, val);
@@ -231,6 +278,17 @@ namespace Sass {
     template <typename P>
     typename sass::vector<T>::iterator insert(P position, T&& val) {
       return elements_.insert(position, std::move(val));
+    }
+
+    template<class UnaryPredicate>
+    void eraseIf(UnaryPredicate* predicate)
+    {
+      elements_.erase(
+        std::remove_if(
+          elements_.begin(),
+          elements_.end(),
+          predicate),
+        elements_.end());
     }
 
     size_t hash() const
@@ -257,6 +315,7 @@ namespace Sass {
   // Mixin class for AST nodes that should behave like a hash table. Uses an
   // extra <std::vector> internally to maintain insertion order for iteration.
   /////////////////////////////////////////////////////////////////////////
+
   template <typename K, typename T>
   class Hashed {
 
@@ -268,10 +327,10 @@ namespace Sass {
       sass::vector<std::pair<K, T>>
     >;
 
-    ordered_map_type elements_;
-
   protected:
 
+    // The main underlying container
+    ordered_map_type elements_;
 
     // Hash is only calculated once and afterwards the value
     // must not be mutated, which is the case with how sass
@@ -282,19 +341,15 @@ namespace Sass {
 
   public:
 
-    Hashed()
-      : elements_(),
+    Hashed() :
+      elements_(),
       hash_(0)
-    {
-      // elements_.reserve(s);
-    }
+    {}
 
     // Copy constructor
     Hashed(const Hashed<K, T>& copy) :
       elements_(), hash_(0)
     {
-      // this seems to expensive!?
-      // elements_.reserve(copy.size());
       elements_ = copy.elements_;
     };
 
@@ -307,8 +362,6 @@ namespace Sass {
     Hashed(ordered_map_type&& values) :
       elements_(std::move(values)),
       hash_(0) {};
-
-    // virtual ~Hashed() {}
 
     size_t size() const { return elements_.size(); }
     bool empty() const { return elements_.empty(); }

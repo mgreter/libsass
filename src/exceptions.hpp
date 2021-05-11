@@ -76,6 +76,14 @@ namespace Sass {
         sass::string name);
     };
 
+    class VariableUnknown : public RuntimeException
+    {
+    public:
+      VariableUnknown(
+        BackTraces traces,
+        const EnvKey& name);
+    };
+
     class ModuleAlreadyKnown : public RuntimeException
     {
     public:
@@ -178,6 +186,11 @@ namespace Sass {
     class RecursionLimitError : public Base {
       public:
         RecursionLimitError();
+    };
+
+    class EndlessExtendError : public Base {
+    public:
+      EndlessExtendError(BackTraces traces);
     };
 
     class DuplicateKeyError : public Base {

@@ -157,6 +157,12 @@ namespace Sass {
     RecursionLimitError::RecursionLimitError()
       : Base(msg_recursion_limit, {}) {}
 
+    EndlessExtendError::EndlessExtendError(BackTraces traces)
+      : Base(def_msg, traces)
+    {
+      msg = "Extend is creating an absurdly big selector, aborting!";
+    }
+
     DuplicateKeyError::DuplicateKeyError(BackTraces traces, const Map& dup, const Value& org)
     : Base(def_msg, traces), dup(dup), org(org)
     {
@@ -309,6 +315,13 @@ namespace Sass {
     RuntimeException(traces,
       "There is no module with the"
       " namespace \"" + name + "\".")
+  {}
+
+  VariableUnknown::VariableUnknown(
+    BackTraces traces,
+    const EnvKey& name) :
+    RuntimeException(traces,
+      "Undefined variable.")
   {}
 
   ModuleAlreadyKnown::ModuleAlreadyKnown(

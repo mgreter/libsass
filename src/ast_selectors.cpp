@@ -647,7 +647,7 @@ namespace Sass {
               name += simple_front->name();
               simple_back->name(name);
               // Replace with modified simple selector
-              tail->set_last(simple_back);
+              tail->setLast(simple_back);
               // Append rest of selector components
               tail->concat({ begin() + 1, end() });
             }
@@ -662,7 +662,7 @@ namespace Sass {
           }
           // Reset the parent selector tail with
           // the combination of parent plus ourself
-          complex->set_last(tail);
+          complex->setLast(tail);
           // Append to results
           rv.emplace_back(complex);
         }

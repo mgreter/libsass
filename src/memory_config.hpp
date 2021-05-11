@@ -4,7 +4,7 @@
 #ifndef SASS_MEMORY_CONFIG_H
 #define SASS_MEMORY_CONFIG_H
 
-#include "../settings.hpp"
+#include "settings.hpp"
 
 /////////////////////////////////////////////////////////////////////////
 // Memory allocator configurations

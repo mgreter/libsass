@@ -9,7 +9,7 @@
 #include <climits>
 #include <algorithm>
 
-#include "config.hpp"
+#include "memory_config.hpp"
 
 namespace Sass {
 

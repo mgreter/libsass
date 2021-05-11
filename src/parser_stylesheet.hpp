@@ -30,10 +30,6 @@ namespace Sass {
 
   public:
 
-    // Whether we are inside a loop directive such as `@for`, `@while` or `@each`.
-    // This will disable some incompatible static variable optimizations.
-    bool inLoopDirective = false;
-
     // Whether we've consumed a rule other than `@charset`, `@forward`, or `@use`.
     bool isUseAllowed = true;
 

@@ -175,7 +175,7 @@ namespace Sass {
     // selectors which must be extended as a unit.
     /////////////////////////////////////////////////////////////////////////
     static SelectorListObj extend(
-      SelectorListObj& selector,
+      const SelectorListObj& selector,
       const SelectorListObj& source,
       const SelectorListObj& target,
       Logger& logger);
@@ -184,7 +184,7 @@ namespace Sass {
     // Returns a copy of [selector] with [targets] replaced by [source].
     /////////////////////////////////////////////////////////////////////////
     static SelectorListObj replace(
-      SelectorListObj& selector,
+      const SelectorListObj& selector,
       const SelectorListObj& source,
       const SelectorListObj& target,
       Logger& logger);
@@ -246,7 +246,7 @@ namespace Sass {
     // A helper function for [extend] and [replace].
     /////////////////////////////////////////////////////////////////////////
     static SelectorListObj extendOrReplace(
-      SelectorListObj& selector,
+      const SelectorListObj& selector,
       const SelectorListObj& source,
       const SelectorListObj& target,
       const ExtendMode mode,
@@ -286,10 +286,11 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     // Extends [list] using [extensions].
     /////////////////////////////////////////////////////////////////////////
-    SelectorListObj extendList(
+    bool extendList(
       const SelectorListObj& list,
       const ExtSelExtMap& extensions,
-      const CssMediaRuleObj& mediaContext);
+      const CssMediaRuleObj& mediaContext,
+      sass::vector<ComplexSelectorObj>& result);
 
     /////////////////////////////////////////////////////////////////////////
     // Extends [complex] using [extensions], and
@@ -377,8 +378,8 @@ namespace Sass {
     // elements. The [isOriginal] callback indicates which selectors are
     // original to the document, and thus should never be trimmed.
     /////////////////////////////////////////////////////////////////////////
-    sass::vector<ComplexSelectorObj> trim(
-      const sass::vector<ComplexSelectorObj>& selectors,
+    void trim(
+      sass::vector<ComplexSelectorObj>& selectors,
       const ExtCplxSelSet& set) const;
 
     /////////////////////////////////////////////////////////////////////////

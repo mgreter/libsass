@@ -8,6 +8,7 @@
 // to get the  __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+#include "fn_utils.hpp"
 #include "ast_nodes.hpp"
 #include "environment_key.hpp"
 #include "environment_stack.hpp"
@@ -17,13 +18,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  typedef Value* (*SassFnSig)(FN_PROTOTYPE2);
+  typedef Value* (*SassFnSig)(FN_PROTOTYPE);
   typedef std::pair<CallableSignatureObj, SassFnSig> SassFnPair;
   typedef sass::vector<SassFnPair> SassFnPairs;
 
   /////////////////////////////////////////////////////////////////////////
   // Base class for everything that can be called on demand.
   /////////////////////////////////////////////////////////////////////////
+
   class Callable : public AstNode
   {
   public:
@@ -53,6 +55,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Individual argument object for function signatures.
   /////////////////////////////////////////////////////////////////////////
+
   class Argument final : public AstNode
   {
   private:
@@ -77,12 +80,13 @@ namespace Sass {
   // Object for the function signature holding which parameters a
   // callable can have or expects, with optional rest arguments.
   //////////////////////////////////////////////////////////////////////
+
   class CallableSignature final : public AstNode
   {
   private:
 
     // The arguments that are taken.
-    ADD_REF(sass::vector<ArgumentObj>, arguments);
+    ADD_CONSTREF(sass::vector<ArgumentObj>, arguments);
 
     // The name of the rest argument (as in `$args...`),
     ADD_CONSTREF(EnvKey, restArg);
@@ -126,16 +130,17 @@ namespace Sass {
   // invocation. It must be valid in regard to the callable signature
   // of the invoked function (will throw an error otherwise).
   /////////////////////////////////////////////////////////////////////////
+
   class CallableArguments final : public AstNode
   {
   private:
 
     // The arguments passed by position.
-    ADD_REF(ExpressionVector, positional);
+    ADD_CONSTREF(ExpressionVector, positional);
 
     // The arguments passed by name.
-    ADD_REF(ExpressionFlatMap, named);
-
+    ADD_CONSTREF(ExpressionFlatMap, named);
+    
     // Optional rest argument (as in `$args...`).
     // Supports only one rest arg and it must be last.
     // ToDo: explain difference between restArg and kwdRest.
@@ -173,6 +178,7 @@ namespace Sass {
   // based values already evaluated in order to check compliance
   // with the expected callable signature.
   /////////////////////////////////////////////////////////////////////////
+
   class ArgumentResults final {
 
     // Arguments passed by position.
@@ -180,12 +186,12 @@ namespace Sass {
 
     // Arguments passed by name.
     // A list implementation is often more efficient
-    // I don't expect any function to have many arguments
+    // We don't expect any function to have many arguments
     // Normally trade-off starts around 8 items in the list
     ADD_REF(ValueFlatMap, named);
 
     // Separator used for rest argument list, if any.
-    ADD_REF(SassSeparator, separator);
+    ADD_CONSTREF(SassSeparator, separator);
 
   public:
 

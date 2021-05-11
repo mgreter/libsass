@@ -415,7 +415,7 @@ namespace Sass {
       }
     }
     else if (isSelectorPseudoClass(unvendored)) {
-      LOCAL_FLAG(allowParent, true);
+      RAII_FLAG(allowParent, true);
       selector = readSelectorList();
       for (auto complex : selector->elements()) {
         complex->chroots(true);

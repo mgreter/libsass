@@ -133,15 +133,16 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\exceptions.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\settings.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory\config.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory\allocator.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory\shared_ptr.hpp" />
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory\memory_pool.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory_config.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory_allocator.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory_pool.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\shared_ptr.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\MurmurHash2.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\eval.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\extender.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\extension.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\file.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\import.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\compiler.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\strings.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\inspect.hpp" />
@@ -182,12 +183,14 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\b64\encode.hpp" />
   </ItemGroup>
   <ItemGroup Label="LibSass Sources">
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\memory_allocator.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\modules.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\constants.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\compiler.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\color_maps.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\environment.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\file.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\import.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\string_utils.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\logger.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\strings.cpp" />
@@ -216,9 +219,7 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\source_state.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\source_span.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\exceptions.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\memory\allocator.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\memory\shared_ptr.cpp" />
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\LUrlParser\LUrlParser.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\shared_ptr.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\unicode.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\cencode.cpp" />
   </ItemGroup>

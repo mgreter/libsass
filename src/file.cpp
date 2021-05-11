@@ -16,7 +16,7 @@
 #ifdef _WIN32
 # ifdef __MINGW32__
 #  ifndef off64_t
-#   define off64_t _off64_t    /* Workaround for http://sourceforge.net/p/mingw/bugs/2024/ */
+#   define off64_t _off64_t /* Workaround for http://sourceforge.net/p/mingw/bugs/2024/ */
 #  endif
 # endif
 # include <direct.h>
@@ -26,32 +26,12 @@
 #endif
 
 #include <sys/stat.h>
+#include "import.hpp"
 #include "sources.hpp"
 #include "unicode.hpp"
 #include "character.hpp"
 #include "exceptions.hpp"
 #include "string_utils.hpp"
-
-#ifdef _WIN32
-# include <windows.h>
-
-# ifdef _MSC_VER
-# include <codecvt>
-inline static sass::string wstring_to_string(const std::wstring& wstr)
-{
-    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wchar_converter;
-    return wchar_converter.to_bytes(wstr).c_str();
-}
-# else // mingw(/gcc) does not support C++11's codecvt yet.
-inline static sass::string wstring_to_string(const std::wstring &wstr)
-{
-    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-    sass::string strTo(size_needed, 0);
-    WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
-    return strTo;
-}
-# endif
-#endif
 
 namespace Sass {
 
@@ -66,33 +46,41 @@ namespace Sass {
     char* pwd = getcwd(wd, wd_len);
     // we should check error for more detailed info (e.g. ENOENT)
     // http://man7.org/linux/man-pages/man2/getcwd.2.html#ERRORS
+    // Cwd may return null if we are in a directory that has been deleted
     if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
     sass::string cwd = pwd;
     #else
     wchar_t wd[wd_len];
     wchar_t* pwd = _wgetcwd(wd, wd_len);
+    // Cwd may return null if we are in a directory that has been deleted
     if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
-    sass::string cwd = wstring_to_string(pwd);
+    // Windows always returns utf16, convert to utf8
+    sass::string cwd = Unicode::utf16to8(pwd);
     //convert backslashes to forward slashes
     replace(cwd.begin(), cwd.end(), '\\', '/');
     #endif
     if (cwd[cwd.length() - 1] != '/') cwd += '/';
     return cwd;
   }
+  // EO extern get_pwd
 
-  // Use a pointer to avoid some compiler issues
+  // Use heap pointer to avoid some compiler issues
   // Has proven to be the most stable, but the memory
   // will kinda leak (not relevant since long living).
   // One known offender is mingw v8.1.0 x86/i686
   static thread_local sass::string* cwd;
 
   // Initialize current directory once
-  extern void set_cwd(const sass::string& path) {
+  extern void set_cwd(const sass::string& path)
+  {
     if (cwd == nullptr) {
+      // Create object on the heap
       cwd = new sass::string(get_pwd());
     }
+    // Assign to heap object
     *cwd = path;
   }
+  // EO extern set_cwd
 
   // Initialize current directory once
   extern const sass::string& CWD() {
@@ -101,6 +89,7 @@ namespace Sass {
     }
     return *cwd;
   }
+  // EO extern CWD
 
   namespace File {
 
@@ -587,75 +576,5 @@ namespace Sass {
 
   }
   // EO File namespace
-
-  // Entry point for top level file import
-  // Don't load like other includes, we do not
-  // check inside include paths for this file!
-  void Import::loadIfNeeded(BackTraces& traces)
-  {
-    // Only load once
-    if (isLoaded()) return;
-    // Check if entry file-path is given
-    // Use err string of LoadedImport
-    if (getAbsPath() == nullptr) {
-      throw std::runtime_error(
-        "No file path given to be loaded.");
-    }
-    // try to read the content of the resolved file entry
-    // the memory buffer returned to us must be freed by us!
-    if (char* contents = File::slurp_file(getAbsPath(), CWD())) {
-      // Upgrade to a source file
-      // ToDo: Add sourcemap parsing
-      source = SASS_MEMORY_NEW(SourceFile,
-        source->getImpPath(),
-        source->getAbsPath(),
-        contents, nullptr
-      );
-    }
-    else {
-      // Throw error if read has failed
-      throw Exception::IoError(traces,
-        "File not found or unreadable",
-        File::abs2rel(source->getAbsPath()));
-    }
-  }
-
-  const char* Import::getImpPath() const
-  {
-    return source->getImpPath();
-  }
-
-  const char* Import::getAbsPath() const
-  {
-    return source->getAbsPath();
-  }
-
-  const char* Import::getFileName() const
-  {
-    return source->getFileName();
-  }
-
-  const char* Import::getErrorMsg() const
-  {
-    return error;
-  }
-
-  void Import::setErrorMsg(const char* msg)
-  {
-    sass_free_c_string(error);
-    error = sass_copy_c_string(msg);
-  }
-
-  Import::Import(
-    SourceData* source,
-    SassImportSyntax syntax) :
-    source(source),
-    syntax(syntax)
-  {}
-
-  bool Import::isLoaded() const
-  {
-    return source && source->content();
-  }
 
 }

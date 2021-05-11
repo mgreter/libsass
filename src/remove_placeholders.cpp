@@ -38,7 +38,7 @@ namespace Sass {
           if (compound) remove_placeholders(compound);
         }
       }
-      listEraseItemIf(complex->elements43(), listIsEmpty<SelectorComponent>);
+      complex->eraseIf(listIsEmpty<SelectorComponent>);
       // ToDo: describe what this means
       if (complex->hasInvisible()) {
         complex->clear(); // remove all
@@ -50,7 +50,7 @@ namespace Sass {
       for(const ComplexSelectorObj& complex : sl->elements()) {
         if (complex) remove_placeholders(complex);
       }
-      listEraseItemIf(sl->elements43(), listIsEmpty<ComplexSelector>);
+      sl->eraseIf(listIsEmpty<ComplexSelector>);
     }
 
     void RemovePlaceholders::visitCssRoot(CssRoot* b)
@@ -58,7 +58,7 @@ namespace Sass {
       // Clean up all our children
       acceptCssParentNode(b);
       // Remove all invisible items
-      listEraseItemIf(b->elements43(), isInvisibleCss); // QQQQQQQQQQQQHHHHHH
+      b->eraseIf(isInvisibleCss);
     }
 
     void RemovePlaceholders::visitCssStyleRule(CssStyleRule* rule)

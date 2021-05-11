@@ -18,6 +18,22 @@
 
 using namespace Sass;
 
+//////////////////////////////////////////////////////////////////////
+// Define cast template now (need complete type).
+// Note: we should have gotten rid of all usage by now.
+// Note: only debugger still uses this (move there?).
+//////////////////////////////////////////////////////////////////////
+
+template<class T>
+T* Cast(AstNode* ptr) {
+  return dynamic_cast<T*>(ptr);
+};
+
+template<class T>
+const T* Cast(const AstNode* ptr) {
+  return dynamic_cast<const T*>(ptr);
+};
+
 inline void debug_ast(AstNode* node, std::string ind = "");
 
 inline sass::string ns_name(NameSpaceSelector* s)
@@ -933,7 +949,7 @@ inline void debug_ast(AstNode* node, std::string ind)
   }
 
 
-  else if (PlainCssFunction* ruleset = Cast<PlainCssFunction>(node)) {
+  else if (CssFnExpression* ruleset = Cast<CssFnExpression>(node)) {
     std::cerr << ind << "PlainCssCallable " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
     // std::cerr << " [indent: " << ruleset->tabs() << "]";

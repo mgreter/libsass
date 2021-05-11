@@ -7,9 +7,9 @@
 #include "settings.hpp"
 
 // Include memory headers
-#include "memory/config.hpp"
-#include "memory/allocator.hpp"
-#include "memory/shared_ptr.hpp"
-#include "memory/memory_pool.hpp"
+#include "memory_config.hpp"
+#include "memory_allocator.hpp"
+#include "memory_pool.hpp"
+#include "shared_ptr.hpp"
 
 #endif

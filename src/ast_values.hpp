@@ -19,6 +19,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Errors from Sass_Values.
   /////////////////////////////////////////////////////////////////////////
+
   class CustomError final : public Value
   {
   private:
@@ -38,7 +39,6 @@ namespace Sass {
     // Implement interface for base Value class
     size_t hash() const override final { return 0; }
     enum SassValueType getTag() const override final { return SASS_ERROR; }
-    const sass::string& getText() const override final { return message_; }
     const sass::string& type() const override final { return Strings::error; }
 
     // Implement equality comparators for base value class
@@ -61,6 +61,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Warnings from Sass_Values.
   /////////////////////////////////////////////////////////////////////////
+
   class CustomWarning final : public Value
   {
   private:
@@ -80,7 +81,6 @@ namespace Sass {
     // Implement interface for base Value class
     size_t hash() const override final { return 0; }
     enum SassValueType getTag() const override final { return SASS_WARNING; }
-    const sass::string& getText() const override final { return message_; }
     const sass::string& type() const override final { return Strings::warning; }
 
     // Implement equality comparators for base value class
@@ -102,6 +102,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   // The null value.
   ///////////////////////////////////////////////////////////////////////
+
   class Null final : public Value
   {
   public:
@@ -145,6 +146,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   // Base class for colors (either rgba or hsla).
   ///////////////////////////////////////////////////////////////////////
+
   class Color : public Value
   {
   private:
@@ -204,6 +206,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   // A sass color in RGBA representation.
   ///////////////////////////////////////////////////////////////////////
+
   class ColorRgba final : public Color
   {
   private:
@@ -251,6 +254,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   // A sass color in HSLA representation.
   ///////////////////////////////////////////////////////////////////////
+
   class ColorHsla final : public Color
   {
   private:
@@ -297,6 +301,7 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
   // A sass color in HSLA representation.
   ///////////////////////////////////////////////////////////////////////
+
   class ColorHwba final : public Color
   {
   private:
@@ -546,7 +551,6 @@ namespace Sass {
     // Implement interface for base Value class
     size_t hash() const override final;
     enum SassValueType getTag() const override final { return SASS_STRING; }
-    const sass::string& getText() const override final { return value_; }
     const sass::string& type() const override { return Strings::string; }
 
     // Implement equality comparators for base value class
@@ -648,7 +652,7 @@ namespace Sass {
 
     // Clone all items in-place
     Map* cloneChildren(SASS_MEMORY_ARGS_VOID) override final {
-      for (auto it = begin(); it != end(); ++it) {
+      for (auto it = Hashed::begin(); it != Hashed::end(); ++it) {
         it.value() = it.value()->copy(SASS_MEMORY_PARAMS_VOID);
         it.value()->cloneChildren(SASS_MEMORY_PARAMS_VOID);
       }

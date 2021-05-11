@@ -210,6 +210,9 @@ namespace Sass {
     // the corresponding source line.
     bool source_comments;
 
+    // Enable to not print anything on stderr (quiet mode)
+    bool suppress_stderr = false;
+
     // Sourcemap related options
     SrcMapOptions mapopt;
 

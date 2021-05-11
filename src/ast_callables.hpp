@@ -25,13 +25,16 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Internal callables provided by LibSass itself.
   /////////////////////////////////////////////////////////////////////////
-  class BuiltInCallable final : public Callable {
+
+  class BuiltInCallable final : public Callable
+  {
+  private:
 
     // Name of this callable/function
     ADD_CONSTREF(EnvKey, envkey);
 
     // Pair of signature and callback
-    ADD_REF(SassFnPair, function);
+    ADD_CONSTREF(SassFnPair, function);
 
   public:
 
@@ -64,7 +67,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Internal callable with multiple signatures to choose from.
   /////////////////////////////////////////////////////////////////////////
-  class BuiltInCallables final : public Callable {
+
+  class BuiltInCallables final : public Callable
+  {
+  private:
 
     // Name of this callable/function
     ADD_CONSTREF(EnvKey, envkey);
@@ -109,9 +115,13 @@ namespace Sass {
 
     // Name of this callable (used for reporting)
     ADD_CONSTREF(EnvKey, envkey);
-    // The declaration (parameters this function takes).
+
+    // The declaration (parameters this callable takes).
     ADD_CONSTREF(CallableDeclarationObj, declaration);
-    // The environment in which this callable was declared.
+
+    // Content blocks passed to includes need to preserve
+    // the previous content block. Could have been implemented
+    // with a stack vector, but we remember it here instead.
     ADD_PROPERTY(UserDefinedCallable*, content);
 
   public:
@@ -121,7 +131,7 @@ namespace Sass {
       const SourceSpan& pstate,
       const EnvKey& fname,
       CallableDeclarationObj declaration,
-      UserDefinedCallable* content);
+      UserDefinedCallable* content = nullptr);
 
     // The main entry point to execute the function (implemented in each specialization)
     Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate) override final;
@@ -139,16 +149,20 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // External callable defined on the C-API side.
   /////////////////////////////////////////////////////////////////////////
+
   class ExternalCallable final : public Callable
   {
   private:
 
     // Name of this callable (used for reporting)
     ADD_CONSTREF(EnvKey, envkey);
+
     // The declaration (parameters this function takes).
     ADD_CONSTREF(CallableSignatureObj, declaration);
+
     // The attached external callback reference
-    ADD_PROPERTY(SassFunctionLambda, lambda);
+    ADD_CONSTREF(SassFunctionLambda, lambda);
+
     // The attached external data cookie
     ADD_PROPERTY(void*, cookie);
 

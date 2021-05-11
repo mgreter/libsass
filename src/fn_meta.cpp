@@ -253,7 +253,7 @@ namespace Sass {
           for (auto entry : refs->varIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            EnvRef vidx(refs->framePtr, entry.second);
+            EnvRef vidx(refs, entry.second);
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
@@ -261,7 +261,7 @@ namespace Sass {
           for (auto entry : root->mergedFwdVar) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            EnvRef vidx(0xFFFFFFFF, entry.second);
+            EnvRef vidx(entry.second);
             list->insert({ name, compiler.
               varRoot.getVariable(vidx) });
           }
@@ -291,7 +291,7 @@ namespace Sass {
           for (auto entry : refs->fnIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            EnvRef fidx(refs->framePtr, entry.second);
+            EnvRef fidx(refs, entry.second);
             auto callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
@@ -300,7 +300,7 @@ namespace Sass {
           for (auto entry : root->mergedFwdFn) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
-            EnvRef fidx(0xFFFFFFFF, entry.second);
+            EnvRef fidx(entry.second);
             auto callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
@@ -349,7 +349,7 @@ namespace Sass {
             EnvRefs* module = pp->second.first;
             auto it = module->fnIdxs.find(name->value());
             if (it != module->fnIdxs.end()) {
-              EnvRef fidx({ module->framePtr, it->second });
+              EnvRef fidx({ module, it->second });
               callable = compiler.varRoot.getFunction(fidx);
             }
           }
@@ -371,7 +371,7 @@ namespace Sass {
                   throw Exception::RuntimeException(compiler,
                     "This function is available from multiple global modules.");
                 }
-                EnvRef fidx({ global->framePtr, it->second });
+                EnvRef fidx({ global, it->second });
                 callable = compiler.varRoot.getFunction(fidx);
                 if (callable) break;
               }
@@ -433,8 +433,7 @@ namespace Sass {
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
           itpl->append(SASS_MEMORY_NEW(String, pstate, sass::string(str->value())));
           FunctionExpressionObj expression = SASS_MEMORY_NEW(
-            FunctionExpression, pstate, str->value(), invocation,
-            true); // Maybe pass flag into here!?
+            FunctionExpression, pstate, str->value(), invocation);
           return eval.acceptFunctionExpression(expression);
 
         }
@@ -474,10 +473,10 @@ namespace Sass {
             WithConfigVar kvar;
             kvar.name = name->value();
             kvar.value = kv.second;
-            kvar.isGuarded = false;
-            kvar.wasUsed = false;
+            kvar.isGuarded41 = false;
+            kvar.wasUsed42 = false;
             kvar.pstate2 = name->pstate();
-            kvar.isNull = !kv.second || kv.second->isaNull();
+            kvar.isNull43 = !kv.second || kv.second->isaNull();
             withConfigs.push_back(kvar);
             if (config.count(kname) == 1) {
               throw Exception::RuntimeException(compiler,
@@ -500,7 +499,7 @@ namespace Sass {
         WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
 
         WithConfig*& pwconfig(compiler.wconfig);
-        LOCAL_PTR(WithConfig, pwconfig, &wconfig);
+        RAII_PTR(WithConfig, pwconfig, &wconfig);
 
         sass::string prev(pstate.getAbsPath());
         if (Root* sheet = eval.loadModule(

@@ -1,12 +1,12 @@
 #include "shared_ptr.hpp"
 
 #ifdef DEBUG_SHARED_PTR
-#include "../debugger.hpp"
+#include "debugger.hpp"
 #include <iostream>
 #include <typeinfo>
 #endif
 
-#include "../source.hpp"
+#include "source.hpp"
 
 namespace Sass {
 

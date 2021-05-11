@@ -416,8 +416,10 @@ extern "C" {
     sass_compiler_render(compiler);
 
     // First print all warnings and deprecation messages
-    if (sass_compiler_get_warn_string(compiler)) {
-      sass_print_stderr(sass_compiler_get_warn_string(compiler));
+    if (!sass_compiler_get_suppress_stderr(compiler)) {
+      if (sass_compiler_get_warn_string(compiler)) {
+        sass_print_stderr(sass_compiler_get_warn_string(compiler));
+      }
     }
 
     // Get original compiler exit status to return
@@ -555,6 +557,18 @@ extern "C" {
   void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path)
   {
     Compiler::unwrap(compiler).output_path = output_path ? output_path : "stream://stdout";
+  }
+
+  // Getter for option to suppress anything being printed on stderr (quiet mode)
+  bool ADDCALL sass_compiler_get_suppress_stderr(struct SassCompiler* compiler)
+  {
+    return Compiler::unwrap(compiler).suppress_stderr;
+  }
+
+  // Setter for option to suppress anything being printed on stderr (quiet mode)
+  void ADDCALL sass_compiler_set_suppress_stderr(struct SassCompiler* compiler, bool suppress)
+  {
+    Compiler::unwrap(compiler).suppress_stderr = suppress;
   }
 
   /////////////////////////////////////////////////////////////////////////

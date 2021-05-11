@@ -63,7 +63,7 @@ namespace Sass {
     CssStyleRule* readStyleRule = nullptr;
 
     // Current content block
-    UserDefinedCallable* content88 = nullptr;
+    UserDefinedCallable* content = nullptr;
 
     // Whether we're working with plain css.
     bool plainCss = false;
@@ -120,7 +120,7 @@ namespace Sass {
 
     // Query if we have a content block
     bool hasContentBlock() const {
-      return content88 != nullptr;
+      return content != nullptr;
     }
 
     // Check if there are any unsatisfied extends (will throw)
@@ -304,7 +304,7 @@ protected:
     Value* visitMapExpression(MapExpression*);
     Value* visitNullExpression(NullExpression*);
     Value* visitNumberExpression(NumberExpression*);
-    Value* visitCssFunction(PlainCssFunction*);
+    Value* visitCssFunction(CssFnExpression*);
     Value* visitParenthesizedExpression(ParenthesizedExpression*);
     Value* visitParentExpression(ParentExpression*);
     Value* visitStringExpression(StringExpression*);

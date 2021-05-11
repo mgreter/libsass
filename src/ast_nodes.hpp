@@ -15,36 +15,18 @@
 
 namespace Sass {
 
-  //////////////////////////////////////////////////////////////////////
-  // Define cast template now (need complete type).
-  // Note: we should have gotten rid of all usage by now.
-  // Note: only debugger still uses this (move there?).
-  //////////////////////////////////////////////////////////////////////
-
-  template<class T>
-  T* Cast(AstNode* ptr) {
-    return dynamic_cast<T*>(ptr);
-  };
-
-  template<class T>
-  const T* Cast(const AstNode* ptr) {
-    return dynamic_cast<const T*>(ptr);
-  };
-
   /////////////////////////////////////////////////////////////////////////
+  // Some helpers in regard to sass value operations.
   /////////////////////////////////////////////////////////////////////////
 
   uint8_t sass_op_to_precedence(enum SassOperator op);
   const char* sass_op_to_name(enum SassOperator op);
   const char* sass_op_separator(enum SassOperator op);
 
-  typedef LocalStack<EnvFrame*> ScopedStack;
-  typedef LocalStack<ImportObj> ScopedImport;
-  typedef LocalStack<SelectorListObj> ScopedSelector;
-
   /////////////////////////////////////////////////////////////////////////
   // Abstract base class for all abstract syntax tree nodes.
   /////////////////////////////////////////////////////////////////////////
+
   class AstNode : public RefCounted
   {
   private:
@@ -70,12 +52,12 @@ namespace Sass {
 
     // Delete compare operators to make implementation more clear
     // Helps us spot cases where we use undefined implementations
-    // virtual bool operator==(const AstNode& rhs) const = delete;
-    // virtual bool operator!=(const AstNode& rhs) const = delete;
-    // virtual bool operator>=(const AstNode& rhs) const = delete;
-    // virtual bool operator<=(const AstNode& rhs) const = delete;
-    // virtual bool operator>(const AstNode& rhs) const = delete;
-    // virtual bool operator<(const AstNode& rhs) const = delete;
+    virtual bool operator==(const AstNode& rhs) const = delete;
+    virtual bool operator!=(const AstNode& rhs) const = delete;
+    virtual bool operator>=(const AstNode& rhs) const = delete;
+    virtual bool operator<=(const AstNode& rhs) const = delete;
+    virtual bool operator>(const AstNode& rhs) const = delete;
+    virtual bool operator<(const AstNode& rhs) const = delete;
 
   };
 
@@ -83,6 +65,7 @@ namespace Sass {
   // Abstract base class for items in interpolations.
   // Must be one of ItplString, an Expression or a Value.
   /////////////////////////////////////////////////////////////////////////
+
   class Interpolant : public AstNode
   {
   public:
@@ -100,7 +83,6 @@ namespace Sass {
 
     // Interface to be implemented
     virtual Type getType() const = 0;
-    virtual const sass::string& getText() const { return Strings::empty; };
 
     // Declare up-casting methods
     DECLARE_ISA_CASTER(Value);
@@ -124,7 +106,6 @@ namespace Sass {
     ItplString(const SourceSpan& pstate, sass::string&& text);
     ItplString(const SourceSpan& pstate, const sass::string& text);
     Type getType() const override final { return LiteralInterpolant; }
-    const sass::string& getText() const override final { return text_; }
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ItplString);
@@ -132,6 +113,7 @@ namespace Sass {
   // EO ItplString
 
   ///////////////////////////////////////////////////////////////////////
+  // Interpolation class holding a list of interpolants.
   ///////////////////////////////////////////////////////////////////////
 
   class Interpolation final : public AstNode,
@@ -143,9 +125,13 @@ namespace Sass {
     Interpolation(const SourceSpan& pstate,
       Interpolant* interpolant = nullptr);
 
+    // // If this contains no interpolated expressions, returns its text contents.
     const sass::string& getPlainString() const;
+
+    // Returns the plain text before the interpolation, or the empty string.
     const sass::string& getInitialPlain() const;
 
+    // Wrap interpolation within a string expression
     StringExpression* wrapInStringExpression();
 
   };
@@ -156,6 +142,7 @@ namespace Sass {
   // hierarchy represents elements in value contexts, which
   // exist primarily to be evaluated and returned.
   //////////////////////////////////////////////////////////////////////
+
   class Expression : public Interpolant,
     public ExpressionVisitable<Value*>
   {
@@ -164,21 +151,33 @@ namespace Sass {
     // Value constructor
     Expression(SourceSpan&& pstate);
 
-    // Needed here to avoid ambiguity from base-classes!??
-    virtual Value* accept(ExpressionVisitor<Value*>* visitor) override = 0;
-    // virtual void accept(ExpressionVisitor<void>* visitor) override = 0;
+    // Needed here to avoid ambiguity from base-classes (issue seems gone)!??
+    // virtual Value* accept(ExpressionVisitor<Value*>* visitor) override = 0;
 
     // Implementation for parent Interpolant interface
     Type getType() const override final { return ExpressionInterpolant; }
 
     // Declare up-casting methods
+    DECLARE_ISA_CASTER(IfExpression);
+    DECLARE_ISA_CASTER(CssFnExpression);
+    DECLARE_ISA_CASTER(UnaryOpExpression);
+    DECLARE_ISA_CASTER(BinaryOpExpression);
+    DECLARE_ISA_CASTER(InvocationExpression);
+    DECLARE_ISA_CASTER(ParenthesizedExpression);
     DECLARE_ISA_CASTER(VariableExpression);
     DECLARE_ISA_CASTER(FunctionExpression);
+    DECLARE_ISA_CASTER(BooleanExpression);
+    DECLARE_ISA_CASTER(StringExpression);
     DECLARE_ISA_CASTER(NumberExpression);
+    DECLARE_ISA_CASTER(ColorExpression);
+    DECLARE_ISA_CASTER(ValueExpression);
     DECLARE_ISA_CASTER(NullExpression);
+    DECLARE_ISA_CASTER(ListExpression);
+    DECLARE_ISA_CASTER(MapExpression);
     // Implement our up-casting
     IMPLEMENT_ISA_CASTER(Expression);
   };
+  // EO Expression
 
   /////////////////////////////////////////////////////////////////////////
   // Abstract base class for statements. This side of the AST hierarchy
@@ -226,12 +225,15 @@ namespace Sass {
   };
 
   //////////////////////////////////////////////////////////////////////
+  // Base class for all imports
   //////////////////////////////////////////////////////////////////////
 
   class ImportBase : public AstNode
   {
   public:
+    // Value constructor
     ImportBase(const SourceSpan& pstate);
+    // Copy constructor
     ImportBase(const ImportBase* ptr);
     // Declare up-casting methods
     DECLARE_ISA_CASTER(StaticImport);
@@ -244,98 +246,85 @@ namespace Sass {
   // we either want to iterate over a container or a single value.
   // In order to avoid unnecessary copies, we use this iterator.
   //////////////////////////////////////////////////////////////////////
-  class Values final {
 
+  class Iterator final
+  {
   public:
 
-    // We know four types
-    enum Type {
+    // We know four iterator types
+    enum ItType {
       MapIterator,
       ListIterator,
       SingleIterator,
       NullPtrIterator,
     };
 
-    // Internal iterator helper class
-    class iterator
-    {
-
-    private:
-
-      // The value we are iterating over
-      Value* val;
-      // The detected value/iterator type
-      Type type;
-      // The final item to iterator to
-      // For null ptr this is zero, for
-      // single items this is 1 and for
-      // lists/maps the container size.
-      size_t last;
-      // The current iteration item
-      size_t cur;
-
-    public:
-
-      // Some typedefs to satisfy C++ type traits
-      typedef std::input_iterator_tag iterator_category;
-      typedef iterator self_type;
-      typedef Value* value_type;
-      typedef Value* reference;
-      typedef Value* pointer;
-      typedef int difference_type;
-
-      // Create iterator for start (or end)
-      iterator(Value* val, bool end);
-
-      // Copy constructor
-      iterator(const iterator& it) :
-        val(it.val),
-        type(it.type),
-        last(it.last),
-        cur(it.cur) {}
-
-      // Dereference current item
-      reference operator*();
-      reference operator->();
-
-      // Move to the next item
-      iterator& operator++();
-      iterator& operator+=(size_t offset);
-      iterator& operator-=(size_t offset);
-      iterator operator-(size_t offset);
-
-      // Check if it's the last item
-      bool isLast();
-
-      // Compare operators
-      bool operator==(const iterator& other) const;
-      bool operator!=(const iterator& other) const;
-
-    };
-    // EO class iterator
+  private:
 
     // The value we are iterating over
     Value* val;
     // The detected value/iterator type
-    Type type;
+    ItType type;
+    // The final item to iterate to
+    // For null ptr this is zero, for
+    // single items this is 1 and for
+    // lists/maps the container size.
+    size_t last;
+    // The current iteration item
+    size_t cur;
 
-    // Standard value constructor
-    Values(Value* val) : val(val), type(SingleIterator) {}
+  public:
 
-    // Get iterator at the given position
-    iterator begin() { return iterator(val, false); }
-    iterator end() { return iterator(val, true); }
+    // Some typedefs to satisfy C++ type traits
+    typedef std::input_iterator_tag iterator_category;
+    typedef Iterator self_type;
+    typedef Value* value_type;
+    typedef Value* reference;
+    typedef Value* pointer;
+    typedef int difference_type;
+
+    // Create iterator for start (or end)
+    Iterator(Value* val, bool end);
+
+    // Copy constructor
+    Iterator(const Iterator& it) :
+      val(it.val),
+      type(it.type),
+      last(it.last),
+      cur(it.cur) {}
+
+    // Dereference current item
+    reference operator*();
+    reference operator->();
+
+    // Move to the next item
+    Iterator& operator++();
+    Iterator& operator+=(size_t offset);
+    Iterator& operator-=(size_t offset);
+    Iterator operator-(size_t offset);
+
+    // Check if it's the last item
+    bool isLast() const;
+
+    // Compare operators
+    bool operator==(const Iterator& other) const;
+    bool operator!=(const Iterator& other) const;
+
+    // Get iterators to support regular C++ loops
+    const Iterator& begin() const { return *this; }
+    Iterator end() const { return Iterator(val, true); }
 
   };
-  // EO class Values
+  // EO class Iterator
 
   //////////////////////////////////////////////////////////////////////
   // base class for values that support operations
   //////////////////////////////////////////////////////////////////////
+
   class Value : public Interpolant,
     public ValueVisitable<void>,
-    public ValueVisitable<Value*> {
-
+    public ValueVisitable<Value*>
+  {
   public:
 
     // Needed here to avoid ambiguity from base-classes!??
@@ -387,13 +376,13 @@ namespace Sass {
     // Return the length of this item as a list
     virtual size_t lengthAsList() const { return 1; }
 
+    // Get iterators for values. We couldn't use begin and end
+    // since list and map already define these methods.
+    virtual Iterator start() { return Iterator(this, false); }
+    virtual Iterator stop() { return Iterator(this, true); }
+
     // Get the type in string format (for output)
     virtual const sass::string& type() const = 0;
-
-    // Get a values iterator
-    virtual Values iterator() {
-      return Values{ this };
-    }
 
     // Search the position of the given value
     virtual size_t indexOf(Value* value) {
@@ -587,6 +576,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // A query for the `@at-root` rule.
   /////////////////////////////////////////////////////////////////////////
+
   class AtRootQuery final : public AstNode
   {
   private:
@@ -615,9 +605,6 @@ namespace Sass {
     // Whether this includes or excludes media rules.
     bool media() const;
 
-    // Returns the at-rule name for [node], or `null` if it's not an at-rule.
-    sass::string _nameFor(CssNode* node) const;
-
     // Returns whether [this] excludes a node with the given [name].
     bool excludesName(const sass::string& name) const;
 
@@ -642,9 +629,6 @@ namespace Sass {
     static AtRootQuery* defaultQuery(SourceSpan&& pstate);
 
   };
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

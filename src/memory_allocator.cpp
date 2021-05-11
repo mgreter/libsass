@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
-#include "allocator.hpp"
+#include "memory_allocator.hpp"
 
 #ifdef SASS_CUSTOM_ALLOCATOR
 #include "memory_pool.hpp"

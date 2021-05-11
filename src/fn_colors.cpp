@@ -1083,7 +1083,7 @@ namespace Sass {
         }
 
         bool isOnlyIeFilters = true;
-        for (Value* value : arguments[0]->iterator()) {
+        for (Value* value : arguments[0]->start()) {
           if (String* string = value->isaString()) {
             if (!isMsFilterStart(string->value())) {
               isOnlyIeFilters = false;

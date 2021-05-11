@@ -22,9 +22,9 @@ namespace Sass {
     Module(new EnvRefs(
       root,
       nullptr,
-      0xFFFFFFFF,
-      false, // isSemiGlobal
-      false)) // isImport
+      false,  // isImport
+      true,   // isInternal
+      false)) // isSemiGlobal
   {
     isBuiltIn = true;
     isLoaded = true;

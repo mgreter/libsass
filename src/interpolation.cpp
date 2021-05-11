@@ -13,8 +13,8 @@ namespace Sass {
   {
     InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
     // Append all content Expressions
-    for (auto item : contents) {
-      itpl->append(item.ptr());
+    for (auto& item : contents) {
+      itpl->append(item);
     }
     if (!text.empty()) {
       // Appends a ItplString from the remaining text in the string buffer

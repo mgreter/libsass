@@ -14,7 +14,7 @@ namespace Sass {
   // Each parsed scope gets its own environment frame
   /////////////////////////////////////////////////////////////////////////
 
-  const EnvRef nullidx{ 0xFFFFFFFF, 0xFFFFFFFF };
+  const EnvRef nullidx{ 0xFFFFFFFF };
 
   // The root is used for all runtime state
   // Also contains parsed root scope stack
@@ -23,18 +23,15 @@ namespace Sass {
     compiler(compiler),
     stack(compiler.varStack3312),
     idxs(new EnvRefs(
-      *this,
-      nullptr,
-      0xFFFFFFFF,
-      false,
-      false))
+      *this,  // root
+      nullptr,// pscope
+      false,  // isImport
+      true,   // isInternal
+      false)) // isSemiGlobal
   {
     varStack.reserve(256);
     mixStack.reserve(128);
     fnStack.reserve(256);
-    varStackPtr.reserve(256);
-    mixStackPtr.reserve(128);
-    fnStackPtr.reserve(256);
     intVariables.reserve(256);
     intMixin.reserve(128);
     intFunction.reserve(256);
@@ -50,24 +47,17 @@ namespace Sass {
   EnvFrame::EnvFrame(
     Compiler& compiler,
     bool isSemiGlobal,
-    bool isModule,
+    bool isInternal,
     bool isImport) :
     stack(compiler.varRoot.stack),
     idxs(new EnvRefs(
       compiler.varRoot,
       compiler.varRoot.stack.back(),
-      uint32_t(compiler.varRoot.varStackPtr.size()),
-      isSemiGlobal, isImport))
+      isImport, isInternal, isSemiGlobal))
   {
-    if (isModule) {
+    if (isInternal) {
       // Lives in built-in scope
-      idxs->framePtr = 0xFFFFFFFF;
-    }
-    else {
-      // Initialize stacks as not active yet
-      idxs->root.varStackPtr.push_back(0xFFFFFFFF);
-      idxs->root.mixStackPtr.push_back(0xFFFFFFFF);
-      idxs->root.fnStackPtr.push_back(0xFFFFFFFF);
+      idxs->isInternal = true;
     }
     // Check and prevent stack smashing
     if (stack.size() > SassMaxNesting) {
@@ -97,18 +87,18 @@ namespace Sass {
   EnvRef EnvRefs::createVariable(
     const EnvKey& name)
   {
-    if (framePtr == 0xFFFFFFFF) {
+    if (isInternal) {
       uint32_t offset = (uint32_t)root.intVariables.size();
       root.intVariables.resize(offset + 1);
       varIdxs[name] = offset;
-      return { 0xFFFFFFFF, offset };
+      return { offset };
     }
     // Get local offset to new variable
     uint32_t offset = (uint32_t)varIdxs.size();
     // Remember the variable name
     varIdxs[name] = offset;
     // Return stack index reference
-    return { framePtr, offset };
+    return { this, offset };
   }
   // EO createVariable
 
@@ -119,18 +109,18 @@ namespace Sass {
   EnvRef EnvRefs::createFunction(
     const EnvKey& name)
   {
-    if (framePtr == 0xFFFFFFFF) {
+    if (isInternal) {
       uint32_t offset = (uint32_t)root.intFunction.size();
       root.intFunction.resize(offset + 1);
       fnIdxs[name] = offset;
-      return { 0xFFFFFFFF, offset };
+      return { offset };
     }
     // Get local offset to new function
     uint32_t offset = (uint32_t)fnIdxs.size();
     // Remember the function name
     fnIdxs[name] = offset;
     // Return stack index reference
-    return { framePtr, offset };
+    return { this, offset };
   }
   // EO createFunction
 
@@ -140,22 +130,21 @@ namespace Sass {
   EnvRef EnvRefs::createMixin(
     const EnvKey& name)
   {
-    if (framePtr == 0xFFFFFFFF) {
+    if (isInternal) {
       uint32_t offset = (uint32_t)root.intMixin.size();
       root.intMixin.resize(offset + 1);
       mixIdxs[name] = offset;
-      return { 0xFFFFFFFF, offset };
+      return { offset };
     }
     // Get local offset to new mixin
     uint32_t offset = (uint32_t)mixIdxs.size();
     // Remember the mixin name
     mixIdxs[name] = offset;
     // Return stack index reference
-    return { framePtr, offset };
+    return { this, offset };
   }
   // EO createMixin
 
- 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -163,11 +152,11 @@ namespace Sass {
   // Just converting and returning reference to array offset
   ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
   {
-    if (vidx.frame == 0xFFFFFFFF) {
+    if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
       return intVariables[vidx.offset];
     }
     else {
-      return varStack[size_t(varStackPtr[vidx.frame]) + vidx.offset];
+      return varStack[vidx.idxs->varOffset + vidx.offset];
     }
   }
   // EO getVariable
@@ -200,11 +189,11 @@ namespace Sass {
   // Just converting and returning reference to array offset
   CallableObj& EnvRoot::getFunction(const EnvRef& fidx)
   {
-    if (fidx.frame == 0xFFFFFFFF) {
+    if (fidx.idxs == nullptr || fidx.idxs->isInternal) {
       return intFunction[fidx.offset];
     }
     else {
-      return fnStack[size_t(fnStackPtr[fidx.frame]) + fidx.offset];
+      return fnStack[size_t(fidx.idxs->fnOffset) + fidx.offset];
     }
   }
   // EO findFunction
@@ -213,11 +202,11 @@ namespace Sass {
   // Just converting and returning reference to array offset
   CallableObj& EnvRoot::getMixin(const EnvRef& midx)
   {
-    if (midx.frame == 0xFFFFFFFF) {
+    if (midx.idxs == nullptr || midx.idxs->isInternal) {
       return intMixin[midx.offset];
     }
     else {
-      return mixStack[size_t(mixStackPtr[midx.frame]) + midx.offset];
+      return mixStack[size_t(midx.idxs->mixOffset) + midx.offset];
     }
   }
   // EO getMixin
@@ -239,31 +228,15 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setVariable(const EnvRef& vidx, Value* value, bool guarded)
   {
-    if (vidx.frame == 0xFFFFFFFF) {
+    if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
       ValueObj& slot(intVariables[vidx.offset]);
       if (!guarded || !slot || slot->isaNull()) {
         slot = value;
       }
     }
     else {
-      ValueObj& slot(varStack[size_t(varStackPtr[vidx.frame]) + vidx.offset]);
+      ValueObj& slot(varStack[vidx.idxs->varOffset + vidx.offset]);
       if (slot == nullptr || guarded == false) slot = value;
-    }
-  }
-  // EO setVariable
-
-  // Set items on runtime/evaluation phase via references
-  // Just converting reference to array offset and assigning
-  void EnvRoot::setVariable(uint32_t frame, uint32_t offset, Value* value, bool guarded)
-  {
-    if (frame == 0xFFFFFFFF) {
-      ValueObj& slot(intVariables[offset]);
-      if (!guarded || !slot || slot->isaNull())
-        intVariables[offset] = value;
-    }
-    else {
-      ValueObj& slot(varStack[size_t(varStackPtr[frame]) + offset]);
-      if (!guarded || !slot || slot->isaNull()) slot = value;
     }
   }
   // EO setVariable
@@ -272,12 +245,12 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setFunction(const EnvRef& fidx, UserDefinedCallable* value, bool guarded)
   {
-    if (fidx.frame == 0xFFFFFFFF) {
+    if (fidx.idxs == nullptr || fidx.idxs->isInternal) {
       if (!guarded || intFunction[fidx.offset] == nullptr)
         intFunction[fidx.offset] = value;
     }
     else {
-      CallableObj& slot(fnStack[size_t(fnStackPtr[fidx.frame]) + fidx.offset]);
+      CallableObj& slot(fnStack[fidx.idxs->fnOffset + fidx.offset]);
       if (!guarded || !slot) slot = value;
     }
   }
@@ -287,12 +260,12 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setMixin(const EnvRef& midx, UserDefinedCallable* value, bool guarded)
   {
-    if (midx.frame == 0xFFFFFFFF) {
+    if (midx.idxs == nullptr || midx.idxs->isInternal) {
       if (!guarded || intMixin[midx.offset] == nullptr)
         intMixin[midx.offset] = value;
     }
     else {
-      CallableObj& slot(mixStack[size_t(mixStackPtr[midx.frame]) + midx.offset]);
+      CallableObj& slot(mixStack[midx.idxs->mixOffset + midx.offset]);
       if (!guarded || !slot) slot = value;
     }
   }
@@ -313,12 +286,12 @@ namespace Sass {
         for (auto fwds : current->forwards) {
           auto fwd = fwds->mixIdxs.find(name);
           if (fwd != fwds->mixIdxs.end()) {
-            return { fwds->framePtr, fwd->second };
+            return { fwds, fwd->second };
           }
           if (Module* mod = fwds->module) {
             auto fwd = mod->mergedFwdMix.find(name);
             if (fwd != mod->mergedFwdMix.end()) {
-              return { 0xFFFFFFFF, fwd->second };
+              return { fwd->second };
             }
           }
         }
@@ -326,7 +299,7 @@ namespace Sass {
       if (current->isImport) continue;
       auto it = current->mixIdxs.find(name);
       if (it != current->mixIdxs.end()) {
-        return { current->framePtr, it->second };
+        return { current, it->second };
       }
     }
     return nullidx;
@@ -346,12 +319,12 @@ namespace Sass {
         for (auto fwds : current->forwards) {
           auto fwd = fwds->fnIdxs.find(name);
           if (fwd != fwds->fnIdxs.end()) {
-            return { fwds->framePtr, fwd->second };
+            return { fwds, fwd->second };
           }
           if (Module* mod = fwds->module) {
             auto fwd = mod->mergedFwdFn.find(name);
             if (fwd != mod->mergedFwdFn.end()) {
-              return { 0xFFFFFFFF, fwd->second };
+              return { fwd->second };
             }
           }
         }
@@ -359,7 +332,7 @@ namespace Sass {
       if (current->isImport) continue;
       auto it = current->fnIdxs.find(name);
       if (it != current->fnIdxs.end()) {
-        return { current->framePtr, it->second };
+        return { current, it->second };
       }
     }
     return nullidx;
@@ -383,7 +356,7 @@ namespace Sass {
               "Private members can't be accessed "
               "from outside their modules.");
           }
-          return { fwds->framePtr, fwd->second };
+          return { fwds, fwd->second };
         }
         if (Module* mod = fwds->module) {
           auto fwd = mod->mergedFwdVar.find(name);
@@ -393,14 +366,14 @@ namespace Sass {
                 "Private members can't be accessed "
                 "from outside their modules.");
             }
-            return { 0xFFFFFFFF, fwd->second };
+            return { fwd->second };
           }
         }
       }
       if (current->isImport) continue;
       auto it = current->varIdxs.find(name);
       if (it != current->varIdxs.end()) {
-        return { current->framePtr, it->second };
+        return { current, it->second };
       }
     }
     return nullidx;
@@ -420,7 +393,7 @@ namespace Sass {
         auto it = current->varIdxs.find(name);
         if (it != current->varIdxs.end()) {
           vidxs.emplace_back(EnvRef{
-            current->framePtr, it->second });
+            current, it->second });
         }
       }
       if (name.isPrivate()) continue;
@@ -428,13 +401,13 @@ namespace Sass {
         auto fwd = fwds->varIdxs.find(name);
         if (fwd != fwds->varIdxs.end()) {
           vidxs.emplace_back(EnvRef{
-            fwds->framePtr, fwd->second });
+            fwds, fwd->second });
         }
         if (Module* mod = fwds->module) {
           auto fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             vidxs.emplace_back(EnvRef{
-              0xFFFFFFFF, fwd->second });
+              fwd->second });
           }
         }
       }
@@ -447,20 +420,20 @@ namespace Sass {
     auto it = varIdxs.find(name);
     if (it != varIdxs.end()) {
       root.setModVar(it->second, value, guarded, pstate);
-      return { 0xFFFFFFFF, it->second };
+      return { it->second };
     }
     for (auto fwds : forwards) {
       auto it = fwds->varIdxs.find(name);
       if (it != fwds->varIdxs.end()) {
         root.setModVar(it->second, value, guarded, pstate);
-        return { 0xFFFFFFFF, it->second };
+        return { it->second };
       }
     }
     return nullidx;
   }
 
 
-  bool EnvRefs::hasNameSpace(const sass::string& ns, const EnvKey& name) const
+  bool EnvRefs::hasNameSpace(const sass::string& ns) const
   {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
@@ -497,13 +470,13 @@ namespace Sass {
       if (EnvRefs* idxs = it->second.first) {
         auto it = idxs->varIdxs.find(name);
         if (it != idxs->varIdxs.end()) {
-          return { idxs->framePtr, it->second };
+          return { idxs, it->second };
         }
       }
       if (Module* mod = it->second.second) {
         auto fwd = mod->mergedFwdVar.find(name);
         if (fwd != mod->mergedFwdVar.end()) {
-          EnvRef vidx{ 0xFFFFFFFF, fwd->second };
+          EnvRef vidx{ fwd->second };
           ValueObj& val = root.getVariable(vidx);
           if (val != nullptr) return vidx;
         }
@@ -525,13 +498,13 @@ namespace Sass {
       if (EnvRefs* idxs = it->second.first) {
         auto it = idxs->mixIdxs.find(name);
         if (it != idxs->mixIdxs.end()) {
-          return { idxs->framePtr, it->second };
+          return { idxs, it->second };
         }
       }
       if (Module* mod = it->second.second) {
         auto fwd = mod->mergedFwdMix.find(name);
         if (fwd != mod->mergedFwdMix.end()) {
-          return { 0xFFFFFFFF, fwd->second };
+          return { fwd->second };
         }
       }
     }
@@ -550,13 +523,13 @@ namespace Sass {
       if (EnvRefs* idxs = it->second.first) {
         auto it = idxs->fnIdxs.find(name);
         if (it != idxs->fnIdxs.end()) {
-          return { idxs->framePtr, it->second };
+          return { idxs, it->second };
         }
       }
       if (Module* mod = it->second.second) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {
-          return { 0xFFFFFFFF, fwd->second };
+          return { fwd->second };
         }
       }
     }
@@ -613,7 +586,7 @@ namespace Sass {
         auto fwd = mod->mergedFwdVar.find(name);
         if (fwd != mod->mergedFwdVar.end()) {
           root.setModVar(fwd->second, value, guarded, pstate);
-          return { 0xFFFFFFFF, fwd->second };
+          return { fwd->second };
         }
       }
       if (EnvRefs* idxs = it->second.first) {
@@ -631,7 +604,7 @@ namespace Sass {
   sass::string EnvRef::toString() const
   {
     sass::sstream strm;
-    strm << frame << ":" << offset;
+    strm << offset;
     return strm.str();
   }
   // EO toString

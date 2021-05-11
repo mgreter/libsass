@@ -30,9 +30,9 @@ namespace Sass {
     ExpressionObj expression;
     ValueObj value;
     SourceSpan pstate2;
-    bool isGuarded = false;
-    bool wasUsed = false;
-    bool isNull = true;
+    bool isGuarded41 = false;
+    bool wasUsed42 = false;
+    bool isNull43 = true;
   };
 
 
@@ -41,12 +41,8 @@ namespace Sass {
   // @include meta.load-css rules.
   /////////////////////////////////////////////////////////////////////////
 
-  class WithConfig {
-
-  private:
-
-    bool doRAII = false;
-
+  class WithConfig
+  {
   public:
 
     WithConfig* parent = nullptr;
@@ -71,38 +67,23 @@ namespace Sass {
       bool hasConfig = true,
       bool hasShowFilter = false,
       bool hasHideFilter = false,
-      std::set<EnvKey> varfilters = {},
+      std::set<EnvKey> varFilters = {},
       std::set<EnvKey> callFilters = {},
       const sass::string& prefix = "");
 
     void finalize(Logger& logger);
-
-    // Destructor
-    ~WithConfig();
 
     // Get value and mark it as used
     WithConfigVar* getCfgVar(const EnvKey& name);
 
   };
 
-  // class WithConfigScope
-  // {
-  //   Compiler& compiler;
-  //   WithConfig* config;
-  // public:
-  //   WithConfigScope(
-  //     Compiler& compiler,
-  //     WithConfig* config);
-  //   ~WithConfigScope();
-  // };
-
   /////////////////////////////////////////////////////////////////////////
   // Abstract base class for statements that contain blocks of statements.
   /////////////////////////////////////////////////////////////////////////
 
   class ParentStatement : public Statement,
-    public Vectorized<Statement>,
-    public Env
+    public Vectorized<Statement>, public Env
   {
   public:
     // Value constructor
@@ -115,21 +96,24 @@ namespace Sass {
   };
 
   /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  /////////////////////////////////////////////////////////////////////////
   // A style rule. This applies style declarations to elements 
   // that match a given selector. Formerly known as `Ruleset`.
   /////////////////////////////////////////////////////////////////////////
+
   class StyleRule final : public ParentStatement
   {
+
+    // Interpolation forming this style rule
     ADD_CONSTREF(InterpolationObj, interpolation);
+
   public:
+
     // Value constructor
     StyleRule(SourceSpan&& pstate,
       Interpolation* interpolation,
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitStyleRule(this);
@@ -137,6 +121,7 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitStyleRule(this);
     }
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(StyleRule);
   };
@@ -144,18 +129,23 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Declarations -- style rules consisting of a property name and values.
   /////////////////////////////////////////////////////////////////////////
+
   class Declaration final : public ParentStatement
   {
+
     ADD_CONSTREF(InterpolationObj, name);
     ADD_CONSTREF(ExpressionObj, value);
     ADD_CONSTREF(bool, is_custom_property);
+
   public:
+
     // Value constructor
     Declaration(SourceSpan&& pstate,
       Interpolation* name,
       Expression* value = nullptr,
       bool is_custom_property = false,
       StatementVector&& children = {});
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitDeclaration(this);
@@ -163,18 +153,27 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitDeclaration(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // The Sass `@for` control directive.
   /////////////////////////////////////////////////////////////////////////
+
   class ForRule final : public ParentStatement
   {
-    ADD_CONSTREF(EnvKey, varname); // unused?
+
+    // Name of loop variable
+    ADD_CONSTREF(EnvKey, varname);
+    // Lower boundary to iterator from
     ADD_CONSTREF(ExpressionObj, lower_bound);
+    // Upper boundary to iterator to
     ADD_CONSTREF(ExpressionObj, upper_bound);
+    // Is upper boundary inclusive?
     ADD_CONSTREF(bool, is_inclusive);
+
   public:
+
     // Value constructor
     ForRule(
       SourceSpan&& pstate,
@@ -184,6 +183,7 @@ namespace Sass {
       bool is_inclusive = false,
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitForRule(this);
@@ -191,16 +191,24 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitForRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // The Sass `@each` control directive.
   /////////////////////////////////////////////////////////////////////////
+
   class EachRule final : public ParentStatement
   {
+
+    // Names of loop variables for key and value
     ADD_CONSTREF(EnvKeys, variables);
+
+    // Expression object to loop over
     ADD_CONSTREF(ExpressionObj, expressions);
+
   public:
+
     // Value constructor
     EachRule(
       SourceSpan&& pstate,
@@ -208,6 +216,7 @@ namespace Sass {
       Expression* expressions,
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitEachRule(this);
@@ -215,21 +224,28 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitEachRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // The Sass `@while` control directive.
   /////////////////////////////////////////////////////////////////////////
+
   class WhileRule final : public ParentStatement
   {
+
+    // Condition to evaluate every loop
     ADD_CONSTREF(ExpressionObj, condition);
+
   public:
+
     // Value constructor
     WhileRule(
       SourceSpan&& pstate,
       Expression* condition,
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitWhileRule(this);
@@ -237,22 +253,29 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitWhileRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // The query that determines on which platforms the styles will be in
   // effect. This is only parsed after the interpolation has been resolved.
   /////////////////////////////////////////////////////////////////////////
+
   class MediaRule final : public ParentStatement
   {
+
+    // Interpolation forming this media rule
     ADD_CONSTREF(InterpolationObj, query)
+
   public:
+
     // Value constructor
     MediaRule(
       SourceSpan&& pstate,
       Interpolation* query,
       EnvRefs* idxs,
       StatementVector&& children = {});
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitMediaRule(this);
@@ -260,18 +283,26 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitMediaRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // At-rules -- arbitrary directives beginning with "@" 
   // The rules may have more optional statement blocks.
   /////////////////////////////////////////////////////////////////////////
+
   class AtRule final : public ParentStatement
   {
+
+    // Interpolation naming this at-rule
     ADD_CONSTREF(InterpolationObj, name);
+    // Interpolations with additional options
     ADD_CONSTREF(InterpolationObj, value);
+    // Flag if the at-rule was parsed childless
     ADD_CONSTREF(bool, isChildless);
+
   public:
+
     // Value constructor
     AtRule(
       SourceSpan&& pstate,
@@ -280,6 +311,7 @@ namespace Sass {
       EnvRefs* idxs,
       bool is_childless = true,
       StatementVector&& children = {});
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitAtRule(this);
@@ -287,21 +319,28 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitAtRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // An `@at-root` rule
   /////////////////////////////////////////////////////////////////////////
+
   class AtRootRule final : public ParentStatement
   {
+
+    // Interpolation forming this at-root rule
     ADD_CONSTREF(InterpolationObj, query);
+
   public:
+
     // Value constructor
     AtRootRule(
       SourceSpan&& pstate,
       Interpolation* query = nullptr,
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitAtRootRule(this);
@@ -309,29 +348,33 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitAtRootRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // The Sass `@if` control directive.
   /////////////////////////////////////////////////////////////////////////
+
   class IfRule final : public ParentStatement
   {
-    // Variables for children scope
-    // ADD_PROPERTY(EnvRefs*, idxs);
     // Predicate is optional, which indicates an else block.
     // In this case further `alternatives` are simply ignored.
     ADD_CONSTREF(ExpressionObj, predicate);
     // The else or else-if block
-    ADD_REF(IfRuleObj, alternative);
+    ADD_CONSTREF(IfRuleObj, alternative);
+
   public:
+
     // Value constructor
     IfRule(SourceSpan&& pstate,
       EnvRefs* idxs,
       StatementVector&& children = {},
       Expression* predicate = nullptr,
       IfRule* alternative = {});
+
     // Also check alternative for content block
     bool hasContent() const override final;
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitIfRule(this);
@@ -339,20 +382,27 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitIfRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // `@supports` rule.
   /////////////////////////////////////////////////////////////////////////
+
   class SupportsRule final : public ParentStatement
   {
+
+    // The condition forming this supports rule
     ADD_CONSTREF(SupportsConditionObj, condition);
+
   public:
+
     SupportsRule(
       SourceSpan&& pstate,
       SupportsCondition* condition,
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {});
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitSupportsRule(this);
@@ -360,19 +410,25 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitSupportsRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // Base class for specialized callable declarations.
   /////////////////////////////////////////////////////////////////////////
+
   class CallableDeclaration : public ParentStatement
   {
+
     // The name of this callable.
     ADD_CONSTREF(EnvKey, name);
     // The comment immediately preceding this declaration.
     ADD_CONSTREF(SilentCommentObj, comment);
     // The declared arguments this callable accepts.
     ADD_CONSTREF(CallableSignatureObj, arguments);
+
   public:
+
     // Value constructor
     CallableDeclaration(
       SourceSpan&& pstate,
@@ -381,22 +437,24 @@ namespace Sass {
       StatementVector&& children = {},
       SilentComment* comment = nullptr,
       EnvRefs* idxs = nullptr);
+
     // Declare up-casting methods
     DECLARE_ISA_CASTER(MixinRule);
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // ToDo: not exactly sure anymore
   /////////////////////////////////////////////////////////////////////////
 
   class ContentBlock final :
     public CallableDeclaration
   {
+
     // Content function reference
     ADD_CONSTREF(EnvRef, cidx);
 
-    ADD_CONSTREF(UserDefinedCallableObj, cmixin);
-
   public:
+
     // Value constructor
     ContentBlock(
       SourceSpan&& pstate,
@@ -404,6 +462,7 @@ namespace Sass {
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {},
       SilentComment* comment = nullptr);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitContentBlock(this);
@@ -411,17 +470,22 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitContentBlock(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // Specialization for `@function` callables
   /////////////////////////////////////////////////////////////////////////
 
   class FunctionRule final :
     public CallableDeclaration
   {
+
     // Function reference
     ADD_CONSTREF(EnvRef, fidx);
+
   public:
+
     // Value constructor
     FunctionRule(
       SourceSpan&& pstate,
@@ -430,6 +494,7 @@ namespace Sass {
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {},
       SilentComment* comment = nullptr);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitFunctionRule(this);
@@ -437,19 +502,22 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitFunctionRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // Specialization for `@mixin` callables
   /////////////////////////////////////////////////////////////////////////
 
   class MixinRule final :
     public CallableDeclaration
   {
+
     // Mixin function reference
     ADD_CONSTREF(EnvRef, midx);
-    // Content function reference
-    // ADD_CONSTREF(EnvRef, cidx33);
+
   public:
+
     // Value constructor
     MixinRule(
       SourceSpan&& pstate,
@@ -458,6 +526,7 @@ namespace Sass {
       EnvRefs* idxs = nullptr,
       StatementVector&& children = {},
       SilentComment* comment = nullptr);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitMixinRule(this);
@@ -465,6 +534,7 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitMixinRule(this);
     }
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(MixinRule);
   };
@@ -472,13 +542,19 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // The Sass `@warn` directive.
   /////////////////////////////////////////////////////////////////////////
+
   class WarnRule final : public Statement
   {
+
+    // Expression forming this warning rule
     ADD_CONSTREF(ExpressionObj, expression);
+
   public:
+
     // Value constructor
     WarnRule(SourceSpan&& pstate,
       Expression* expression);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitWarnRule(this);
@@ -486,6 +562,7 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitWarnRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -493,11 +570,16 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   class ErrorRule final : public Statement
   {
+
+    // Expression forming this error rule
     ADD_CONSTREF(ExpressionObj, expression);
+
   public:
+
     // Value constructor
     ErrorRule(SourceSpan&& pstate,
       Expression* expression);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitErrorRule(this);
@@ -505,18 +587,25 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitErrorRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // The Sass `@debug` directive.
   /////////////////////////////////////////////////////////////////////////
+
   class DebugRule final : public Statement
   {
+
+    // Expression forming this debug rule
     ADD_CONSTREF(ExpressionObj, expression);
+
   public:
+
     // Value constructor
     DebugRule(SourceSpan&& pstate,
       Expression* expression);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitDebugRule(this);
@@ -524,18 +613,25 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitDebugRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // The @return directive for use inside SassScript functions.
   /////////////////////////////////////////////////////////////////////////
+
   class ReturnRule final : public Statement
   {
+
+    // Expression forming this return rule
     ADD_CONSTREF(ExpressionObj, value);
+
   public:
+
     // Value constructor
     ReturnRule(SourceSpan&& pstate,
       Expression* value = nullptr);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitReturnRule(this);
@@ -543,19 +639,28 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitReturnRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // The @content directive for mixin content blocks.
   /////////////////////////////////////////////////////////////////////////
+
   class ContentRule final : public Statement
   {
+
+    // Expression forming this content rule
     ADD_CONSTREF(CallableArgumentsObj, arguments);
+
   public:
+
     // Value constructor
     ContentRule(SourceSpan&& pstate,
       CallableArguments* arguments);
+
+    // Specialize method to indicate we have content
     bool hasContent() const override final { return true; }
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitContentRule(this);
@@ -563,23 +668,30 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitContentRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // The Sass `@extend` directive.
   /////////////////////////////////////////////////////////////////////////
+
   class ExtendRule final : public Statement
   {
+
     // This should be a simple selector only!
+    // ToDo: change when we remove old code!
     ADD_CONSTREF(InterpolationObj, selector);
     // Flag if extend had optional flag
     ADD_CONSTREF(bool, is_optional);
+
   public:
+
     // Value constructor
     ExtendRule(
       SourceSpan&& pstate,
       Interpolation* selector,
       bool is_optional = false);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitExtendRule(this);
@@ -587,20 +699,25 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitExtendRule(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // CSS comments. These may be interpolated.
   /////////////////////////////////////////////////////////////////////////
+
   class LoudComment final : public Statement
   {
     // The interpolated text of this comment, including comment characters.
     ADD_CONSTREF(InterpolationObj, text)
+
   public:
+
     // Value constructor
     LoudComment(
       SourceSpan&& pstate,
       Interpolation* text);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitLoudComment(this);
@@ -608,20 +725,26 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitLoudComment(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // Silent comment, starting with `//`.
   /////////////////////////////////////////////////////////////////////////
+
   class SilentComment final : public Statement
   {
+
     // The text of this comment, including comment characters.
     ADD_CONSTREF(sass::string, text)
+
   public:
+
     // Value constructor
     SilentComment(
       SourceSpan&& pstate,
       sass::string&& text);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitSilentComment(this);
@@ -629,19 +752,22 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitSilentComment(this);
     }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
   // `@import` rule.
   /////////////////////////////////////////////////////////////////////////
+
   class ImportRule final : public Statement,
     public Vectorized<ImportBase>
   {
-    //ADD_CONSTREF(sass::string, url98);
-    //ADD_CONSTREF(sass::string, prev97);
+
   public:
+
     // Value constructor
     ImportRule(const SourceSpan& pstate);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitImportRule(this);
@@ -649,23 +775,38 @@ namespace Sass {
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitImportRule(this);
     }
+
   };
+
+  /////////////////////////////////////////////////////////////////////////
+  // Base class for @use and @forward rules
+  /////////////////////////////////////////////////////////////////////////
 
   class ModRule : public WithConfig
   {
   private:
-    ADD_CONSTREF(ImportObj, import);
-    ADD_CONSTREF(sass::string, prev);
+
+    ADD_CONSTREF(sass::string, prev51);
     ADD_CONSTREF(sass::string, url);
     ADD_CONSTREF(sass::string, ns);
-    ADD_CONSTREF(RootObj, root);
-    ADD_PROPERTY(Module*, module);
+
+    // The associated module (required)
+    ADD_PROPERTY(Module*, module32);
+
+    // Optional root object, indicating that we have
+    // a connected environment. Must be the same instance
+    // as root if set (as Root implements Module).
+    ADD_CONSTREF(RootObj, root47);
+
+    // Flag to see if rule was already exposed
+    // Normally modules are exposed as singletons
+    ADD_CONSTREF(bool, wasExposed);
+
   public:
 
     ModRule(
       const sass::string& prev,
       const sass::string& url,
-      Import* import,
       WithConfig* pwconfig = nullptr,
       sass::vector<WithConfigVar>&& config = {},
       bool hasLocalWith = false);
@@ -673,7 +814,6 @@ namespace Sass {
     ModRule(
       const sass::string& prev,
       const sass::string& url,
-      Import* import,
       const sass::string& prefix,
       WithConfig* pwconfig,
       std::set<EnvKey>&& varFilters,
@@ -688,14 +828,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // `@use` rule.
   /////////////////////////////////////////////////////////////////////////
+
   class UseRule final : public Statement, public ModRule
   {
-  private:
-
-    ADD_PROPERTY(bool, wasExported);
-
-
   public:
+
     // Value constructor
     UseRule(
       const SourceSpan& pstate,
@@ -705,6 +842,7 @@ namespace Sass {
       WithConfig* pwconfig,
       sass::vector<WithConfigVar>&& config,
       bool hasLocalWith);
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitUseRule(this);
@@ -715,13 +853,14 @@ namespace Sass {
   };
 
   /////////////////////////////////////////////////////////////////////////
-  // `@use` rule.
+  // `@forward` rule.
   /////////////////////////////////////////////////////////////////////////
+
   class ForwardRule final : public Statement, public ModRule
   {
-  private:
-    ADD_PROPERTY(bool, wasMerged);
   public:
+
+    // Value constructor
     ForwardRule(
       const SourceSpan& pstate,
       const sass::string& prev,
@@ -733,34 +872,38 @@ namespace Sass {
       std::set<EnvKey>&& callFilters,
       sass::vector<WithConfigVar>&& config,
       bool isShown, bool isHidden, bool hasWith);
-      // Statement visitor to sass values entry function
+
+    // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitForwardRule(this);
     }
     void accept(StatementVisitor<void>* visitor) override final {
       return visitor->visitForwardRule(this);
     }
+
   };
 
-  /////////////////////////////////////
-  // Assignments -- variable and value.
-  /////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+  // Assignment rule to assign (evaluated) expression to variable
+  /////////////////////////////////////////////////////////////////////////
+
   class AssignRule final : public Statement
   {
+
   private:
-    ADD_REF(EnvRef, vidx);
+
+    ADD_CONSTREF(EnvRef, vidx);
     ADD_CONSTREF(EnvKey, variable);
     ADD_CONSTREF(sass::string, ns);
     ADD_CONSTREF(ExpressionObj, value);
-    ADD_PROPERTY(bool, withinLoop);
     ADD_CONSTREF(bool, is_default); // ToDO rename
     ADD_CONSTREF(bool, is_global); // ToDO rename
+
   public:
     // Value constructor
     AssignRule(
       const SourceSpan& pstate,
       const EnvKey& variable,
-      bool withinLoop,
       const sass::string ns,
       sass::vector<EnvRef> vidxs,
       Expression* value,
@@ -775,9 +918,10 @@ namespace Sass {
     }
   };
 
-  ///////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
   // The @include mixin invocation rule
-  ///////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   class IncludeRule final : public Statement
   {
 
@@ -799,11 +943,9 @@ namespace Sass {
     // being invoked, or `null` if this doesn't pass a content block.
     ADD_CONSTREF(ContentBlockObj, content);
 
-
-    // ADD_PROPERTY(CallableObj, cached); // circular?
-
   public:
 
+    // Value constructor
     IncludeRule(
       SourceSpan&& pstate,
       const EnvKey& name,
@@ -811,7 +953,9 @@ namespace Sass {
       CallableArguments* arguments,
       ContentBlock* content = nullptr);
 
+    // Check if we have a valid content block
     bool hasContent() const override final;
+
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {
       return visitor->visitIncludeRule(this);

@@ -59,6 +59,37 @@ namespace Sass {
     }
   }
 
+  // If this contains no interpolated expressions, returns its text contents.
+  const sass::string& Interpolation::getPlainString() const
+  {
+    if (size() != 1) {
+      return Strings::empty;
+    }
+    if (const ItplString* str = first()->isaItplString()) {
+      return str->text();
+    }
+    else if (const String* str = first()->isaString()) {
+      return str->value();
+    }
+
+    return Strings::empty;
+  }
+
+  // Returns the plain text before the interpolation, or the empty string.
+  const sass::string& Interpolation::getInitialPlain() const
+  {
+    if (empty()) return Strings::empty;
+    if (const ItplString* str = first()->isaItplString()) {
+      return str->text();
+    }
+    return Strings::empty;
+  }
+
+  // Wrap interpolation within a string expression
+  StringExpression* Interpolation::wrapInStringExpression() {
+    return SASS_MEMORY_NEW(StringExpression, pstate(), this);
+  }
+
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
 
@@ -66,34 +97,16 @@ namespace Sass {
     : Interpolant(std::move(pstate))
   {}
 
-  ///////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////
-
-  const sass::string& Interpolation::getPlainString() const
-  {
-    if (size() != 1) {
-      return Strings::empty;
-    }
-    return first()->getText();
-  }
-
-  const sass::string& Interpolation::getInitialPlain() const
-  {
-    if (empty()) return Strings::empty;
-    if (Interpolant* str = first()->isaItplString()) {
-      return str->getText();
-    }
-    return Strings::empty;
-  }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Value constructor
   ImportBase::ImportBase(
     const SourceSpan& pstate) :
     AstNode(pstate)
   {}
 
+  // Copy constructor
   ImportBase::ImportBase(
     const ImportBase* ptr) :
     AstNode(ptr)
@@ -123,15 +136,13 @@ namespace Sass {
     const sass::string& url,
     Import* import) :
     ImportBase(pstate),
-    ModRule(
-      prev, url,
-      import)
+    ModRule(prev, url)
   {}
 
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  Values::iterator::iterator(Value* val, bool end) :
+  Iterator::Iterator(Value* val, bool end) :
     val(val), last(0), cur(0)
   {
     if (val == nullptr) {
@@ -153,7 +164,7 @@ namespace Sass {
     if (end) cur = last;
   }
 
-  Values::iterator& Values::iterator::operator++()
+  Iterator& Iterator::operator++()
   {
     switch (type) {
     case MapIterator:
@@ -171,7 +182,7 @@ namespace Sass {
     return *this;
   }
 
-  Values::iterator& Values::iterator::operator+=(size_t offset)
+  Iterator& Iterator::operator+=(size_t offset)
   {
     switch (type) {
     case MapIterator:
@@ -189,7 +200,7 @@ namespace Sass {
     return *this;
   }
 
-  Values::iterator& Values::iterator::operator-=(size_t offset)
+  Iterator& Iterator::operator-=(size_t offset)
   {
     switch (type) {
     case MapIterator:
@@ -207,9 +218,9 @@ namespace Sass {
     return *this;
   }
 
-  Values::iterator Values::iterator::operator-(size_t offset)
+  Iterator Iterator::operator-(size_t offset)
   {
-    Values::iterator copy(*this);
+    Iterator copy(*this);
     switch (type) {
     case MapIterator:
       copy.cur = std::max(copy.cur - offset, (size_t)0);
@@ -226,7 +237,7 @@ namespace Sass {
     return copy;
   }
 
-  bool Values::iterator::isLast()
+  bool Iterator::isLast() const
   {
     switch (type) {
     case MapIterator:
@@ -241,7 +252,7 @@ namespace Sass {
     return true;
   }
 
-  Value* Values::iterator::operator*()
+  Value* Iterator::operator*()
   {
     switch (type) {
     case MapIterator:
@@ -256,17 +267,17 @@ namespace Sass {
     return nullptr;
   }
 
-  Value* Values::iterator::operator->()
+  Value* Iterator::operator->()
   {
-    return Values::iterator::operator*();
+    return Iterator::operator*();
   }
 
-  bool Values::iterator::operator==(const iterator& other) const
+  bool Iterator::operator==(const Iterator& other) const
   {
     return val == other.val && cur == other.cur;
   }
 
-  bool Values::iterator::operator!=(const iterator& other) const
+  bool Iterator::operator!=(const Iterator& other) const
   {
     return val != other.val || cur != other.cur;
   }

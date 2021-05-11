@@ -41,6 +41,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Abstract base class for CSS selectors.
   /////////////////////////////////////////////////////////////////////////
+
   class Selector : public AstNode,
     public SelectorVisitable<void>
   {
@@ -108,6 +109,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Abstract base class for simple selectors.
   /////////////////////////////////////////////////////////////////////////
+
   class SimpleSelector : public Selector
   {
   private:
@@ -266,7 +268,9 @@ namespace Sass {
   // A type selector. (e.g., `div`, `span` or `*`).
   // This selects elements whose name equals the given name.
   /////////////////////////////////////////////////////////////////////////
-  class TypeSelector final : public NameSpaceSelector {
+
+  class TypeSelector final : public NameSpaceSelector
+  {
   public:
 
     // Value constructor
@@ -300,7 +304,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Class selectors  -- i.e., .foo.
   /////////////////////////////////////////////////////////////////////////
-  class ClassSelector final : public SimpleSelector {
+
+  class ClassSelector final : public SimpleSelector
+  {
   public:
 
     // Value constructor
@@ -327,7 +333,9 @@ namespace Sass {
   // An ID selector (i.e. `#foo`). This selects elements 
   // whose `id` attribute exactly matches the given name.
   /////////////////////////////////////////////////////////////////////////
-  class IDSelector final : public SimpleSelector {
+
+  class IDSelector final : public SimpleSelector
+  {
   public:
 
     // Value constructor
@@ -358,7 +366,9 @@ namespace Sass {
   // with the given attribute, and optionally with a
   // value matching certain conditions as well.
   /////////////////////////////////////////////////////////////////////////
-  class AttributeSelector final : public NameSpaceSelector {
+
+  class AttributeSelector final : public NameSpaceSelector
+  {
 
     // The operator that defines the semantics of [value].
     // If this is empty, this matches any element with the given property,
@@ -416,7 +426,9 @@ namespace Sass {
   // selector that takes a selector as an argument, to ensure that
   // extension and other selector operations work properly.
   /////////////////////////////////////////////////////////////////////////
-  class PseudoSelector final : public SimpleSelector {
+
+  class PseudoSelector final : public SimpleSelector
+  {
 
     // Like [name], but without any vendor prefixes.
     ADD_CONSTREF(sass::string, normalized);
@@ -512,10 +524,10 @@ namespace Sass {
   // Complex Selectors are itself a list of Compounds and Combinators
   // Between each item there is an implicit ancestor of combinator
   /////////////////////////////////////////////////////////////////////////
+
   class ComplexSelector final : public Selector,
     public Vectorized<SelectorComponent>
   {
-  private:
 
     ADD_CONSTREF(bool, chroots);
     // line break before list separator
@@ -581,9 +593,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Base class for complex selector components
   /////////////////////////////////////////////////////////////////////////
-  class SelectorComponent : public Selector {
+
+  class SelectorComponent : public Selector
+  {
+
     // line break after list separator
     ADD_CONSTREF(bool, hasPostLineBreak);
+
   public:
 
     // Value constructor
@@ -620,6 +636,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // A specific combinator between compound selectors
   /////////////////////////////////////////////////////////////////////////
+
   class SelectorCombinator final : public SelectorComponent
   {
   public:
@@ -682,7 +699,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   class CompoundSelector final : public SelectorComponent, public Vectorized<SimpleSelector>
   {
-  private:
 
     // This is one of the most important flags for selectors.
     // The `&` parent selector can only occur at the start of

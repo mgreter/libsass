@@ -283,8 +283,8 @@ namespace Sass {
 
   void Inspect::visitCssDeclaration(CssDeclaration* node)
   {
-    LOCAL_FLAG(in_declaration, true);
-    LOCAL_FLAG(in_custom_property,
+    RAII_FLAG(in_declaration, true);
+    RAII_FLAG(in_custom_property,
       node->is_custom_property());
     // if (output_style() == SASS_STYLE_NESTED)
     //   indentation += node->tabs();

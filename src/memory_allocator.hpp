@@ -4,10 +4,10 @@
 #ifndef SASS_ALLOCATOR_HPP
 #define SASS_ALLOCATOR_HPP
 
-#include "config.hpp"
-#include "../settings.hpp"
-#include "../MurmurHash2.hpp"
-#include "../randomize.hpp"
+#include "memory_config.hpp"
+#include "settings.hpp"
+#include "MurmurHash2.hpp"
+#include "randomize.hpp"
 
 #include <deque>
 #include <vector>

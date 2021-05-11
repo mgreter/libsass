@@ -90,10 +90,6 @@ namespace Sass {
     hasQuotes_(hasQuotes)
   {}
 
-  StringExpression* Interpolation::wrapInStringExpression() {
-    return SASS_MEMORY_NEW(StringExpression, pstate(), this);
-  }
-
   // find best quote_mark by detecting if the string contains any single
   // or double quotes. When a single quote is found, we not we want a double
   // quote as quote_mark. Otherwise we check if the string contains any double
@@ -114,14 +110,14 @@ namespace Sass {
     return containsDoubleQuote ? $apos : $quote;
   }
 
-  PlainCssFunction::PlainCssFunction(
+  CssFnExpression::CssFnExpression(
     SourceSpan pstate,
     Interpolation* itpl,
-    CallableArguments* args,
+    CallableArguments* arguments,
     const sass::string& ns) :
-    Expression(std::move(pstate)),
+    InvocationExpression(
+      std::move(pstate), arguments),
     itpl_(itpl),
-    args_(args),
     ns_(ns)
   {}
 
@@ -231,12 +227,10 @@ namespace Sass {
   VariableExpression::VariableExpression(
     SourceSpan&& pstate,
     const EnvKey& name,
-    bool withinLoop,
     const sass::string& ns) :
     Expression(std::move(pstate)),
     name_(name),
-    ns_(ns),
-    withinLoop_(withinLoop)
+    ns_(ns)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -268,14 +262,12 @@ namespace Sass {
     SourceSpan pstate,
     const sass::string& name,
     CallableArguments* arguments,
-    bool withinLoop,
     const sass::string& ns) :
     InvocationExpression(
       std::move(pstate),
       arguments),
     ns_(ns),
-    name_(name),
-    withinLoop_(withinLoop)
+    name_(name)
   {}
 
   /////////////////////////////////////////////////////////////////////////

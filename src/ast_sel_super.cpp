@@ -205,7 +205,7 @@ namespace Sass {
     // ToDo: move normalization function
     sass::string name(StringUtils::unvendor(pseudo1->name()));
 
-    if (name == "matches" || name == "any") {
+    if (name == "is" || name == "matches" || name == "any") {
       sass::vector<PseudoSelectorObj> pseudos =
         selectorPseudoNamed(compound2, pseudo1->name());
       const SelectorList* selector1 = pseudo1->selector();

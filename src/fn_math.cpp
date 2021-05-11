@@ -98,7 +98,7 @@ namespace Sass {
       BUILT_IN_FN(fnHypot)
       {
         sass::vector<Number*> numbers;
-        for (Value* value : arguments[0]->iterator()) {
+        for (Value* value : arguments[0]->start()) {
           numbers.push_back(value->assertNumber(compiler, ""));
         }
 
@@ -226,7 +226,7 @@ namespace Sass {
       BUILT_IN_FN(max)
       {
         Number* max = nullptr;
-        for (Value* value : arguments[0]->iterator()) {
+        for (Value* value : arguments[0]->start()) {
           Number* number = value->assertNumber(compiler, "");
           if (max == nullptr || max->lessThan(number, compiler, pstate)) {
             max = number;
@@ -244,7 +244,7 @@ namespace Sass {
       BUILT_IN_FN(min)
       {
         Number* min = nullptr;
-        for (Value* value : arguments[0]->iterator()) {
+        for (Value* value : arguments[0]->start()) {
           Number* number = value->assertNumber(compiler, "");
           if (min == nullptr || min->greaterThan(number, compiler, pstate)) {
             min = number;

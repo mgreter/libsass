@@ -3,8 +3,8 @@
 
 // sass.hpp must go before all system headers
 // to get the __EXTENSIONS__ fix on Solaris.
-#include "../capi_sass.hpp"
-#include "allocator.hpp"
+#include "capi_sass.hpp"
+#include "memory_allocator.hpp"
 
 #include <cstddef>
 #include <iostream>

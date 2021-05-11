@@ -438,7 +438,7 @@ namespace Sass {
               // Add a dynamic import to the import rule
               auto inc = SASS_MEMORY_NEW(IncludeImport,
                 pstate, ctx_path, path_key, &import);
-              inc->root(sheet);
+              inc->root47(sheet);
               rule->append(inc);
             }
             // Only a path was returned
@@ -476,7 +476,7 @@ namespace Sass {
                 const sass::string& url(resolved[0].abs_path);
                 auto inc = SASS_MEMORY_NEW(IncludeImport,
                   pstate, ctx_path, url, &import);
-                inc->root(sheet);
+                inc->root47(sheet);
                 rule->append(inc);
               }
               // Import failed to load

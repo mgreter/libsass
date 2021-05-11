@@ -179,7 +179,7 @@ namespace Sass {
     // Prepend previous comments
     flushCssComments();
     // Never hoist nested comments
-    LOCAL_FLAG(hoistComments, false);
+    RAII_FLAG(hoistComments, false);
     // Let inspect do its magic
     Cssize::visitCssStyleRule(rule);
   }
@@ -190,7 +190,7 @@ namespace Sass {
     // Prepend previous comments
     flushCssComments();
     // Never hoist nested comments
-    LOCAL_FLAG(hoistComments, false);
+    RAII_FLAG(hoistComments, false);
     // Let inspect do its magic
     Cssize::visitCssSupportsRule(rule);
   }
@@ -201,7 +201,7 @@ namespace Sass {
     // Prepend previous comments
     flushCssComments();
     // Never hoist nested comments
-    LOCAL_FLAG(hoistComments, false);
+    RAII_FLAG(hoistComments, false);
     // Let inspect do its magic
     Cssize::visitCssAtRule(rule);
   }
@@ -216,7 +216,7 @@ namespace Sass {
     // Prepend previous comments
     flushCssComments();
     // Never hoist nested comments
-    LOCAL_FLAG(hoistComments, false);
+    RAII_FLAG(hoistComments, false);
     // Let inspect do its magic
     Cssize::visitCssMediaRule(rule);
   }

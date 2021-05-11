@@ -33,7 +33,7 @@ namespace Sass {
   // selectors which must be extended as a unit.
   /////////////////////////////////////////////////////////////////////////
   SelectorListObj Extender::extend(
-    SelectorListObj& selector,
+    const SelectorListObj& selector,
     const SelectorListObj& source,
     const SelectorListObj& targets,
     Logger& logger)
@@ -46,7 +46,7 @@ namespace Sass {
   // Returns a copy of [selector] with [targets] replaced by [source].
   /////////////////////////////////////////////////////////////////////////
   SelectorListObj Extender::replace(
-    SelectorListObj& selector,
+    const SelectorListObj& selector,
     const SelectorListObj& source,
     const SelectorListObj& targets,
     Logger& logger)
@@ -59,7 +59,7 @@ namespace Sass {
   // A helper function for [extend] and [replace].
   /////////////////////////////////////////////////////////////////////////
   SelectorListObj Extender::extendOrReplace(
-    SelectorListObj& selector,
+    const SelectorListObj& selector,
     const SelectorListObj& source,
     const SelectorListObj& targets,
     const ExtendMode mode,
@@ -108,7 +108,8 @@ namespace Sass {
         }
         // }
 
-        selector = extender.extendList(selector, extensions, {});
+        extender.extendList(selector, extensions,
+          {}, selector->elements());
 
       }
       else {
@@ -188,12 +189,8 @@ namespace Sass {
     // }
 
     if (!extensions.empty()) {
-
-      SelectorListObj res = extendList(selector, extensions, mediaContext);
-
-      selector->elementsN(res->elements43());
-      // *selector = std::move(*res); // no move please
-
+      extendList(selector, extensions,
+        mediaContext, selector->elements());
     }
 
     if (!mediaContext.isNull()) {
@@ -391,18 +388,16 @@ namespace Sass {
   {
     // Is a modifyableCssStyleRUle in dart sass
     for (const SelectorListObj& rule : rules) {
-      const SelectorListObj& oldValue = SASS_MEMORY_COPY(rule);
       CssMediaRuleObj mediaContext;
       auto it = mediaContexts.find(rule);
       if (it != mediaContexts.end()) {
         mediaContext = it->second;
       }
-      SelectorListObj ext = extendList(rule, newExtensions, mediaContext);
-      // If no extends actually happened (for example because unification
-      // failed), we don't need to re-register the selector.
-      if (ObjEqualityFn(oldValue, ext)) continue;
-      rule->elementsM(std::move(ext->elements43()));
-      registerSelector(rule, rule);
+      // If no extends happened (for example because unification
+      // failed), we don't need to re-register the selector again.
+      if (extendList(rule, newExtensions, mediaContext, rule->elements())) {
+        registerSelector(rule, rule);
+      }
 
     }
   }
@@ -502,13 +497,15 @@ namespace Sass {
   }
   // EO extendExistingExtensions
 
+
   /////////////////////////////////////////////////////////////////////////
   // Extends [list] using [extensions].
   /////////////////////////////////////////////////////////////////////////
-  SelectorListObj Extender::extendList(
+  bool Extender::extendList(
     const SelectorListObj& list,
     const ExtSelExtMap& extensions,
-    const CssMediaRuleObj& mediaQueryContext)
+    const CssMediaRuleObj& mediaQueryContext,
+    sass::vector<ComplexSelectorObj>& result)
   {
 
     // This could be written more simply using [List.map], but we want to
@@ -536,12 +533,13 @@ namespace Sass {
     }
 
     if (extended.empty()) {
-      return list;
+      return false;
     }
 
-    SelectorListObj rv = SASS_MEMORY_NEW(SelectorList, list->pstate());
-    rv->concat(trim(extended, originals));
-    return rv;
+    result = std::move(extended);
+    trim(result, originals);
+
+    return true;
 
   }
   // EO extendList
@@ -645,22 +643,31 @@ namespace Sass {
         // Make sure that copies of [complex] retain their status
         // as "original" selectors. This includes selectors that
         // are modified because a :not() was extended into.
-        if (first && originals.find(complex) != originals.end()) {
-          originals.insert(cplx);
+        if (first) {
+          auto it = originals.begin();
+          while (it != originals.end()) {
+            if (ObjEqualityFn(*it, complex)) break;
+            it++;
+          }
+          if (it != originals.end()) {
+            originals.insert(cplx);
+          }
+          first = false;
         }
-        first = false;
 
+        // Make sure we don't append any copies
         auto it = result.begin();
         while (it != result.end()) {
           if (ObjEqualityFn(*it, cplx)) break;
-          it += 1;
+          it++;
         }
         if (it == result.end()) {
           result.push_back(cplx);
         }
 
         if (result.size() > 500) {
-          throw Exception::EndlessExtendError(traces, complex);
+          traces.push_back(complex->pstate());
+          throw Exception::EndlessExtendError(traces);
         }
 
       }
@@ -979,10 +986,11 @@ namespace Sass {
       // become `.foo:not(.bar)`. However, this is a narrow edge case and
       // supporting it properly would make this code and the code calling it
       // a lot more complicated, so it's not supported for now.
-      if (innerPseudo->normalized() != "matches") return {};
+      if (innerPseudo->normalized() != "matches" &&
+        innerPseudo->normalized() != "is") return {};
       return innerPseudo->selector()->elements();
     }
-    else if (name == "matches" || name == "any" || name == "current" || name == "nth-child" || name == "nth-last-child") {
+    else if (isSubselectorPseudo(name) || name == "current") {
       // As above, we could theoretically support :not within :matches, but
       // doing so would require this method and its callers to handle much
       // more complex cases that likely aren't worth the pain.
@@ -1011,24 +1019,27 @@ namespace Sass {
     const ExtSelExtMap& extensions,
     const CssMediaRuleObj& mediaQueryContext)
   {
-    auto selector = pseudo->selector();
-    SelectorListObj extended = extendList(
-      selector, extensions, mediaQueryContext);
-    if (!extended || !pseudo || !pseudo->selector()) { return {}; }
-    if (ObjEqualityFn(pseudo->selector(), extended)) { return {}; }
+    sass::vector<ComplexSelectorObj> extended;
+    // Call extend and abort if nothing was extended
+    if (!pseudo || !pseudo->selector() ||
+      !extendList(pseudo->selector(), extensions,
+        mediaQueryContext, extended)) {
+      // Abort pseudo extend
+      return {};
+    }
 
     // For `:not()`, we usually want to get rid of any complex selectors because
     // that will cause the selector to fail to parse on all browsers at time of
     // writing. We can keep them if either the original selector had a complex
     // selector, or the result of extending has only complex selectors, because
     // either way we aren't breaking anything that isn't already broken.
-    sass::vector<ComplexSelectorObj> complexes = extended->elements();
+    sass::vector<ComplexSelectorObj> complexes = extended;
 
     if (pseudo->normalized() == "not") {
       if (!hasAny(pseudo->selector()->elements(), hasMoreThanOne)) {
-        if (hasAny(extended->elements(), hasExactlyOne)) {
+        if (hasAny(extended, hasExactlyOne)) {
           complexes.clear();
-          for (auto& complex : extended->elements()) {
+          for (auto& complex : extended) {
             if (complex->size() <= 1) {
               complexes.emplace_back(complex);
             }
@@ -1038,7 +1049,8 @@ namespace Sass {
     }
 
     sass::vector<ComplexSelectorObj> expanded = expand(
-      complexes, extendPseudoComplex, pseudo, mediaQueryContext);
+      std::move(complexes), extendPseudoComplex,
+      pseudo, mediaQueryContext);
 
     // Older browsers support `:not`, but only with a single complex selector.
     // In order to support those browsers, we break up the contents of a `:not`
@@ -1087,8 +1099,8 @@ namespace Sass {
   // Note: for adaption I pass in the set directly, there is some
   // code path in selector-trim that might need this special callback
   /////////////////////////////////////////////////////////////////////////
-  sass::vector<ComplexSelectorObj> Extender::trim(
-    const sass::vector<ComplexSelectorObj>& selectors,
+  void Extender::trim(
+    sass::vector<ComplexSelectorObj>& selectors,
     const ExtCplxSelSet& existing) const
   {
 
@@ -1097,7 +1109,7 @@ namespace Sass {
     // without going quadratic by building some sort of trie-like
     // data structure that can be used to look up superselectors.
     // TODO(mgreter): Check how this performs in C++ (up the limit)
-    if (selectors.size() > 100) return selectors;
+    if (selectors.size() > 100) return;
 
     // This is n² on the sequences, but only comparing between separate sequences
     // should limit the quadratic behavior. We iterate from last to first and reverse
@@ -1156,11 +1168,10 @@ namespace Sass {
 
     }
 
-    return result;
+    selectors = std::move(result);
 
   }
   // EO trim
-
   /////////////////////////////////////////////////////////////////////////
   // Returns the maximum specificity of the given [simple] source selector.
   /////////////////////////////////////////////////////////////////////////

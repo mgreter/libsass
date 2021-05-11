@@ -23,9 +23,18 @@ namespace Sass {
   extern const EnvRef nullidx;
 
   /////////////////////////////////////////////////////////////////////////
-  // Base class/struct for variable references. Each variable belongs to an
-  // environment frame (determined as we see variables during parsing). Similar
-  // to how C organizes local variables via function stack pointers.
+  // Base class/struct for environment references. These can be variables,
+  // functions or mixins. Each one belongs to an environment frame/scope,
+  // as determined and seen during parsing. Similar to how C organizes
+  // local variables via function stack pointers. This allows us to do
+  // improvements during parse or eval phase, e.g. if a variable is first
+  // seen, a new slot is assigned for it on the current frame/scope. When
+  // we later see this variable being used, we know the static offset of
+  // that variable on the frame. E.g. if a scope has two variables, one
+  // will be at offset 0, the other at offset 1. When we later see one of
+  // these variables being used, we know the offset to this variable to be
+  // used to access it on the current active stack frame. This removes the
+  // need for a dynamic lookup during runtime to improve performance.
   /////////////////////////////////////////////////////////////////////////
   class EnvRef
   {
@@ -33,51 +42,54 @@ namespace Sass {
 
     // The lexical frame pointer
     // Each parsed scope gets its own
-    uint32_t frame;
+    const EnvRefs* idxs = nullptr;
 
     // Local offset within the frame
-    uint32_t offset;
+    uint32_t offset = 0xFFFFFFFF;
 
     // Default constructor
-    EnvRef() :
-      frame(0xFFFFFFFF),
-      offset(0xFFFFFFFF)
+    EnvRef() {}
+
+    // Value constructor
+    EnvRef(
+      uint32_t offset) :
+      offset(offset)
     {}
 
     // Value constructor
     EnvRef(
-      uint32_t frame,
+      const EnvRefs* idxs,
       uint32_t offset) :
-      frame(frame),
+      idxs(idxs),
       offset(offset)
     {}
 
     // Implement native equality operator
-    bool operator==(const EnvRef& rhs) const {
-      return frame == rhs.frame
+    inline bool operator==(const EnvRef& rhs) const {
+      return idxs == rhs.idxs
         && offset == rhs.offset;
     }
 
     // Implement native inequality operator
-    bool operator!=(const EnvRef& rhs) const {
-      return frame != rhs.frame
+    inline bool operator!=(const EnvRef& rhs) const {
+      return idxs != rhs.idxs
         || offset != rhs.offset;
     }
 
     // Implement operator to allow use in sets
-    bool operator<(const EnvRef& rhs) const {
-      if (frame < rhs.frame) return true;
+    inline bool operator<(const EnvRef& rhs) const {
+      if (idxs < rhs.idxs) return true;
       return offset < rhs.offset;
     }
 
     // Check if reference is valid
-    bool isValid() const { // 3%
+    inline bool isValid() const { // 3%
       return offset != 0xFFFFFFFF;
     }
 
     // Check if entity is read-only
-    bool isPrivate(uint32_t privateOffset) {
-      return frame == 0xFFFFFFFF &&
+    inline bool isPrivate(uint32_t privateOffset) {
+      return idxs == nullptr &&
         offset <= privateOffset;
     }
 
@@ -103,13 +115,14 @@ namespace Sass {
     // dynamic setter and getter by EnvKey.
     EnvRefs* pscope;
 
-    // Global scope pointers
-    uint32_t framePtr;
-
     // Lexical scope entries
     VidxEnvKeyMap varIdxs;
     MidxEnvKeyMap mixIdxs;
     FidxEnvKeyMap fnIdxs;
+
+    size_t varOffset = NPOS;
+    size_t mixOffset = NPOS;
+    size_t fnOffset = NPOS;
 
     // Any import may add forwarded entities to current scope
     // Since those scopes are dynamic and not global, we can't
@@ -127,6 +140,9 @@ namespace Sass {
     // We always need to create entities inside the parent scope
     bool isImport = false;
 
+    // Flag if this scope is considered internal
+    bool isInternal = false;
+
     // Rules like `@if`, `@for` etc. are semi-global (permeable).
     // Assignments directly in those can bleed to the root scope.
     bool isSemiGlobal = false;
@@ -139,13 +155,13 @@ namespace Sass {
     // Value constructor
     EnvRefs(EnvRoot& root,
       EnvRefs* pscope,
-      uint32_t framePtr,
-      bool isSemiGlobal,
-      bool isImport) :
+      bool isImport,
+      bool isInternal,
+      bool isSemiGlobal) :
       root(root),
       pscope(pscope),
-      framePtr(framePtr),
       isImport(isImport),
+      isInternal(isInternal),
       isSemiGlobal(isSemiGlobal)
     {}
 
@@ -206,7 +222,7 @@ namespace Sass {
     EnvRef findFnIdx(const EnvKey& name) const;
     EnvRef findMixIdx(const EnvKey& name) const;
 
-    bool hasNameSpace(const sass::string& ns, const EnvKey& name) const;
+    bool hasNameSpace(const sass::string& ns) const;
 
     // Find function only in local frame
 
@@ -284,16 +300,6 @@ namespace Sass {
     sass::vector<CallableObj> mixStack;
     sass::vector<CallableObj> fnStack;
 
-    // Every scope we execute in sass gets an entry here.
-    // The value stored here is the base address of the
-    // active scope, used to calculate the final offset.
-    // Gives current offset into growable runtime stack.
-    // Old values are restored when scopes are exited.
-    // Access it by absolute `frameOffset`
-    sass::vector<uint32_t> varStackPtr;
-    sass::vector<uint32_t> mixStackPtr;
-    sass::vector<uint32_t> fnStackPtr;
-
     // Internal functions are stored here
     sass::vector<CallableObj> intFunction;
     sass::vector<CallableObj> intMixin;
@@ -354,10 +360,6 @@ namespace Sass {
 
     // Set items on runtime/evaluation phase via references
     // Just converting reference to array offset and assigning
-    void setVariable(uint32_t frame, uint32_t offset, Value* value, bool guarded);
-
-    // Set items on runtime/evaluation phase via references
-    // Just converting reference to array offset and assigning
     void setFunction(const EnvRef& fidx, UserDefinedCallable* value, bool guarded);
 
     // Set items on runtime/evaluation phase via references
@@ -410,12 +412,9 @@ namespace Sass {
 
     // Remember previous "addresses"
     // Restored when we go out of scope
-    uint32_t oldVarFrame;
-    uint32_t oldVarOffset;
-    uint32_t oldMixFrame;
-    uint32_t oldMixOffset;
-    uint32_t oldFnFrame;
-    uint32_t oldFnOffset;
+    size_t oldVarOffset;
+    size_t oldMixOffset;
+    size_t oldFnOffset;
 
   public:
 
@@ -425,11 +424,8 @@ namespace Sass {
       EnvRefs* idxs) :
       env(env),
       idxs(idxs),
-      oldVarFrame(0),
       oldVarOffset(0),
-      oldMixFrame(0),
       oldMixOffset(0),
-      oldFnFrame(0),
       oldFnOffset(0)
     {
 
@@ -437,42 +433,42 @@ namespace Sass {
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
 
-      if (idxs->framePtr != 0xFFFFFFFF) {
+      if (!idxs->isInternal) {
 
         // Check if we have scoped variables
         if (idxs->varIdxs.size() != 0) {
           // Get offset into variable vector
-          oldVarOffset = (uint32_t)env.varStack.size();
+          size_t oldVarSize = env.varStack.size();
           // Remember previous frame "addresses"
-          oldVarFrame = env.varStackPtr[idxs->framePtr];
+          oldVarOffset = idxs->varOffset;
           // Update current frame offset address
-          env.varStackPtr[idxs->framePtr] = oldVarOffset;
+          idxs->varOffset = oldVarSize;
           // Create space for variables in this frame scope
-          env.varStack.resize(oldVarOffset + idxs->varIdxs.size());
+          env.varStack.resize(oldVarSize + idxs->varIdxs.size());
         }
 
         // Check if we have scoped mixins
         if (idxs->mixIdxs.size() != 0) {
           // Get offset into mixin vector
-          oldMixOffset = (uint32_t)env.mixStack.size();
+          size_t oldMixSize = env.mixStack.size();
           // Remember previous frame "addresses"
-          oldMixFrame = env.mixStackPtr[idxs->framePtr];
+          oldMixOffset = idxs->mixOffset;
           // Update current frame offset address
-          env.mixStackPtr[idxs->framePtr] = oldMixOffset;
+          idxs->mixOffset = oldMixSize;
           // Create space for mixins in this frame scope
-          env.mixStack.resize(oldMixOffset + idxs->mixIdxs.size());
+          env.mixStack.resize(oldMixSize + idxs->mixIdxs.size());
         }
 
         // Check if we have scoped functions
         if (idxs->fnIdxs.size() != 0) {
           // Get offset into function vector
-          oldFnOffset = (uint32_t)env.fnStack.size();
+          size_t oldFnSize = env.fnStack.size();
           // Remember previous frame "addresses"
-          oldFnFrame = env.fnStackPtr[idxs->framePtr];
+          oldFnOffset = idxs->fnOffset;
           // Update current frame offset address
-          env.fnStackPtr[idxs->framePtr] = oldFnOffset;
+          idxs->fnOffset = oldFnSize;
           // Create space for functions in this frame scope
-          env.fnStack.resize(oldFnOffset + idxs->fnIdxs.size());
+          env.fnStack.resize(oldFnSize + idxs->fnIdxs.size());
         }
 
       }
@@ -493,36 +489,36 @@ namespace Sass {
       // Meaning it no scoped items at all
       if (idxs == nullptr) return;
 
-      if (idxs->framePtr != 0xFFFFFFFF) {
+      if (!idxs->isInternal) {
 
         // Check if we had scoped variables
         if (idxs->varIdxs.size() != 0) {
           // Truncate variable vector
           env.varStack.resize(
-            oldVarOffset);
+            env.varStack.size()
+            - idxs->varIdxs.size());
           // Restore old frame address
-          env.varStackPtr[idxs->framePtr] =
-            oldVarFrame;
+          idxs->varOffset = oldVarOffset;
         }
 
         // Check if we had scoped mixins
         if (idxs->mixIdxs.size() != 0) {
           // Truncate existing vector
           env.mixStack.resize(
-            oldMixOffset);
+            env.mixStack.size()
+            - idxs->mixIdxs.size());
           // Restore old frame address
-          env.mixStackPtr[idxs->framePtr] =
-            oldMixFrame;
+          idxs->mixOffset = oldMixOffset;
         }
 
         // Check if we had scoped functions
         if (idxs->fnIdxs.size() != 0) {
           // Truncate existing vector
           env.fnStack.resize(
-            oldFnOffset);
+            env.fnStack.size()
+            - idxs->fnIdxs.size());
           // Restore old frame address
-          env.fnStackPtr[idxs->framePtr] =
-            oldFnFrame;
+          idxs->fnOffset = oldFnOffset;
         }
 
       }

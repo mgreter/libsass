@@ -253,13 +253,12 @@ namespace Sass {
     
     // Plain Css as it's interpolated
     if (name->getPlainString().empty()) {
-      return SASS_MEMORY_NEW(PlainCssFunction,
+      return SASS_MEMORY_NEW(CssFnExpression,
         scanner.relevantSpanFrom(start), name, args, "");
     }
 
     return SASS_MEMORY_NEW(FunctionExpression,
-      scanner.rawSpanFrom(start), name->getPlainString(), args,
-      inLoopDirective);
+      scanner.rawSpanFrom(start), name->getPlainString(), args);
 
   }
   // EO readIdentifierLike

@@ -80,10 +80,10 @@ namespace Sass {
 
         auto it = map->find(key);
         if (it != map->end()) {
-          auto rv = it->second;
+          Value* rv = it->second;
 
-          auto inner = arguments[2]->iterator();
-          auto cur = inner.begin(), end = inner.end();
+          auto cur = arguments[2]->start();
+          auto end = arguments[2]->stop();
           if (cur == end) {
             return rv;
           }
@@ -131,9 +131,9 @@ namespace Sass {
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         MapObj copy = map = SASS_MEMORY_COPY(map); // Can be optimized
-        auto it = arguments[1]->iterator();
+        auto cur = arguments[1]->start();
+        auto end = arguments[1]->stop();
         auto size = arguments[1]->lengthAsList();
-        auto cur = it.begin(), end = it.end();
         if (size == 0) {
           throw Exception::RuntimeException(compiler,
             "Expected $args to contain a key.");
@@ -213,7 +213,6 @@ namespace Sass {
       {
         MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
 
-        auto it = arguments[1]->iterator();
         auto size = arguments[1]->lengthAsList();
 
         if (size == 0) {
@@ -225,7 +224,8 @@ namespace Sass {
             "Expected $args to contain a map.");
         }
 
-        auto cur = it.begin(), end = it.end() - 1;
+        auto cur = arguments[1]->start();
+        auto end = arguments[1]->stop() - 1;
 
         MapObj last = (end)->assertMap(compiler, Strings::map2);
         MapObj copy = map1 = SASS_MEMORY_COPY(map1);
@@ -283,7 +283,7 @@ namespace Sass {
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
         if (eval.assigne && eval.assigne->ptr() == map.ptr() && map->refcount < AssignableRefCount + 1) {
           map->erase(arguments[1]);
-          for (Value* key : arguments[2]->iterator()) {
+          for (Value* key : arguments[2]->start()) {
             map->erase(key);
           }
           return map.detach();
@@ -292,7 +292,7 @@ namespace Sass {
 
         MapObj copy = SASS_MEMORY_COPY(map);
         copy->erase(arguments[1]);
-        for (Value* key : arguments[2]->iterator()) {
+        for (Value* key : arguments[2]->start()) {
           copy->erase(key);
         }
         return copy.detach();
@@ -331,8 +331,8 @@ namespace Sass {
             if (!current) {
               return SASS_MEMORY_NEW(Boolean, pstate, false);
             }
-            auto it = arguments[2]->iterator();
-            auto cur = it.begin(), end = it.end() - 1;
+            auto cur = arguments[2]->start();
+            auto end = arguments[2]->stop() - 1;
             Value* last = *end;
             while (cur != end) {
               auto inner = current->find(*cur);
@@ -382,8 +382,8 @@ namespace Sass {
         MapObj result = SASS_MEMORY_COPY(map);
         Map* level = result;
 
-        auto it = arguments[2]->iterator();
-        auto cur = it.begin(), end = it.end();
+        auto cur = arguments[2]->start();
+        auto end = arguments[2]->stop();
 
         if (cur == end) {
           level->erase(arguments[1]);

@@ -1,7 +1,7 @@
 #ifndef SASS_AST_DEF_MACROS_H
 #define SASS_AST_DEF_MACROS_H
 
-#include "memory/allocator.hpp"
+#include "memory_allocator.hpp"
 
 // Helper class to switch a flag
 // and revert once we go out of scope
@@ -39,10 +39,11 @@ public:
 };
 
 // Macros to help create and maintain local and recursive flag states
-#define LOCAL_FLAG(name,opt) LocalOption<bool> flag_##name(name, opt)
-#define LOCAL_PTR(var,name,opt) LocalOption<var*> flag_##name(name, opt)
-#define LOCAL_SELECTOR(name,opt) LocalStack<SelectorListObj> stack_##name(name, opt)
+#define RAII_FLAG(name,opt) LocalOption<bool> flag_##name(name, opt)
+#define RAII_PTR(var,name,opt) LocalOption<var*> flag_##name(name, opt)
+#define RAII_SELECTOR(name,opt) LocalStack<SelectorListObj> stack_##name(name, opt)
 
+// Macro to help impose maximum nesting to avoid stack overflow
 #define NESTING_GUARD(name) \
   LocalOption<size_t> cnt_##name(name, name + 1); \
   if (name > SassMaxNesting) throw Exception::RecursionLimitError(); \

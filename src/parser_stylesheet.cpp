@@ -62,10 +62,10 @@ namespace Sass {
     compiler.varRoot.stack.back()->module = root;
 
     // Set the current module context
-    LOCAL_PTR(Root, modctx, root);
+    RAII_PTR(Root, modctx, root);
 
     // Get reference to (not yet) parsed children
-    StatementVector& children(root->elements43());
+    StatementVector& children(root->elements());
 
     // Check seems a bit esoteric but works
     if (compiler.included_sources.size() == 1) {
@@ -283,7 +283,7 @@ namespace Sass {
   StyleRule* StylesheetParser::readStyleRule(Interpolation* itpl)
   {
     isUseAllowed = false;
-    LOCAL_FLAG(inStyleRule, true);
+    RAII_FLAG(inStyleRule, true);
 
     // The indented syntax allows a single backslash to distinguish a style rule
     // from old-style property syntax. We don't support old property syntax, but
@@ -365,7 +365,7 @@ namespace Sass {
     buffer.addInterpolation(styleRuleSelector());
     SourceSpan selectorPstate(scanner.relevantSpanFrom(start));
 
-    LOCAL_FLAG(inStyleRule, true);
+    RAII_FLAG(inStyleRule, true);
 
     if (buffer.empty()) {
       error("expected \"}\".",
@@ -934,7 +934,7 @@ namespace Sass {
         scanner.relevantSpan(), ExpressionVector(), {});
     }
 
-    LOCAL_FLAG(mixinHasContent, true);
+    RAII_FLAG(mixinHasContent, true);
     expectStatementSeparator("@content rule");
     // ToDo: ContentRule
     return SASS_MEMORY_NEW(ContentRule,
@@ -970,8 +970,7 @@ namespace Sass {
   EachRule* StylesheetParser::readEachRule(Offset start, Statement* (StylesheetParser::* child)())
   {
     // This must be enabled to pass tests
-    LOCAL_FLAG(inControlDirective, true);
-    LOCAL_FLAG(inLoopDirective, true);
+    RAII_FLAG(inControlDirective, true);
     sass::vector<EnvKey> variables;
     EnvFrame local(compiler, true);
     variables.emplace_back(variableName());
@@ -1019,8 +1018,7 @@ namespace Sass {
 
   ForRule* StylesheetParser::readForRule(Offset start, Statement* (StylesheetParser::* child)())
   {
-    LOCAL_FLAG(inControlDirective, true);
-    LOCAL_FLAG(inLoopDirective, true);
+    RAII_FLAG(inControlDirective, true);
     EnvFrame local(compiler, true);
     sass::string variable = variableName();
     local.idxs->createVariable(variable);
@@ -1045,7 +1043,7 @@ namespace Sass {
   {
     // var ifIndentation = currentIndentation;
     size_t ifIndentation = 0;
-    LOCAL_FLAG(inControlDirective, true);
+    RAII_FLAG(inControlDirective, true);
     ExpressionObj predicate = readExpression();
 
     IfRuleObj root;
@@ -1165,8 +1163,8 @@ namespace Sass {
 
       WithConfigVar variable;
       variable.expression = expression;
-      variable.isGuarded = guarded;
-      variable.isNull = !expression || expression->isaNullExpression();
+      variable.isGuarded41 = guarded;
+      variable.isNull43 = !expression || expression->isaNullExpression();
       variable.pstate2 = scanner.relevantSpanFrom(variableStart);
       variable.name = name;
       vars.push_back(variable);
@@ -1276,7 +1274,6 @@ namespace Sass {
 
     sass::vector<WithConfigVar> config;
     bool hasWith(readWithConfiguration(config, false));
-    // LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@use rule");
 
     if (isUseAllowed == false) {
@@ -1290,10 +1287,7 @@ namespace Sass {
       scanner.sourceUrl, url, {},
       wconfig, std::move(config), hasWith);
 
-    LOCAL_PTR(WithConfig, wconfig, rule);
-
-    // EnvRefs* current(compiler.getCurrentFrame());
-    // EnvRefs* modFrame(compiler.getCurrentModule());
+    RAII_PTR(WithConfig, wconfig, rule);
 
     // Support internal modules first
     if (startsWithIgnoreCase(url, "sass:", 5)) {
@@ -1316,7 +1310,7 @@ namespace Sass {
           "Invalid internal module requested.");
       }
 
-      rule->module(module);
+      rule->module32(module);
 
       return rule.detach();
     }
@@ -1368,7 +1362,7 @@ namespace Sass {
 
     sass::vector<WithConfigVar> config;
     bool hasWith(readWithConfiguration(config, true));
-    // LOCAL_FLAG(hasWithConfig, hasWithConfig || hasWith);
+    // RAII_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@forward rule");
 
     if (isUseAllowed == false) {
@@ -1387,7 +1381,7 @@ namespace Sass {
       std::move(config),
       isShown, isHidden, hasWith);
 
-    LOCAL_PTR(WithConfig, wconfig, rule);
+    RAII_PTR(WithConfig, wconfig, rule);
 
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
@@ -1399,8 +1393,8 @@ namespace Sass {
 
       sass::string name(url.substr(5));
       if (BuiltInMod* module = compiler.getModule(name)) {
-        rule->module(module);
-        rule->root(nullptr);
+        rule->module32(module);
+        rule->root47(nullptr);
       }
       else {
         callStackFrame csf(compiler, rule->pstate());
@@ -1455,7 +1449,7 @@ namespace Sass {
 
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
-      LOCAL_FLAG(inContentBlock, true);
+      RAII_FLAG(inContentBlock, true);
       // EnvFrame inner(compiler.varRoot.stack);
       if (contentArguments.isNull()) {
         // Dart-sass creates this one too
@@ -1637,8 +1631,7 @@ namespace Sass {
   // to consume any children that are specifically allowed in the caller's context.
   WhileRule* StylesheetParser::readWhileRule(Offset start, Statement* (StylesheetParser::* child)())
   {
-    LOCAL_FLAG(inControlDirective, true);
-    LOCAL_FLAG(inLoopDirective, true);
+    RAII_FLAG(inControlDirective, true);
     EnvFrame local(compiler, true);
     ExpressionObj condition(readExpression());
     return withChildren<WhileRule>(child,
@@ -1650,7 +1643,7 @@ namespace Sass {
   // [start] should point before the `@`. [name] is the name of the at-rule.
   AtRule* StylesheetParser::readAnyAtRule(Offset start, Interpolation* name)
   {
-    LOCAL_FLAG(inUnknownAtRule, true);
+    RAII_FLAG(inUnknownAtRule, true);
     EnvFrame local(compiler, false);
 
     InterpolationObj value;
@@ -2307,7 +2300,7 @@ namespace Sass {
         scanner.rawSpan());
     }
 
-    LOCAL_FLAG(inParentheses, true);
+    RAII_FLAG(inParentheses, true);
 
     Offset start(scanner.offset);
     scanner.expectChar($lparen);
@@ -2765,7 +2758,7 @@ namespace Sass {
     VariableExpression* expression =
       SASS_MEMORY_NEW(VariableExpression,
         scanner.relevantSpanFrom(start),
-        name, inLoopDirective, ns);
+        name, ns);
     return expression;
 
   }
@@ -2931,8 +2924,7 @@ namespace Sass {
         sass::vector<EnvRef> vidxs;
 
         VariableExpressionObj expression = SASS_MEMORY_NEW(VariableExpression,
-          scanner.relevantSpanFrom(start),
-          name, inLoopDirective, plain);
+          scanner.relevantSpanFrom(start), name, plain);
 
         if (isPrivate(name)) {
           callStackFrame csf(compiler, expression->pstate());
@@ -2965,28 +2957,28 @@ namespace Sass {
 
       // Plain Css as it's interpolated
       if (identifier->getPlainString().empty()) {
-        return SASS_MEMORY_NEW(PlainCssFunction,
+        return SASS_MEMORY_NEW(CssFnExpression,
           scanner.relevantSpanFrom(start), itpl, args, ns);
       }
 
       return SASS_MEMORY_NEW(FunctionExpression,
         scanner.relevantSpanFrom(start),
         itpl->getPlainString(),
-        args, inLoopDirective, name);
+        args, name);
     }
     else if (next == $lparen) {
       CallableArguments* args = readArgumentInvocation();
 
       // Plain Css as it's interpolated
       if (identifier->getPlainString().empty()) {
-        return SASS_MEMORY_NEW(PlainCssFunction,
+        return SASS_MEMORY_NEW(CssFnExpression,
           scanner.relevantSpanFrom(start), identifier, args, ns);
       }
 
       FunctionExpressionObj fn = SASS_MEMORY_NEW(FunctionExpression,
         scanner.relevantSpanFrom(start),
         identifier->getPlainString(),
-        args, inLoopDirective, ns);
+        args, ns);
       // sass::string name(identifier->getPlainString());
       return fn.detach();
     }
@@ -3283,7 +3275,7 @@ namespace Sass {
 
     // Plain Css as it's interpolated
     if (itpl->getPlainString().empty()) {
-      return SASS_MEMORY_NEW(PlainCssFunction,
+      return SASS_MEMORY_NEW(CssFnExpression,
         scanner.relevantSpanFrom(start), itpl, args, "");
     }
 

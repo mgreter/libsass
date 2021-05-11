@@ -159,6 +159,7 @@ void getopt_set_srcmap_root(struct SassGetOpt* getopt, union SassOptionValue val
 void getopt_set_srcmap_path(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.path = value.boolean; }
 void getopt_set_term_unicode(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_unicode = value.boolean; }
 void getopt_set_term_colors(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_colors = value.boolean; }
+void getopt_set_suppress_stderr(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.suppress_stderr = true; }
 
 void getopt_error(struct SassGetOpt* getopt, const char* what)
 {
@@ -218,33 +219,33 @@ sass::string format_option(struct SassGetOpt* getopt, SassOption& option)
   Compiler& compiler(getopt->compiler);
   sass::sstream line;
   if (option.shrt) {
-    line << getopt->compiler.getTerm(Terminal::bold_magenta);
+    line << compiler.getTerm(Terminal::bold_magenta);
     line << "-" << option.shrt;
-    line << getopt->compiler.getTerm(Terminal::reset);
+    line << compiler.getTerm(Terminal::reset);
     if (option.name) line << ", ";
   }
   else {
     line << "    ";
   }
   if (option.name) {
-    line << getopt->compiler.getTerm(Terminal::green);
+    line << compiler.getTerm(Terminal::green);
     line << "--";
-    line << getopt->compiler.getTerm(Terminal::reset);
+    line << compiler.getTerm(Terminal::reset);
     if (option.boolean) {
-      line << getopt->compiler.getTerm(Terminal::blue);
+      line << compiler.getTerm(Terminal::blue);
       line << "[no-]";
-      line << getopt->compiler.getTerm(Terminal::reset);
+      line << compiler.getTerm(Terminal::reset);
     }
-    line << getopt->compiler.getTerm(Terminal::green);
+    line << compiler.getTerm(Terminal::green);
     line << option.name;
-    line << getopt->compiler.getTerm(Terminal::reset);
+    line << compiler.getTerm(Terminal::reset);
   }
   if (option.argument) {
     if (option.optional) line << "[";
     line << "=";
-    line << getopt->compiler.getTerm(Terminal::cyan);
+    line << compiler.getTerm(Terminal::cyan);
     line << option.argument;
-    line << getopt->compiler.getTerm(Terminal::reset);
+    line << compiler.getTerm(Terminal::reset);
     if (option.optional) line << "]";
   }
   return line.str();
@@ -654,7 +655,6 @@ extern "C" {
 
     /* enum: style */ sass_getopt_register_option(getopt, 't', "style", "Set output style (nested, expanded, compact or compressed).", false, "STYLE", false, style_options, getopt_set_output_style);
     /* enum: format */ sass_getopt_register_option(getopt, 'f', "format", "Set explicit input syntax (scss, sass, css or auto).", false, "SYNTAX", true, format_options, getopt_set_input_format);
-    /* bool */ sass_getopt_register_option(getopt, 'l', "line-comments", "Emit comments showing original line numbers.", true, nullptr, false, nullptr, cli_sass_compiler_set_line_numbers);
     /* path */ sass_getopt_register_option(getopt, 'I', "include-path", "Add include path to look for imports.", false, "PATH", false, nullptr, getopt_add_include_path);
     /* path */ sass_getopt_register_option(getopt, 'P', "plugin-path", "Add plugin path to auto load plugins.", false, "PATH", false, nullptr, getopt_load_plugins);
     /* enum: mode */ sass_getopt_register_option(getopt, 'm', "sourcemap", "Set how to create and emit source mappings.", false, "TYPE", true, srcmap_options, getopt_set_srcmap_mode);
@@ -663,8 +663,10 @@ extern "C" {
     /* path */ sass_getopt_register_option(getopt, 'M', "sourcemap-path", "Set path where source map file is saved.", false, "PATH", false, nullptr, getopt_set_srcmap_path);
     /* int */ sass_getopt_register_option(getopt, 'p', "precision", "Set the precision for numbers.", false, "{0-12}", false, nullptr, getopt_set_precision);
     /* bool */ // sass_getopt_register_option(getopt, '\0', "unicode", "Enable or disable unicode in generated css output.", true, nullptr, false, nullptr, getopt_set_unicode);
+    /* bool */ sass_getopt_register_option(getopt, 'l', "line-comments", "Emit comments showing original line numbers.", true, nullptr, false, nullptr, cli_sass_compiler_set_line_numbers);
     /* bool */ sass_getopt_register_option(getopt, '\0', "term-unicode", "Enable or disable terminal unicode output.", true, nullptr, false, nullptr, getopt_set_term_unicode);
     /* bool */ sass_getopt_register_option(getopt, '\0', "term-colors", "Enable or disable terminal ANSI color output.", true, nullptr, false, nullptr, getopt_set_term_colors);
+    /* bool */ sass_getopt_register_option(getopt, '\0', "quiet", "Do not print any warnings to stderr.", false, nullptr, false, nullptr, getopt_set_suppress_stderr);
 
   }
   // EO sass_getopt_populate_options

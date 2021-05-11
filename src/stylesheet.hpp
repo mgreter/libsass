@@ -10,6 +10,7 @@
 
 #include "ast_css.hpp"
 #include "modules.hpp"
+#include "import.hpp"
 
 namespace Sass {
 

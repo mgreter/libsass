@@ -52,7 +52,7 @@ namespace Sass {
         }
         SelectorListObj result;
         // Iterate over the rest argument list
-        for (Value* arg : arguments[0]->iterator()) {
+        for (Value* arg : arguments[0]->start()) {
           if (arg->isNull()) {
             callStackFrame csf(compiler, arg->pstate());
             throw Exception::RuntimeException(compiler, // "$selectors: "
@@ -82,7 +82,7 @@ namespace Sass {
         }
 
         SelectorListObj reduced;
-        for (Value* arg : arguments[0]->iterator()) {
+        for (Value* arg : arguments[0]->start()) {
           if (arg->isNull()) {
             throw Exception::RuntimeException( // "$selectors: "
               "null is not a valid selector: it must be a string,\n"

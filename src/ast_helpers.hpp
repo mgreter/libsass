@@ -13,9 +13,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////#
   /////////////////////////////////////////////////////////////////////////#
 
-  // easier to search with name
-  const bool DELAYED = true;
-
   // ToDo: should this really be hard-coded
   // Note: most methods follow precision option
   const double NUMBER_EPSILON = 1e-12;
@@ -32,8 +29,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////#
   // Implement compare and hashing operations for raw pointers
   /////////////////////////////////////////////////////////////////////////#
-
-  const std::hash<std::size_t> hasher;
 
   template <class T>
   size_t PtrHashFn(const T* ptr) {
@@ -62,8 +57,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////#
   // Implement compare and hashing operations for AST Nodes
   /////////////////////////////////////////////////////////////////////////#
-
-  // TODO: get rid of functions and use ObjEquality<T>
 
   template <class T>
   // Hash the raw pointer instead of object
@@ -207,12 +200,6 @@ namespace Sass {
     return cnt && cnt->empty();
   }
 
-  // Return if Vector is empty
-  // template <class T>
-  // bool listIsInvisible(T* cnt) {
-  //   return cnt && (cnt->empty() || (cnt->hasInvisible() && !cnt->hasInvisible()));
-  // }
-
   // Erase items from vector that match predicate
   template<class T, class UnaryPredicate>
   void listEraseItemIf(T& vec, UnaryPredicate* predicate)
@@ -251,7 +238,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   inline bool isSubselectorPseudo(const sass::string& norm)
   {
-    return StringUtils::equalsIgnoreCase(norm, "any", 3)
+    return StringUtils::equalsIgnoreCase(norm, "is", 2)
+      || StringUtils::equalsIgnoreCase(norm, "any", 3)
       || StringUtils::equalsIgnoreCase(norm, "matches", 7)
       || StringUtils::equalsIgnoreCase(norm, "nth-child", 9)
       || StringUtils::equalsIgnoreCase(norm, "nth-last-child", 14);
@@ -263,7 +251,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////#
   inline bool isSelectorPseudoClass(const sass::string& test)
   {
-    return StringUtils::equalsIgnoreCase(test, "not", 3)
+    return StringUtils::equalsIgnoreCase(test, "is", 2)
+      || StringUtils::equalsIgnoreCase(test, "not", 3)
       || StringUtils::equalsIgnoreCase(test, "matches", 7)
       || StringUtils::equalsIgnoreCase(test, "current", 7)
       || StringUtils::equalsIgnoreCase(test, "any", 3)
