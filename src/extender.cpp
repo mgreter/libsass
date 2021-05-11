@@ -191,7 +191,8 @@ namespace Sass {
 
       SelectorListObj res = extendList(selector, extensions, mediaContext);
 
-      if (res) *selector = std::move(*res);
+      selector->elementsN(res->elements43());
+      // *selector = std::move(*res); // no move please
 
     }
 
@@ -400,7 +401,7 @@ namespace Sass {
       // If no extends actually happened (for example because unification
       // failed), we don't need to re-register the selector.
       if (ObjEqualityFn(oldValue, ext)) continue;
-      *rule = std::move(*ext);
+      rule->elementsM(std::move(ext->elements43()));
       registerSelector(rule, rule);
 
     }

@@ -55,6 +55,7 @@ namespace Sass {
     // Some simple method delegations
     void clear() { return elements_.clear(); }
     size_t size() const { return elements_.size(); }
+    void reserve(size_t n) { return elements_.reserve(n); }
     bool empty() const { return elements_.empty(); }
     const T& at(size_t i) const { return elements_.at(i); }
     const T& get(size_t i) const { return elements_[i]; }
@@ -208,6 +209,18 @@ namespace Sass {
         }
       }
       return false;
+    }
+
+    // This might be better implemented as `operator=`?
+    void elementsN(const sass::vector<T>& e)
+    {
+      elements_ = e;
+    }
+
+    // This might be better implemented as `operator=`?
+    void elementsM(sass::vector<T>&& e)
+    {
+      elements_ = std::move(e);
     }
 
     template <typename P>
