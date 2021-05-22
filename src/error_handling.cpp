@@ -84,6 +84,8 @@ namespace Sass {
 
     EndlessExtendError::EndlessExtendError(Backtraces traces, const AST_Node& node)
       : Base(node.pstate(), def_msg, traces), node(node)
+    EndlessExtendError::EndlessExtendError(Backtraces traces, const AST_Node& node)
+      : Base(node.pstate(), def_msg, traces), node(node)
     {
       msg = "Extend is creating an absurdly big selector, aborting!";
     }

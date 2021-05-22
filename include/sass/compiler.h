@@ -110,6 +110,12 @@ extern "C" {
   // Note: LibSass does not write the file, implementers should write to this path.
   ADDAPI void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path);
 
+  // Getter for option to suppress anything being printed on stderr (quiet mode)
+  ADDAPI bool ADDCALL sass_compiler_get_suppress_stderr(struct SassCompiler* compiler);
+
+  // Setter for option to suppress anything being printed on stderr (quiet mode)
+  ADDAPI void ADDCALL sass_compiler_set_suppress_stderr(struct SassCompiler* compiler, bool suppress);
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

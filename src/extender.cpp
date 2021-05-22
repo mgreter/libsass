@@ -632,7 +632,8 @@ namespace Sass {
 
       for (SelectorComponentVector& components : weaved) {
 
-        ComplexSelectorObj cplx = SASS_MEMORY_NEW(ComplexSelector, complex->pstate());
+        ComplexSelectorObj cplx = SASS_MEMORY_NEW(ComplexSelector,
+          complex->pstate(), std::move(components));
         cplx->hasPreLineFeed(complex->hasPreLineFeed());
         for (auto& pp : path) {
           if (pp->hasPreLineFeed()) {
