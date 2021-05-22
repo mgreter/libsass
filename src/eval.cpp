@@ -1559,7 +1559,7 @@ namespace Sass {
       // Reset specific flag (not in an at-rule)
       RAII_FLAG(atRootExcludingStyleRule, false);
       // Visit the remaining items at child
-      acceptChildrenAt(child, node);
+      return acceptChildrenAt(child, node);
     }
     // Consumed node
     return nullptr;
