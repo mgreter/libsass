@@ -261,6 +261,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_IGNORE(PlaceholderSelector);
     IMPLEMENT_ACCEPT(void, Selector, PlaceholderSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, PlaceholderSelector);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(PlaceholderSelector);
   };
 
@@ -298,6 +300,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_IGNORE(TypeSelector);
     IMPLEMENT_ACCEPT(void, Selector, TypeSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, TypeSelector);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(TypeSelector);
   };
 
@@ -326,6 +330,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_IGNORE(ClassSelector);
     IMPLEMENT_ACCEPT(void, Selector, ClassSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, ClassSelector);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ClassSelector);
   };
 
@@ -358,6 +364,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_IGNORE(IDSelector);
     IMPLEMENT_ACCEPT(void, Selector, IDSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, IDSelector);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(IDSelector);
   };
 
@@ -415,6 +423,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_IGNORE(AttributeSelector);
     IMPLEMENT_ACCEPT(void, Selector, AttributeSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, AttributeSelector);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(AttributeSelector);
   };
 
@@ -515,6 +525,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_IGNORE(PseudoSelector);
     IMPLEMENT_ACCEPT(void, Selector, PseudoSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, PseudoSelector);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(PseudoSelector);
   };
 
@@ -587,6 +599,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_CHILDREN(ComplexSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, ComplexSelector)
     IMPLEMENT_ACCEPT(void, Selector, ComplexSelector);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ComplexSelector);
   };
 
@@ -686,6 +700,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_IGNORE(SelectorCombinator);
     IMPLEMENT_ACCEPT(void, Selector, SelectorCombinator);
     IMPLEMENT_EQ_OPERATOR(Selector, SelectorCombinator);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SelectorCombinator);
   };
 
@@ -767,6 +783,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_CHILDREN(CompoundSelector);
     IMPLEMENT_ACCEPT(void, Selector, CompoundSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, CompoundSelector);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(CompoundSelector);
   };
 
@@ -824,6 +842,8 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_CHILDREN(SelectorList);
     IMPLEMENT_ACCEPT(void, Selector, SelectorList);
     IMPLEMENT_EQ_OPERATOR(Selector, SelectorList);
+
+    // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SelectorList);
   };
 

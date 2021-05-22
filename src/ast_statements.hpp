@@ -26,13 +26,19 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   struct WithConfigVar {
+    // SourceSpan where this config var was defined
+    SourceSpan pstate;
+    // Name of this config variable (without dollar sign)
     sass::string name;
-    ExpressionObj expression;
-    ValueObj value;
-    SourceSpan pstate2;
-    bool isGuarded41 = false;
-    bool wasUsed42 = false;
-    bool isNull43 = true;
+    // The assigned value or expressions
+    ValueObj value33;
+    ExpressionObj expression44;
+    bool needsAssignment = false;
+    bool wasAssigned = false;
+    bool isNull() const {
+      return (value33 && value33->isaNull()) ||
+        (expression44 && expression44->isaNullExpression());
+    }
   };
 
 
@@ -892,7 +898,9 @@ namespace Sass {
 
   private:
 
+    // Assignments are always local to the 
     ADD_CONSTREF(EnvRef, vidx);
+
     ADD_CONSTREF(EnvKey, variable);
     ADD_CONSTREF(sass::string, ns);
     ADD_CONSTREF(ExpressionObj, value);

@@ -1,5 +1,7 @@
 #include "fn_meta.hpp"
 
+#include <cstring>
+
 #include "eval.hpp"
 #include "compiler.hpp"
 #include "exceptions.hpp"
@@ -29,7 +31,6 @@
 
 #include "parser_stylesheet.hpp"
 
-#include <cstring>
 #include "compiler.hpp"
 #include "charcode.hpp"
 #include "charcode.hpp"
@@ -53,16 +54,18 @@ namespace Sass {
   Value* Eval::visitAssignRule(AssignRule* a)
   {
 
+    // Optimize case where we know to what variable to assign to
+    // This should potentially increase performance, but real-time
+    // profiling only show a very minor increase (but keep anyway).
     if (a->vidx().isValid()) {
       assigne = &compiler.varRoot.getVariable(a->vidx());
-      ValueObj result = a->value()->accept(this);
-      compiler.varRoot.setVariable(
-        a->vidx(),
-        result,
-        false);
-      assigne = nullptr;
+      compiler.varRoot.setVariable(a->vidx(),
+        a->value()->accept(this), a->is_default());
       return nullptr;
     }
+    //else {
+    //  std::cerr << "FADA\n";
+    //}
 
     ValueObj result;
 
@@ -70,24 +73,24 @@ namespace Sass {
 
     if (a->is_default()) {
 
-      auto frame = compiler.getCurrentFrame();
+      auto scope = compiler.getCurrentScope();
 
       // If we have a config and the variable is already set
       // we still overwrite the variable beside being guarded
       WithConfigVar* wconf = nullptr;
-      if (compiler.wconfig && frame->isInternal && a->ns().empty()) {
+      if (compiler.wconfig && scope->isInternal && a->ns().empty()) {
         wconf = wconfig->getCfgVar(vname);
       }
       if (wconf) {
         // Via load-css
-        if (wconf->value) {
-          result = wconf->value;
+        if (wconf->value33) {
+          result = wconf->value33;
         }
         // Via regular load
-        else if (wconf->expression) {
-          a->value(wconf->expression);
+        else if (wconf->expression44) {
+          a->value(wconf->expression44);
         }
-        a->is_default(wconf->isGuarded41);
+        a->is_default(wconf->needsAssignment);
       }
     }
 
@@ -165,11 +168,11 @@ namespace Sass {
       EnvRefs* mod = compiler.getCurrentModule();
 
       auto it = mod->module->moduse.find(a->ns());
-      if (it == mod->module->moduse.end()) {
+      /* if (it == mod->module->moduse.end()) {
         callStackFrame csf(compiler, a->pstate());
         throw Exception::ModuleUnknown(compiler, a->ns());
       }
-      else if (it->second.second && !it->second.second->isCompiled) {
+      else */ if (it->second.second && !it->second.second->isCompiled) {
         callStackFrame csf(compiler, a->pstate());
         throw Exception::ModuleUnknown(compiler, a->ns());
       }
@@ -177,17 +180,13 @@ namespace Sass {
       if (!result) result = a->value()->accept(this);
 
 
-      if (auto frame = compiler.getCurrentFrame()) {
+      if (auto frame = compiler.getCurrentScope()) {
         a->vidx(frame->setModVar(
           a->variable(), a->ns(),
           result,
           a->is_default(),
           a->pstate()));
       }
-
-      // if (compiler.stack().empty()) return nullidx;
-
-
 
     }
 
@@ -294,13 +293,14 @@ namespace Sass {
 
     return declaration;
   }
+  // EO readVariableDeclarationWithoutNamespace
 
   // Consumes a mixin declaration.
   // [start] should point before the `@`.
   MixinRule* StylesheetParser::readMixinRule(Offset start)
   {
 
-    EnvRefs* frame = compiler.getCurrentFrame();
+    EnvRefs* frame = compiler.getCurrentScope();
 
     EnvFrame local(compiler, false);
     // Create space for optional content callable
@@ -551,9 +551,9 @@ namespace Sass {
       return rule->root47();
     }
 
-    if (rule->module32() && rule->module32()->isBuiltIn) {
-      return nullptr;
-    }
+    //if (rule->module32() && rule->module32()->isBuiltIn) {
+    //  return nullptr;
+    //}
 
     if (Root* sheet2 = loadModule(
       rule->prev51(),
@@ -576,48 +576,12 @@ namespace Sass {
 
     if (intoRoot) {
 
-      for (auto& var : idxs->varIdxs) {
-        auto it = modFrame->varIdxs.find(var.first);
-        if (it != modFrame->varIdxs.end()) {
-          if (var.first.isPrivate()) continue;
-          if (var.second == it->second) continue;
-
-          ValueObj& slot = compiler.varRoot.getVariable({ it->second });
-          if (slot == nullptr || slot->isaNull()) continue;
-
-          throw Exception::ParserException(compiler,
-            "This module and the new module both define a "
-            "variable named \"$" + var.first.norm() + "\".");
-        }
-      }
-      for (auto& mix : idxs->mixIdxs) {
-        auto it = modFrame->mixIdxs.find(mix.first);
-        if (it != modFrame->mixIdxs.end()) {
-          if (mix.first.isPrivate()) continue;
-          if (mix.second == it->second) continue;
-          CallableObj& slot = compiler.varRoot.getMixin({ it->second });
-          if (slot == nullptr) continue;
-          throw Exception::ParserException(compiler,
-            "This module and the new module both define a "
-            "mixin named \"" + mix.first.norm() + "\".");
-        }
-      }
-      for (auto& fn : idxs->fnIdxs) {
-        auto it = modFrame->fnIdxs.find(fn.first);
-        if (it != modFrame->fnIdxs.end()) {
-          if (fn.first.isPrivate()) continue;
-          if (fn.second == it->second) continue;
-          CallableObj& slot = compiler.varRoot.getFunction({ it->second });
-          if (slot == nullptr) continue;
-          throw Exception::ParserException(compiler,
-            "This module and the new module both define a "
-            "function named \"" + fn.first.norm() + "\".");
-        }
-      }
-
       // Check if we push the same stuff twice
       for (auto fwd : modFrame->forwards) {
-        if (idxs == fwd) continue;
+
+        // if (idxs == fwd) continue;
+
+        // Checked, needed
         for (auto& var : idxs->varIdxs) {
           auto it = fwd->varIdxs.find(var.first);
           if (it != fwd->varIdxs.end()) {
@@ -627,6 +591,7 @@ namespace Sass {
               "from multiple global modules.");
           }
         }
+        // Checked, needed
         for (auto& var : idxs->mixIdxs) {
           auto it = fwd->mixIdxs.find(var.first);
           if (it != fwd->mixIdxs.end()) {
@@ -636,6 +601,7 @@ namespace Sass {
               "available from multiple global modules.");
           }
         }
+        // Checked, needed
         for (auto& var : idxs->fnIdxs) {
           auto it = fwd->fnIdxs.find(var.first);
           if (it != fwd->fnIdxs.end()) {
@@ -689,12 +655,12 @@ namespace Sass {
     if (module->compiled == nullptr) return;
 
     // For imports we always reproduce
-    if (inImport) {
-      // Don't like the recursion, but OK
-      for (auto upstream : module->upstream) {
-        insertModule(upstream);
-      }
-    }
+//    if (inImport) {
+//      // Don't like the recursion, but OK
+//      for (auto upstream : module->upstream) {
+//        insertModule(upstream);
+//      }
+//    }
 
     // The children to be added to the document
     auto& children(module->compiled->elements());
@@ -711,11 +677,11 @@ namespace Sass {
       auto parent = current->isaCssStyleRule();
       if (css && parent) {
         for (auto& inner : css->elements()) {
-          SelectorListObj copy = SASS_MEMORY_COPY(css->selector());
-          for (ComplexSelector* selector : copy->elements()) {
+          // SelectorListObj copy = SASS_MEMORY_COPY(css->selector());
+          for (ComplexSelector* selector : css->selector()->elements()) {
             selector->chroots(false);
           }
-          SelectorListObj resolved = copy->resolveParentSelectors(
+          SelectorListObj resolved = css->selector()->resolveParentSelectors(
             parent->selector(), compiler, true);
           current->parent()->append(SASS_MEMORY_NEW(CssStyleRule,
             css->pstate(), current, resolved, { inner }));
@@ -744,7 +710,8 @@ namespace Sass {
 
     EnvRefs* mframe(compiler.getCurrentModule());
 
-    EnvScope scoped2(compiler.varRoot, idxs);
+    // Make frame scope active for evaluation
+    EnvScope scoped(compiler.varRoot, idxs);
 
     selectorStack.push_back(nullptr);
     for (auto& child : root->elements()) {
@@ -759,13 +726,13 @@ namespace Sass {
       if (slot == nullptr) slot = SASS_MEMORY_NEW(Null, root->pstate());
     }
 
-      }
+   }
 
   void Eval::exposeFwdRule(ForwardRule* rule)
   {
-    if (!rule->module32()) return;
     if (rule->wasExposed()) return;
     rule->wasExposed(true);
+    // if (!rule->module32()) return;
     mergeForwards(rule->module32()->idxs,
       modctx, rule, compiler);
 
@@ -774,17 +741,16 @@ namespace Sass {
   void Eval::exposeUseRule(UseRule* rule)
   {
 
-    if (!rule->module32()) return;
     if (rule->wasExposed()) return;
     rule->wasExposed(true);
+    // if (!rule->module32()) return;
 
-    EnvRefs* frame(compiler.getCurrentFrame());
+    EnvRefs* frame(compiler.getCurrentScope());
 
     if (rule->module32()->isBuiltIn) {
 
       if (rule->ns().empty()) {
         frame->forwards.push_back(rule->module32()->idxs);
-        rule->wasExposed(true);
       }
       else if (frame->module->moduse.count(rule->ns())) {
         throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
@@ -792,7 +758,6 @@ namespace Sass {
       else {
         frame->module->moduse.insert({ rule->ns(),
           { rule->module32()->idxs, nullptr } });
-        rule->wasExposed(true);
       }
 
     }
@@ -827,51 +792,13 @@ namespace Sass {
   void Eval::exposeImpRule(IncludeImport* rule)
   {
 
-    EnvRefs* pframe = compiler.getCurrentFrame();
+    EnvRefs* pframe = compiler.getCurrentScope();
 
     while (pframe->isImport) {
       pframe = pframe->pscope;
     }
 
-    if (pframe->isInternal) {
-
-      // Import to forward
-      for (auto& asd : rule->root47()->mergedFwdVar) {
-        pframe->varIdxs[asd.first] = asd.second;
-      } // a: 18
-      for (auto& asd : rule->root47()->mergedFwdMix) {
-        pframe->mixIdxs[asd.first] = asd.second;
-      }
-      for (auto& asd : rule->root47()->mergedFwdFn) {
-        pframe->fnIdxs[asd.first] = asd.second;
-      }
-
-    }
-
-
     EnvRefs* cidxs = rule->root47()->idxs;
-
-    // Merge it up through all imports
-    for (auto& var : cidxs->varIdxs) {
-      if (pframe->varIdxs.count(var.first) == 0) {
-        pframe->createVariable(var.first);
-      }
-    }
-
-    // Merge it up through all imports
-    for (auto& fn : cidxs->fnIdxs) {
-      if (pframe->fnIdxs.count(fn.first) == 0) {
-        pframe->createFunction(fn.first);
-      }
-    }
-
-    // Merge it up through all imports
-    for (auto& mix : cidxs->mixIdxs) {
-      if (pframe->mixIdxs.count(mix.first) == 0) {
-        pframe->createMixin(mix.first);
-      }
-    }
-
 
     if (!pframe->isInternal) {
 
@@ -883,21 +810,42 @@ namespace Sass {
     }
     else {
 
-      // Import to forward
-      for (auto& asd : rule->root47()->mergedFwdVar) {
-        pframe->varIdxs[asd.first] = asd.second;
-      } // a: 18
-      for (auto& asd : rule->root47()->mergedFwdMix) {
-        pframe->mixIdxs[asd.first] = asd.second;
+      // Merge it up through all imports
+      for (auto& var : cidxs->varIdxs) {
+        if (pframe->varIdxs.count(var.first) == 0) {
+          pframe->createVariable(var.first);
+        }
       }
-      for (auto& asd : rule->root47()->mergedFwdFn) {
-        pframe->fnIdxs[asd.first] = asd.second;
+
+      // Merge it up through all imports
+      for (auto& fn : cidxs->fnIdxs) {
+        if (pframe->fnIdxs.count(fn.first) == 0) {
+          pframe->createFunction(fn.first);
+        }
+      }
+
+      // Merge it up through all imports
+      // for (auto& mix : cidxs->mixIdxs) {
+      //   if (pframe->mixIdxs.count(mix.first) == 0) {
+      //     pframe->createMixin(mix.first);
+      //   }
+      // }
+
+      // Import to forward
+      for (auto& var : rule->root47()->mergedFwdVar) {
+        pframe->varIdxs[var.first] = var.second;
+      } // a: 18
+      for (auto& fn : rule->root47()->mergedFwdFn) {
+        pframe->fnIdxs[fn.first] = fn.second;
+      }
+      for (auto& mix : rule->root47()->mergedFwdMix) {
+        pframe->mixIdxs[mix.first] = mix.second;
       }
 
     }
 
-
   }
+  // EO exposeImpRule
 
   void Eval::acceptIncludeImport(IncludeImport* rule)
   {
@@ -975,14 +923,4 @@ namespace Sass {
     return nullptr;
   }
 
-  namespace Functions {
-
-    /////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////
-
-    namespace Meta {
-
-
-    }
-  }
 }

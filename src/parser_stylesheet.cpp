@@ -1120,16 +1120,13 @@ namespace Sass {
     sass::vector<WithConfigVar>& vars,
     bool allowGuarded)
   {
+
     if (!scanIdentifier("with")) return false;
 
     scanWhitespace();
     scanner.expectChar($lparen);
 
     std::set<EnvKey> seen;
-
-    // if (compiler.withConfig) {
-    //   std::cerr << "must merge";
-    // }
 
     while (true) {
       scanWhitespace();
@@ -1161,13 +1158,12 @@ namespace Sass {
 
       seen.insert(name);
 
-      WithConfigVar variable;
-      variable.expression = expression;
-      variable.isGuarded41 = guarded;
-      variable.isNull43 = !expression || expression->isaNullExpression();
-      variable.pstate2 = scanner.relevantSpanFrom(variableStart);
-      variable.name = name;
-      vars.push_back(variable);
+      WithConfigVar kvar;
+      kvar.expression44 = expression;
+      kvar.needsAssignment = guarded;
+      kvar.pstate = scanner.relevantSpanFrom(variableStart);
+      kvar.name = name;
+      vars.push_back(kvar);
 
       if (!scanner.scanChar($comma)) break;
       scanWhitespace();

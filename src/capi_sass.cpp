@@ -19,7 +19,7 @@ extern "C" {
 
   // Change the current working directory
   // LibSass will fetch this once initially
-  // Underlying `CWD` is a thread local var
+  // Underlying `CWD` is a thread-local var
   void ADDCALL sass_chdir(const char* path)
   {
     if (path != nullptr) {
@@ -32,7 +32,7 @@ extern "C" {
 
   // LibSass function to print to stderr terminal output
   // This function is able to print a line with colors
-  // It translates the Unix terminal codes to windows
+  // It translates Unix/ANSI terminal codes to windows
   void ADDCALL sass_print_stderr(const char* message)
   {
     Terminal::print(message, true);
@@ -40,7 +40,7 @@ extern "C" {
 
   // LibSass function to print to stdout terminal output
   // This function is able to print a line with colors
-  // It translates the Unix terminal codes to windows
+  // It translates Unix/ANSI terminal codes to windows
   void ADDCALL sass_print_stdout(const char* message)
   {
     Terminal::print(message, false);
@@ -50,7 +50,7 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   // Allocate a memory block on the heap of (at least) [size].
-  // Make sure to release to acquired memory at some later point via
+  // Caller must ensure to release acquired memory at some later point via
   // `sass_free_memory`. You need to go through this utility function in
   // case your code and LibSass use different memory manager implementations.
   // See https://stackoverflow.com/questions/1518711/how-does-free-know-how-much-to-free
@@ -65,7 +65,7 @@ extern "C" {
   }
 
   // Allocate a new memory block and copy the passed string into it.
-  // Make sure to release to acquired memory at some later point via
+  // Caller must ensure to release acquired memory at some later point via
   // `sass_free_c_string`. You need to go through this utility function in
   // case your code and LibSass use different memory manager implementations.
   // See https://stackoverflow.com/questions/1518711/how-does-free-know-how-much-to-free

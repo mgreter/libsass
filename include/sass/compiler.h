@@ -200,7 +200,8 @@ extern "C" {
   // Resolve an include relative to last import or include paths in the sass option struct.
   // This will do a lookup as LibSass would do internally (partials, different extensions).
   // ToDo: Check if we should add `includeIndex` option to check for directory index files!?
-  ADDAPI char* ADDCALL sass_compiler_find_include(const char* path, struct SassCompiler* compiler);
+  // Deprecated with LibSass 4.0 as it wasn't used (request implementation if you need this).
+  // ADDAPI char* ADDCALL sass_compiler_find_include(const char* path, struct SassCompiler* compiler);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

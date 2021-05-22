@@ -472,11 +472,10 @@ namespace Sass {
             EnvKey kname(name->value());
             WithConfigVar kvar;
             kvar.name = name->value();
-            kvar.value = kv.second;
-            kvar.isGuarded41 = false;
-            kvar.wasUsed42 = false;
-            kvar.pstate2 = name->pstate();
-            kvar.isNull43 = !kv.second || kv.second->isaNull();
+            kvar.value33 = kv.second;
+            kvar.needsAssignment = false;
+            kvar.wasAssigned = false;
+            kvar.pstate = name->pstate();
             withConfigs.push_back(kvar);
             if (config.count(kname) == 1) {
               throw Exception::RuntimeException(compiler,
