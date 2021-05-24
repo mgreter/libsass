@@ -593,7 +593,7 @@ namespace Sass {
     else if (const List* list = isaList()) {
       if (list->empty()) return false;
       sass::vector<sass::string> result;
-      if (list->separator() == SASS_COMMA) {
+      if (list->separator() != SASS_SPACE) {
         for (auto complex : list->elements()) {
           List* cplxLst = complex->isaList();
           String* cplxStr = complex->isaString();

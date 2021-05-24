@@ -85,9 +85,12 @@ namespace Sass {
         else if (separatorParam->value() == "comma") {
           separator = SASS_COMMA;
         }
+        else if (separatorParam->value() == "slash") {
+          separator = SASS_DIV;
+        }
         else {
           throw Exception::SassScriptException(
-            "$separator: Must be \"space\", \"comma\", or \"auto\".",
+            "$separator: Must be \"space\", \"comma\", \"slash\", or \"auto\".",
             compiler, pstate);
         }
 
@@ -137,9 +140,12 @@ namespace Sass {
         else if (separatorParam->value() == "comma") {
           separator = SASS_COMMA;
         }
+        else if (separatorParam->value() == "slash") {
+          separator = SASS_DIV;
+        }
         else {
           throw Exception::SassScriptException(
-            "$separator: Must be \"space\", \"comma\", or \"auto\".",
+            "$separator: Must be \"space\", \"comma\", \"slash\", or \"auto\".",
             compiler, pstate);
         }
 
@@ -216,7 +222,8 @@ namespace Sass {
       BUILT_IN_FN(separator)
       {
         return SASS_MEMORY_NEW(String, arguments[0]->pstate(),
-          std::move(arguments[0]->separator() == SASS_COMMA ? "comma" : "space"));
+          std::move(arguments[0]->separator() == SASS_COMMA ? "comma" :
+            arguments[0]->separator() == SASS_DIV ? "slash" : "space"));
       }
 
       /*******************************************************************/
@@ -225,6 +232,25 @@ namespace Sass {
       {
         return SASS_MEMORY_NEW(Boolean, pstate,
           arguments[0]->hasBrackets());
+      }
+
+      /*******************************************************************/
+
+      BUILT_IN_FN(slash)
+      {
+
+        if (arguments[0]->lengthAsList() < 2) {
+          throw Exception::SassScriptException(
+            "At least two elements are required.",
+            compiler, pstate);
+        }
+
+        ValueVector inner;
+        inner.reserve(arguments[0]->lengthAsList());
+        std::copy(arguments[0]->start(), arguments[0]->stop(),
+          std::back_inserter(inner));
+        return SASS_MEMORY_NEW(List, pstate, inner,
+          SASS_DIV, arguments[0]->hasBrackets());
       }
 
       /*******************************************************************/
@@ -243,6 +269,7 @@ namespace Sass {
         module.addFunction(key_index, ctx.registerBuiltInFunction(key_index, "$list, $value", index));
         module.addFunction(key_list_separator, ctx.registerBuiltInFunction(key_list_separator, "$list", separator));
         module.addFunction(key_is_bracketed, ctx.registerBuiltInFunction(key_is_bracketed, "$list", isBracketed));
+        module.addFunction(key_slash, ctx.registerBuiltInFunction(key_slash, "$elements...", slash));
 
       }
 

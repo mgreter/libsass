@@ -404,6 +404,11 @@ namespace Sass {
       return separator() == SASS_SPACE;
     }
 
+    // Check if we has space separator
+    bool hasSlashSeparator() const {
+      return separator() == SASS_DIV;
+    }
+
     // Check if we are bracketed
     virtual bool hasBrackets() {
       return false;

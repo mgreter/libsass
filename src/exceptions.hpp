@@ -216,6 +216,11 @@ namespace Sass {
       MissingArgument(BackTraces traces, const EnvKey& name);
     };
 
+    class MissingElement : public RuntimeException {
+    public:
+      MissingElement(BackTraces traces, const EnvKey& name);
+    };
+
     class ArgumentGivenTwice : public RuntimeException {
     public:
       ArgumentGivenTwice(BackTraces traces, const EnvKey& name);

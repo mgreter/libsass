@@ -66,6 +66,9 @@ namespace Sass {
       else {
         rv->lhsAsSlash({}); // reset
         rv->lhsAsSlash({}); // reset
+
+        logger.addDeprecation("Using / for division is deprecated and will be removed.", pstate);
+
       }
     }
     return result.detach();

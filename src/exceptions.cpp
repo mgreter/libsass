@@ -243,6 +243,10 @@ namespace Sass {
       : RuntimeException(traces, "Missing argument $" + name.norm() + ".")
     {}
 
+    MissingElement::MissingElement(BackTraces traces, const EnvKey& name)
+      : RuntimeException(traces, "Missing element $" + name.norm() + ".")
+    {}
+
     ArgumentGivenTwice::ArgumentGivenTwice(BackTraces traces, const EnvKey& name)
       : RuntimeException(traces, "Argument $" + name.norm() + " name was passed both by position and by name.")
     {}

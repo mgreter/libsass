@@ -204,7 +204,7 @@ namespace Sass {
       }
       else if (arguments_[i]->defval() == nullptr) {
         throw Exception::RuntimeException(traces,
-          "Missing argument $" + arguments_[i]->name().orig() + ".");
+          "Missing element $" + arguments_[i]->name().orig() + ".");
       }
       i++;
     }

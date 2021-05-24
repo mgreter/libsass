@@ -179,6 +179,32 @@ namespace Sass {
         list = SASS_MEMORY_NEW(List,
           pstate, { channels });
       }
+
+      auto originalChannels = channels;
+      ValueObj alphaFromSlashList;
+      if (channels->separator() == SASS_DIV) {
+        // ListObj list = channels->asList;
+        if (channels->lengthAsList() != 2) {
+          sass::sstream message;
+          message << "Only 2 slash-separated elements allowed, but ";
+          message << channels->lengthAsList() << " ";
+          message << pluralize("was", channels->lengthAsList(), "were");
+          message << " passed.";
+          throw Exception::SassScriptException(message.str(), compiler, pstate);
+        }
+
+        channels = list->get(0);
+
+        alphaFromSlashList = list->get(1);
+        if (!isSpecialNumber(alphaFromSlashList)) {
+          alphaFromSlashList->assertNumber(compiler, "alpha");
+        }
+        if (isVar(channels)) {
+          return getFunctionString(name, pstate, list->elements(), list->separator());
+          // return _functionString(name, [originalChannels]);
+        }
+      }
+
       // Check for invalid input arguments
       bool isBracketed = list->hasBrackets();
       bool isCommaSeparated = list->hasCommaSeparator();
@@ -1469,51 +1495,51 @@ namespace Sass {
         uint32_t idx_hsl_strict = ctx.createBuiltInOverloadFns(key_hsl, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsl4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsl3arg),
-          std::make_pair("$color, $alpha", fnHsl2arg),
+          std::make_pair("$hue, $saturation", fnHsl2arg),
           std::make_pair("$channels", fnHsl1arg),
         });
         uint32_t idx_hsl_loose = ctx.createBuiltInOverloadFns(key_hsl, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsl4arg),
           std::make_pair("$hue, $saturation, $lightness", hsl3arg),
-          std::make_pair("$color, $alpha", hsl2arg),
+          std::make_pair("$hue, $saturation", hsl2arg),
           std::make_pair("$channels", hsl1arg),
         });
         uint32_t idx_hsla_strict = ctx.createBuiltInOverloadFns(key_hsla, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsla4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsla3arg),
-          std::make_pair("$color, $alpha", fnHsla2arg),
+          std::make_pair("$hue, $saturation", fnHsla2arg),
           std::make_pair("$channels", fnHsla1arg),
         });
         uint32_t idx_hsla_loose = ctx.createBuiltInOverloadFns(key_hsla, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsla4arg),
           std::make_pair("$hue, $saturation, $lightness", hsla3arg),
-          std::make_pair("$color, $alpha", hsla2arg),
+          std::make_pair("$hue, $saturation", hsla2arg),
           std::make_pair("$channels", hsla1arg),
         });
         uint32_t idx_hwb_strict = ctx.createBuiltInOverloadFns(key_hwb, {
-          std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwb4arg),
-          std::make_pair("$hue, $whiteness, $blackness", fnHwb3arg),
-          std::make_pair("$color, $alpha", fnHwb2arg),
+          std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", fnHwb4arg),
+          // std::make_pair("$hue, $whiteness, $blackness", fnHwb3arg),
+          // std::make_pair("$color, $alpha", fnHwb2arg),
           std::make_pair("$channels", fnHwb1arg),
         });
         uint32_t idx_hwb_loose = ctx.createBuiltInOverloadFns(key_hwb, {
-          std::make_pair("$hue, $whiteness, $blackness, $alpha", hwb4arg),
-          std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
-          std::make_pair("$color, $alpha", hwb2arg),
+          std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", hwb4arg),
+          // std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
+          // std::make_pair("$color, $alpha", hwb2arg),
           std::make_pair("$channels", hwb1arg),
         });
-        uint32_t idx_hwba_strict = ctx.createBuiltInOverloadFns(key_hwba, {
-          std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwba4arg),
-          std::make_pair("$hue, $whiteness, $blackness", fnHwba3arg),
-          std::make_pair("$color, $alpha", fnHwba2arg),
-          std::make_pair("$channels", fnHwba1arg),
-        });
-        uint32_t idx_hwba_loose = ctx.createBuiltInOverloadFns(key_hwba, {
-          std::make_pair("$hue, $whiteness, $blackness, $alpha", hwba4arg),
-          std::make_pair("$hue, $whiteness, $blackness", hwba3arg),
-          std::make_pair("$color, $alpha", hwba2arg),
-          std::make_pair("$channels", hwba1arg),
-        });
+        // uint32_t idx_hwba_strict = ctx.createBuiltInOverloadFns(key_hwba, {
+        //   std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwba4arg),
+        //   std::make_pair("$hue, $whiteness, $blackness", fnHwba3arg),
+        //   std::make_pair("$color, $alpha", fnHwba2arg),
+        //   std::make_pair("$channels", fnHwba1arg),
+        // });
+        // uint32_t idx_hwba_loose = ctx.createBuiltInOverloadFns(key_hwba, {
+        //   std::make_pair("$hue, $whiteness, $blackness, $alpha", hwba4arg),
+        //   std::make_pair("$hue, $whiteness, $blackness", hwba3arg),
+        //   std::make_pair("$color, $alpha", hwba2arg),
+        //   std::make_pair("$channels", hwba1arg),
+        // });
 
         uint32_t idx_red = ctx.createBuiltInFunction(key_red, "$color", red);
         uint32_t idx_green = ctx.createBuiltInFunction(key_green, "$color", green);
@@ -1566,7 +1592,7 @@ namespace Sass {
         ctx.exposeFunction(key_hsl, idx_hsl_loose);
         ctx.exposeFunction(key_hsla, idx_hsla_loose);
         ctx.exposeFunction(key_hwb, idx_hwb_loose);
-        ctx.exposeFunction(key_hwba, idx_hwba_loose);
+        // ctx.exposeFunction(key_hwba, idx_hwba_loose);
         ctx.exposeFunction(key_red, idx_red);
         ctx.exposeFunction(key_green, idx_green);
         ctx.exposeFunction(key_blue, idx_blue);
@@ -1601,7 +1627,7 @@ namespace Sass {
         module.addFunction(key_hsl, idx_hsl_strict);
         module.addFunction(key_hsla, idx_hsla_strict);
         module.addFunction(key_hwb, idx_hwb_strict);
-        module.addFunction(key_hwba, idx_hwba_strict);
+        // module.addFunction(key_hwba, idx_hwba_strict);
         module.addFunction(key_red, idx_red);
         module.addFunction(key_green, idx_green);
         module.addFunction(key_blue, idx_blue);
