@@ -172,19 +172,16 @@ namespace Sass {
           String, pstate, name + "(" +
           channels->inspect() + ")");
       }
-      // Check if argument is already a list
-      ListObj list = channels->isaList();
-      // If not create one and wrap value in it
-      if (!list) {
-        list = SASS_MEMORY_NEW(List,
-          pstate, { channels });
-      }
 
       auto originalChannels = channels;
       ValueObj alphaFromSlashList;
       if (channels->separator() == SASS_DIV) {
-        // ListObj list = channels->asList;
-        if (channels->lengthAsList() != 2) {
+
+        // std::cerr << "List from slash\n";
+
+        ListObj args = SASS_MEMORY_NEW(List, channels->pstate(),
+          { channels->start(), channels->stop() });
+        if (args->size() != 2) {
           sass::sstream message;
           message << "Only 2 slash-separated elements allowed, but ";
           message << channels->lengthAsList() << " ";
@@ -193,16 +190,28 @@ namespace Sass {
           throw Exception::SassScriptException(message.str(), compiler, pstate);
         }
 
-        channels = list->get(0);
+        channels = args->get(0);
 
-        alphaFromSlashList = list->get(1);
+        alphaFromSlashList = args->get(1);
         if (!isSpecialNumber(alphaFromSlashList)) {
           alphaFromSlashList->assertNumber(compiler, "alpha");
         }
         if (isVar(channels)) {
-          return getFunctionString(name, pstate, list->elements(), list->separator());
+          std::cerr << "Doing shenanigans\n";
+          // return getFunctionString(name, pstate,
+          //   list->elements(), list->separator());
           // return _functionString(name, [originalChannels]);
         }
+
+        // list = args;
+      }
+
+      // Check if argument is already a list
+      ListObj list = channels->isaList();
+      // If not create one and wrap value in it
+      if (!list) {
+        list = SASS_MEMORY_NEW(List,
+          pstate, { channels->start(), channels->stop() });
       }
 
       // Check for invalid input arguments
@@ -243,6 +252,14 @@ namespace Sass {
         throw Exception::MissingArgument(compiler,
           getColorArgName(list->size(), name));
       }
+
+      if (alphaFromSlashList) {
+        ListObj copy = SASS_MEMORY_COPY(list);
+        list->append(alphaFromSlashList);
+        return list.detach();
+      }
+
+
       // Check for the second argument
       Number* secondNumber = list->get(2)->isaNumber();
       String* secondString = list->get(2)->isaString();
