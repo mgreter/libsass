@@ -55,8 +55,9 @@ namespace Sass {
 
   // Helper function for the division
   Value* doDivision(Value* left, Value* right,
-    bool allowSlash, Logger& logger, SourceSpan pstate)
+    BinaryOpExpression* node, Logger& logger, SourceSpan pstate)
   {
+    bool allowSlash = node->allowsSlash();
     ValueObj result = left->dividedBy(right, logger, pstate);
     if (Number* rv = result->isaNumber()) {
       if (allowSlash && left && right) {
@@ -64,16 +65,33 @@ namespace Sass {
         rv->rhsAsSlash(right->isaNumber());
       }
       else {
+        if (left && right) {
+          logger.addDeprecation("Using / for division is deprecated and will be removed "
+            "in LibSass 4.1.0.\n\nRecommendation: math.div(" + left->inspect() +
+            ", " + right->inspect() + ")\n\nMore info and automated migrator: "
+            "https://sass-lang.com/d/slash-div", pstate);
+        }
         rv->lhsAsSlash({}); // reset
         rv->lhsAsSlash({}); // reset
-
-        logger.addDeprecation("Using / for division is deprecated and will be removed.", pstate);
 
       }
     }
     return result.detach();
   }
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  Value* Eval::withoutSlash(Value* value) {
+    Number* number = value->isaNumber();
+    if (number && number->hasAsSlash()) {
+      logger.addDeprecation("Using / for division is deprecated and will be removed " 
+        "in LibSass 4.1.0.\n\nRecommendation: math.div(" + number->lhsAsSlash()->inspect() +
+        ", " + number->rhsAsSlash()->inspect() + ")\n\nMore info and automated migrator: "
+        "https://sass-lang.com/d/slash-div", value->pstate());
+    }
+    return value->withoutSlash();
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -620,12 +638,13 @@ namespace Sass {
     // Collect positional args by evaluating input arguments
     positional.reserve(arguments->positional().size() + 1);
     for (const auto& arg : arguments->positional()) {
-      positional.emplace_back(arg->accept(this));
+      positional.emplace_back(withoutSlash(arg->accept(this)));
     }
 
     // Collect named args by evaluating input arguments
     for (const auto& kv : arguments->named()) {
-      named.insert(std::make_pair(kv.first, kv.second->accept(this)));
+      named.insert(std::make_pair(kv.first,
+        withoutSlash(kv.second->accept(this))));
     }
 
     // Abort if we don't take any restargs
@@ -636,12 +655,13 @@ namespace Sass {
     }
 
     // Evaluate the variable expression (
-    ValueObj rest = arguments->restArg()->accept(this);
+    ValueObj rest = withoutSlash(arguments->restArg()->accept(this));
 
     SassSeparator separator = SASS_UNDEF;
 
     if (Map* restMap = rest->isaMap()) {
-      _addRestValueMap(named, restMap, arguments->restArg()->pstate());
+      _addRestValueMap(named, restMap,
+        arguments->restArg()->pstate());
     }
     else if (List* list = rest->isaList()) {
       std::copy(list->begin(), list->end(),
@@ -685,7 +705,7 @@ namespace Sass {
   sass::string Eval::toCss(Expression* expression, bool quote)
   {
     ValueObj value = expression->accept(this);
-    return value->toCss(logger, quote);
+    return value->toCss(quote);
   }
 
   /// Evaluates [interpolation] into a serialized string.
@@ -947,7 +967,7 @@ namespace Sass {
           strings.emplace_back(lit->value());
         }
         else if (!result->isNull()) {
-          strings.emplace_back(result->toCss(logger, false));
+          strings.emplace_back(result->toCss(false));
         }
       }
     }
@@ -1026,8 +1046,7 @@ namespace Sass {
     case SassOperator::DIV:
       right = rhs->accept(this);
       return doDivision(left, right,
-        node->allowsSlash(),
-        logger, node->pstate());
+        node, logger, node->pstate());
     case SassOperator::MOD:
       right = rhs->accept(this);
       return left->modulo(right,
@@ -1087,7 +1106,7 @@ namespace Sass {
 
     ValueObj rv = condition ? condition->accept(this) : nullptr;
     Expression* ex = rv && rv->isTruthy() ? ifTrue : ifFalse;
-    return ex ? ex->accept(this) : nullptr;
+    return ex ? withoutSlash(ex->accept(this)) : nullptr;
   }
 
   Value* Eval::visitParenthesizedExpression(ParenthesizedExpression* ex)
@@ -1482,7 +1501,7 @@ namespace Sass {
       callExternalMessageOverloadFunction(fn, message);
     }
     else {
-      sass::string result(message->toCss(logger, false));
+      sass::string result(message->toCss(false));
       callStackFrame frame(logger, BackTrace(node->pstate()));
       logger.addWarning(result);
     }
@@ -2217,6 +2236,7 @@ namespace Sass {
           compiler.varRoot.setVariable({ vidx, 0 }, variable, false);
         }
         else {
+          value = withoutSlash(value);
           compiler.varRoot.setVariable({ vidx, 0 }, key, false);
           compiler.varRoot.setVariable({ vidx, 1 }, value, false);
         }
@@ -2296,7 +2316,8 @@ namespace Sass {
 
   Value* Eval::visitReturnRule(ReturnRule* rule)
   {
-    return rule->value()->accept(this);
+    return withoutSlash(
+      rule->value()->accept(this));
   }
 
   Value* Eval::visitSilentComment(SilentComment* c)

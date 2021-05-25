@@ -373,60 +373,60 @@ namespace Sass {
   Value* Value::singleEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     return SASS_MEMORY_NEW(String, pstate,
-      toCss(logger) + "=" + other->toCss(logger));
+      toCss() + "=" + other->toCss());
   }
 
   // The SassScript `+` operation.
   Value* Value::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (String* str = other->isaString()) {
-      sass::string text(toCss(logger));
+      sass::string text(toCss());
       return SASS_MEMORY_NEW(String, pstate,
         text + str->value(),
         str->hasQuotes());
     }
     else {
-      sass::string text(toCss(logger));
+      sass::string text(toCss());
       return SASS_MEMORY_NEW(String, pstate,
-        text + other->toCss(logger));
+        text + other->toCss());
     }
   }
 
   // The SassScript `-` operation.
   Value* Value::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    sass::string text(toCss(logger));
+    sass::string text(toCss());
     return SASS_MEMORY_NEW(String, pstate,
-      text + "-" + other->toCss(logger));
+      text + "-" + other->toCss());
   }
 
   // The SassScript `/` operation.
   Value* Value::dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    sass::string text(toCss(logger));
+    sass::string text(toCss());
     return SASS_MEMORY_NEW(String, pstate,
-      text + "/" + other->toCss(logger));
+      text + "/" + other->toCss());
   }
 
   // The SassScript unary `+` operation.
   Value* Value::unaryPlus(Logger& logger, const SourceSpan& pstate) const
   {
     return SASS_MEMORY_NEW(String,
-      pstate, "+" + toCss(logger));
+      pstate, "+" + toCss());
   }
 
   // The SassScript unary `-` operation.
   Value* Value::unaryMinus(Logger& logger, const SourceSpan& pstate) const
   {
     return SASS_MEMORY_NEW(String,
-      pstate, "-" + toCss(logger));
+      pstate, "-" + toCss());
   }
 
   // The SassScript unary `/` operation.
   Value* Value::unaryDivide(Logger& logger, const SourceSpan& pstate) const
   {
     return SASS_MEMORY_NEW(String,
-      pstate, "/" + toCss(logger));
+      pstate, "/" + toCss());
   }
 
   // The SassScript unary `not` operation.

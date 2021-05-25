@@ -158,7 +158,7 @@ namespace Sass {
       if (!result) result = a->value()->accept(this);
       compiler.varRoot.setVariable(
         a->vidx(),
-        result,
+        withoutSlash(result),
         a->is_default());
       assigne = nullptr;
 
@@ -183,7 +183,7 @@ namespace Sass {
       if (auto frame = compiler.getCurrentScope()) {
         a->vidx(frame->setModVar(
           a->variable(), a->ns(),
-          result,
+          withoutSlash(result),
           a->is_default(),
           a->pstate()));
       }

@@ -151,7 +151,7 @@ namespace Sass {
       if (separator == SASS_COMMA) sep = ", ";
       for (Value* arg : arguments) {
         if (addComma) fncall << sep;
-        fncall << arg->inspect();
+        fncall << arg->toCss();
         addComma = true;
       }
       fncall << ")";
@@ -197,9 +197,8 @@ namespace Sass {
           alphaFromSlashList->assertNumber(compiler, "alpha");
         }
         if (isVar(channels)) {
-          std::cerr << "Doing shenanigans\n";
-          // return getFunctionString(name, pstate,
-          //   list->elements(), list->separator());
+          // std::cerr << "Doing shenanigans\n";
+          return getFunctionString(name, pstate, { originalChannels });
           // return _functionString(name, [originalChannels]);
         }
 
@@ -246,7 +245,7 @@ namespace Sass {
         }
         // Return function as-is back to be rendered as css
         if (hasVar || (!list->empty() && isVarSlash(list->last()))) {
-          return getFunctionString(name, pstate, list->elements(), list->separator());
+          return getFunctionString(name, pstate, { originalChannels });
         }
         // Throw error for missing argument
         throw Exception::MissingArgument(compiler,

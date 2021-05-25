@@ -1230,7 +1230,7 @@ namespace Sass {
       return SASS_MEMORY_NEW(String,
         pstate, std::move(text), hasQuotes());
     }
-    sass::string text(value() + other->toCss(logger));
+    sass::string text(value() + other->toCss());
     return SASS_MEMORY_NEW(String,
       pstate, std::move(text), hasQuotes());
   }

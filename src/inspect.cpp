@@ -642,9 +642,15 @@ namespace Sass {
     if (const List * list = value->isaList()) {
       if (list->size() < 2) return false;
       if (list->hasBrackets()) return false;
-      return separator == SASS_COMMA
-        ? (list->separator() == SASS_COMMA || list->separator() == SASS_DIV)
-        : list->separator() != SASS_UNDEF;
+      switch (separator) {
+      case SASS_COMMA:
+        return list->separator() == SASS_COMMA;
+      case SASS_DIV:
+        return list->separator() == SASS_COMMA ||
+          list->separator() == SASS_DIV;
+      default:
+        return list->separator() != SASS_UNDEF;
+      }
     }
     return false;
   }
@@ -720,7 +726,12 @@ namespace Sass {
     }
 
     if (preserveComma) {
-      append_char($comma);
+      if (list->separator() == SASS_DIV) {
+        append_char($slash);
+      }
+      else {
+        append_char($comma);
+      }
       if (!list->hasBrackets()) {
         append_char($rparen);
       }

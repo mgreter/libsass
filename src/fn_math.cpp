@@ -172,7 +172,7 @@ namespace Sass {
             "Use list.slash() instead for a slash separator.");
          }
 
-        return number1->dividedBy(number2, compiler, number1->pstate());
+        return arguments[0]->dividedBy(arguments[1], compiler, pstate);
 
       }
 
