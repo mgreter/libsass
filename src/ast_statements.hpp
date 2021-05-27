@@ -32,7 +32,7 @@ namespace Sass {
     sass::string name;
     // The assigned value or expressions
     ValueObj value33;
-    ExpressionObj expression42;
+    ExpressionObj expression44;
     bool isGuarded41 = false;
     bool wasAssigned = false;
     bool isNull43 = true;

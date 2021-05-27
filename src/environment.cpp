@@ -88,8 +88,8 @@ namespace Sass {
           result = wconf->value33;
         }
         // Via regular load
-        else if (wconf->expression42) {
-          a->value(wconf->expression42);
+        else if (wconf->expression44) {
+          a->value(wconf->expression44);
         }
         a->is_default(wconf->isGuarded41);
       }

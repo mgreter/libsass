@@ -1159,7 +1159,7 @@ namespace Sass {
       seen.insert(name);
 
       WithConfigVar kvar;
-      kvar.expression42 = expression;
+      kvar.expression44 = expression;
       kvar.isGuarded41 = guarded;
       kvar.isNull43 = !expression || expression->isaNullExpression();
       kvar.pstate = scanner.relevantSpanFrom(variableStart);
