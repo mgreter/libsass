@@ -2329,7 +2329,8 @@ namespace Sass {
 
   Value* Eval::visitReturnRule(ReturnRule* rule)
   {
-    return rule->value()->accept(this);
+    ValueObj result(rule->value()->accept(this));
+    return withoutSlash(result);
   }
 
   Value* Eval::visitSilentComment(SilentComment* c)
