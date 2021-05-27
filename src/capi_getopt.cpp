@@ -661,7 +661,7 @@ extern "C" {
     /* bool */ sass_getopt_register_option(getopt, '\0', "sourcemap-file-urls", "Emit absolute file:// urls in includes array.", true, nullptr, true, nullptr, getopt_set_srcmap_file_urls);
     /* bool */ sass_getopt_register_option(getopt, 'C', "sourcemap-contents", "Embed contents of imported files in source map.", true, nullptr, true, nullptr, getopt_set_srcmap_contents);
     /* path */ sass_getopt_register_option(getopt, 'M', "sourcemap-path", "Set path where source map file is saved.", false, "PATH", false, nullptr, getopt_set_srcmap_path);
-    /* int */ sass_getopt_register_option(getopt, 'p', "precision", "Set the precision for numbers.", false, "{0-12}", false, nullptr, getopt_set_precision);
+    /* int */ sass_getopt_register_option(getopt, 'p', "precision", "Set floating-point precision for numbers.", false, "{0-12}", false, nullptr, getopt_set_precision);
     /* bool */ // sass_getopt_register_option(getopt, '\0', "unicode", "Enable or disable unicode in generated css output.", true, nullptr, false, nullptr, getopt_set_unicode);
     /* bool */ sass_getopt_register_option(getopt, 'l', "line-comments", "Emit comments showing original line numbers.", true, nullptr, false, nullptr, cli_sass_compiler_set_line_numbers);
     /* bool */ sass_getopt_register_option(getopt, '\0', "term-unicode", "Enable or disable terminal unicode output.", true, nullptr, false, nullptr, getopt_set_term_unicode);
