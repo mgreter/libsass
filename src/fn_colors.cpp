@@ -172,13 +172,47 @@ namespace Sass {
           String, pstate, name + "(" +
           channels->inspect() + ")");
       }
+
+      auto originalChannels = channels;
+      ValueObj alphaFromSlashList;
+      if (channels->separator() == SASS_DIV) {
+
+        // std::cerr << "List from slash\n";
+
+        ListObj args = SASS_MEMORY_NEW(List, channels->pstate(),
+          { channels->start(), channels->stop() });
+        if (args->size() != 2) {
+          sass::sstream message;
+          message << "Only 2 slash-separated elements allowed, but ";
+          message << channels->lengthAsList() << " ";
+          message << pluralize("was", channels->lengthAsList(), "were");
+          message << " passed.";
+          throw Exception::SassScriptException(message.str(), compiler, pstate);
+        }
+
+        channels = args->get(0);
+
+        alphaFromSlashList = args->get(1);
+        if (!isSpecialNumber(alphaFromSlashList)) {
+          alphaFromSlashList->assertNumber(compiler, "alpha");
+        }
+        if (isVar(channels)) {
+          // std::cerr << "Doing shenanigans\n";
+          return getFunctionString(name, pstate, { originalChannels });
+          // return _functionString(name, [originalChannels]);
+        }
+
+        // list = args;
+      }
+
       // Check if argument is already a list
       ListObj list = channels->isaList();
       // If not create one and wrap value in it
       if (!list) {
         list = SASS_MEMORY_NEW(List,
-          pstate, { channels });
+          pstate, { channels->start(), channels->stop() });
       }
+
       // Check for invalid input arguments
       bool isBracketed = list->hasBrackets();
       bool isCommaSeparated = list->hasCommaSeparator();
@@ -211,12 +245,20 @@ namespace Sass {
         }
         // Return function as-is back to be rendered as css
         if (hasVar || (!list->empty() && isVarSlash(list->last()))) {
-          return getFunctionString(name, pstate, list->elements(), list->separator());
+          return getFunctionString(name, pstate, { originalChannels });
         }
         // Throw error for missing argument
         throw Exception::MissingArgument(compiler,
           getColorArgName(list->size(), name));
       }
+
+      if (alphaFromSlashList) {
+        ListObj copy = SASS_MEMORY_COPY(list);
+        list->append(alphaFromSlashList);
+        return list.detach();
+      }
+
+
       // Check for the second argument
       Number* secondNumber = list->get(2)->isaNumber();
       String* secondString = list->get(2)->isaString();
@@ -1469,51 +1511,51 @@ namespace Sass {
         uint32_t idx_hsl_strict = ctx.createBuiltInOverloadFns(key_hsl, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsl4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsl3arg),
-          std::make_pair("$color, $alpha", fnHsl2arg),
+          std::make_pair("$hue, $saturation", fnHsl2arg),
           std::make_pair("$channels", fnHsl1arg),
         });
         uint32_t idx_hsl_loose = ctx.createBuiltInOverloadFns(key_hsl, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsl4arg),
           std::make_pair("$hue, $saturation, $lightness", hsl3arg),
-          std::make_pair("$color, $alpha", hsl2arg),
+          std::make_pair("$hue, $saturation", hsl2arg),
           std::make_pair("$channels", hsl1arg),
         });
         uint32_t idx_hsla_strict = ctx.createBuiltInOverloadFns(key_hsla, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsla4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsla3arg),
-          std::make_pair("$color, $alpha", fnHsla2arg),
+          std::make_pair("$hue, $saturation", fnHsla2arg),
           std::make_pair("$channels", fnHsla1arg),
         });
         uint32_t idx_hsla_loose = ctx.createBuiltInOverloadFns(key_hsla, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsla4arg),
           std::make_pair("$hue, $saturation, $lightness", hsla3arg),
-          std::make_pair("$color, $alpha", hsla2arg),
+          std::make_pair("$hue, $saturation", hsla2arg),
           std::make_pair("$channels", hsla1arg),
         });
         uint32_t idx_hwb_strict = ctx.createBuiltInOverloadFns(key_hwb, {
-          std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwb4arg),
-          std::make_pair("$hue, $whiteness, $blackness", fnHwb3arg),
-          std::make_pair("$color, $alpha", fnHwb2arg),
+          std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", fnHwb4arg),
+          // std::make_pair("$hue, $whiteness, $blackness", fnHwb3arg),
+          // std::make_pair("$color, $alpha", fnHwb2arg),
           std::make_pair("$channels", fnHwb1arg),
         });
         uint32_t idx_hwb_loose = ctx.createBuiltInOverloadFns(key_hwb, {
-          std::make_pair("$hue, $whiteness, $blackness, $alpha", hwb4arg),
-          std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
-          std::make_pair("$color, $alpha", hwb2arg),
+          std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", hwb4arg),
+          // std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
+          // std::make_pair("$color, $alpha", hwb2arg),
           std::make_pair("$channels", hwb1arg),
         });
-        uint32_t idx_hwba_strict = ctx.createBuiltInOverloadFns(key_hwba, {
-          std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwba4arg),
-          std::make_pair("$hue, $whiteness, $blackness", fnHwba3arg),
-          std::make_pair("$color, $alpha", fnHwba2arg),
-          std::make_pair("$channels", fnHwba1arg),
-        });
-        uint32_t idx_hwba_loose = ctx.createBuiltInOverloadFns(key_hwba, {
-          std::make_pair("$hue, $whiteness, $blackness, $alpha", hwba4arg),
-          std::make_pair("$hue, $whiteness, $blackness", hwba3arg),
-          std::make_pair("$color, $alpha", hwba2arg),
-          std::make_pair("$channels", hwba1arg),
-        });
+        // uint32_t idx_hwba_strict = ctx.createBuiltInOverloadFns(key_hwba, {
+        //   std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwba4arg),
+        //   std::make_pair("$hue, $whiteness, $blackness", fnHwba3arg),
+        //   std::make_pair("$color, $alpha", fnHwba2arg),
+        //   std::make_pair("$channels", fnHwba1arg),
+        // });
+        // uint32_t idx_hwba_loose = ctx.createBuiltInOverloadFns(key_hwba, {
+        //   std::make_pair("$hue, $whiteness, $blackness, $alpha", hwba4arg),
+        //   std::make_pair("$hue, $whiteness, $blackness", hwba3arg),
+        //   std::make_pair("$color, $alpha", hwba2arg),
+        //   std::make_pair("$channels", hwba1arg),
+        // });
 
         uint32_t idx_red = ctx.createBuiltInFunction(key_red, "$color", red);
         uint32_t idx_green = ctx.createBuiltInFunction(key_green, "$color", green);
@@ -1566,7 +1608,7 @@ namespace Sass {
         ctx.exposeFunction(key_hsl, idx_hsl_loose);
         ctx.exposeFunction(key_hsla, idx_hsla_loose);
         ctx.exposeFunction(key_hwb, idx_hwb_loose);
-        ctx.exposeFunction(key_hwba, idx_hwba_loose);
+        // ctx.exposeFunction(key_hwba, idx_hwba_loose);
         ctx.exposeFunction(key_red, idx_red);
         ctx.exposeFunction(key_green, idx_green);
         ctx.exposeFunction(key_blue, idx_blue);
@@ -1601,7 +1643,7 @@ namespace Sass {
         module.addFunction(key_hsl, idx_hsl_strict);
         module.addFunction(key_hsla, idx_hsla_strict);
         module.addFunction(key_hwb, idx_hwb_strict);
-        module.addFunction(key_hwba, idx_hwba_strict);
+        // module.addFunction(key_hwba, idx_hwba_strict);
         module.addFunction(key_red, idx_red);
         module.addFunction(key_green, idx_green);
         module.addFunction(key_blue, idx_blue);
