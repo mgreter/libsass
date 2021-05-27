@@ -708,6 +708,28 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Resolve an include relative to last import or include paths in the sass option struct.
+  // This will do a lookup as LibSass would do internally (partials, different extensions).
+  // ToDo: Check if we should add `includeIndex` option to check for directory index files!?
+  char* ADDCALL sass_compiler_find_include(const char* file, struct SassCompiler* compiler)
+  {
+    std::cerr << "YEP, find include\n";
+    /*
+    // get the last import entry to get current base directory
+    SassImportPtr import = sass_compiler_get_last_import(compiler);
+    const sass::vector<sass::string>& incs = compiler->cpp_ctx->includePaths;
+    // create the vector with paths to lookup
+    sass::vector<sass::string> paths(1 + incs.size());
+    paths.emplace_back(File::dir_name(import->srcdata->getAbsPath()));
+    paths.insert( paths.end(), incs.begin(), incs.end() );
+    // now resolve the file path relative to lookup paths
+    sass::string resolved(File::find_include(file,
+      compiler->cpp_ctx->CWD, paths, compiler->cpp_ctx->fileExistsCache));
+    return sass_copy_c_string(resolved.c_str());
+    */
+    return 0;
+  }
+
   // Resolve a file relative to last import or include paths in the sass option struct.
   char* ADDCALL sass_compiler_find_file(const char* file, struct SassCompiler* compiler)
   {

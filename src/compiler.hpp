@@ -130,7 +130,7 @@ namespace Sass {
 
   public:
 
-    EnvRefs* getCurrentScope() const {
+    EnvRefs* getCurrentFrame() const {
       if (varRoot.stack.empty()) return nullptr;
       return varRoot.stack.back();
     }
