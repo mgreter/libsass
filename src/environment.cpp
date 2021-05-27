@@ -59,8 +59,9 @@ namespace Sass {
     // profiling only show a very minor increase (but keep anyway).
     if (a->vidx().isValid()) {
       assigne = &compiler.varRoot.getVariable(a->vidx());
+      ValueObj result = a->value()->accept(this);
       compiler.varRoot.setVariable(a->vidx(),
-        a->value()->accept(this), a->is_default());
+        result, a->is_default());
       assigne = nullptr;
       return nullptr;
     }
