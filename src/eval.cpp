@@ -644,13 +644,17 @@ namespace Sass {
 
     // Collect positional args by evaluating input arguments
     positional.reserve(arguments->positional().size() + 1);
-    for (const auto& arg : arguments->positional()) {
-      positional.emplace_back(arg->accept(this));
+    for (const auto& arg : arguments->positional())
+    {
+      ValueObj result(arg->accept(this));
+      positional.emplace_back(withoutSlash(result));
     }
 
     // Collect named args by evaluating input arguments
     for (const auto& kv : arguments->named()) {
-      named.insert(std::make_pair(kv.first, kv.second->accept(this)));
+      ValueObj result(kv.second->accept(this));
+      named.insert(std::make_pair(kv.first,
+        withoutSlash(result)));
     }
 
     // Abort if we don't take any restargs
