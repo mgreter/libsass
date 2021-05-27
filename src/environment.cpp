@@ -189,10 +189,6 @@ namespace Sass {
           a->pstate()));
       }
 
-      // if (compiler.stack().empty()) return nullidx;
-
-
-
     }
 
     if (!a->vidx().isValid())
@@ -893,14 +889,14 @@ namespace Sass {
     else {
 
       // Import to forward
-      for (auto& asd : rule->root47()->mergedFwdVar) {
-        pframe->varIdxs[asd.first] = asd.second;
+      for (auto& var : rule->root47()->mergedFwdVar) {
+        pframe->varIdxs[var.first] = var.second;
       } // a: 18
-      for (auto& asd : rule->root47()->mergedFwdMix) {
-        pframe->mixIdxs[asd.first] = asd.second;
+      for (auto& fn : rule->root47()->mergedFwdFn) {
+        pframe->fnIdxs[fn.first] = fn.second;
       }
-      for (auto& asd : rule->root47()->mergedFwdFn) {
-        pframe->fnIdxs[asd.first] = asd.second;
+      for (auto& mix : rule->root47()->mergedFwdMix) {
+        pframe->mixIdxs[mix.first] = mix.second;
       }
 
     }

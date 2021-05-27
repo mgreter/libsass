@@ -75,7 +75,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Value* Eval::withoutSlash(ValueObj value) {
-    return value.detach();
     if (value == nullptr) return value;
     Number* number = value->isaNumber();
     if (number && number->hasAsSlash()) {
