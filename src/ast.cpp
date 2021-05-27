@@ -49,6 +49,17 @@ namespace Sass {
     return SassOpOperator[op];
   }
 
+  // Get readable name for list operator (e.g. `,`, `/` or ` `)
+  const char* sass_list_separator(enum SassSeparator op)
+  {
+    switch (op) {
+    case SASS_COMMA: return ", ";
+    case SASS_SPACE: return " ";
+    case SASS_DIV: return " / ";
+    default: return "";
+    }
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

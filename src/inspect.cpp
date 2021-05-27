@@ -642,11 +642,30 @@ namespace Sass {
     if (const List * list = value->isaList()) {
       if (list->size() < 2) return false;
       if (list->hasBrackets()) return false;
-      return separator == SASS_COMMA
-        ? list->separator() == SASS_COMMA
-        : list->separator() != SASS_UNDEF;
+      switch (separator) {
+      case SASS_COMMA:
+        return list->separator() == SASS_COMMA;
+      case SASS_DIV:
+        return list->separator() == SASS_COMMA ||
+          list->separator() == SASS_DIV;
+      default:
+        return list->separator() != SASS_UNDEF;
+      }
     }
     return false;
+  }
+
+  sass::string _separatorString(SassSeparator separator, bool compressed) {
+    switch (separator) {
+    case SASS_SPACE:
+      return " ";
+    case SASS_COMMA:
+      return compressed ? "," : ", ";
+    case SASS_DIV:
+      return compressed ? "/" : " / ";
+    default:
+      return "";
+    }
   }
 
   void Inspect::visitList(List* list)
@@ -666,7 +685,8 @@ namespace Sass {
 
     bool preserveComma = inspect &&
       list->size() == 1 &&
-      list->separator() == SASS_COMMA;
+      (list->separator() == SASS_COMMA ||
+        list->separator() == SASS_DIV);
 
     if (list->hasBrackets()) {
       append_char($lbracket);
@@ -678,9 +698,8 @@ namespace Sass {
     const sass::vector<ValueObj>& values(list->elements());
 
     bool first = true;
-    sass::string joiner =
-      list->separator() == SASS_SPACE ? " " :
-      output_style() == SASS_STYLE_COMPRESSED ? "," : ", ";
+    sass::string joiner = _separatorString(list->separator(),
+      output_style() == SASS_STYLE_COMPRESSED);
 
     for (Value* value : values) {
       // Only print `null` when inspecting
@@ -708,7 +727,12 @@ namespace Sass {
     }
 
     if (preserveComma) {
-      append_char($comma);
+      if (list->separator() == SASS_DIV) {
+        append_char($slash);
+      }
+      else {
+        append_char($comma);
+      }
       if (!list->hasBrackets()) {
         append_char($rparen);
       }

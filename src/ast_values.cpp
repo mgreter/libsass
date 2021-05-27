@@ -1114,6 +1114,8 @@ namespace Sass {
   // Implement delayed value fetcher
   /////////////////////////////////////////////////////////////////////////
 
+  // The original value may not be returned
+  // Therefore make sure original is collected
   Value* Number::withoutSlash()
   {
     if (!hasAsSlash()) return this;

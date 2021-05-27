@@ -15,6 +15,7 @@ namespace Sass
   const sass::string str_join("join");
   const sass::string str_append("append");
   const sass::string str_zip("zip");
+  const sass::string str_slash("slash");
   const sass::string str_list_separator("list-separator");
   const sass::string str_is_bracketed("is-bracketed");
 
@@ -119,6 +120,7 @@ namespace Sass
   const sass::string str_abs("abs");
   const sass::string str_hypot("hypot");
   const sass::string str_log("log");
+  const sass::string str_div("div");
   const sass::string str_pow("pow");
   const sass::string str_sqrt("sqrt");
   const sass::string str_cos("cos");
@@ -177,6 +179,7 @@ namespace Sass
   const EnvKey key_join(str_join);
   const EnvKey key_append(str_append);
   const EnvKey key_zip(str_zip);
+  const EnvKey key_slash(str_slash);
   const EnvKey key_list_separator(str_list_separator);
   const EnvKey key_is_bracketed(str_is_bracketed);
 
@@ -281,6 +284,7 @@ namespace Sass
   const EnvKey key_abs(str_abs);
   const EnvKey key_hypot(str_hypot);
   const EnvKey key_log(str_log);
+  const EnvKey key_div(str_div);
   const EnvKey key_pow(str_pow);
   const EnvKey key_sqrt(str_sqrt);
   const EnvKey key_cos(str_cos);

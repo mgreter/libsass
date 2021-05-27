@@ -22,6 +22,7 @@ namespace Sass {
   uint8_t sass_op_to_precedence(enum SassOperator op);
   const char* sass_op_to_name(enum SassOperator op);
   const char* sass_op_separator(enum SassOperator op);
+  const char* sass_list_separator(enum SassSeparator op);
 
   /////////////////////////////////////////////////////////////////////////
   // Abstract base class for all abstract syntax tree nodes.
@@ -407,6 +408,11 @@ namespace Sass {
     // Check if we has space separator
     bool hasSpaceSeparator() const {
       return separator() == SASS_SPACE;
+    }
+
+    // Check if we has space separator
+    bool hasSlashSeparator() const {
+      return separator() == SASS_DIV;
     }
 
     // Check if we are bracketed

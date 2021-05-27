@@ -1120,16 +1120,13 @@ namespace Sass {
     sass::vector<WithConfigVar>& vars,
     bool allowGuarded)
   {
+
     if (!scanIdentifier("with")) return false;
 
     scanWhitespace();
     scanner.expectChar($lparen);
 
     std::set<EnvKey> seen;
-
-    // if (compiler.withConfig) {
-    //   std::cerr << "must merge";
-    // }
 
     while (true) {
       scanWhitespace();

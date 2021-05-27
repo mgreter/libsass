@@ -162,6 +162,22 @@ namespace Sass {
           std::log(numberValue) / std::log(baseValue));
       }
 
+      BUILT_IN_FN(fnDiv)
+      {
+        Number* number1 = arguments[0]->isaNumber();
+        Number* number2 = arguments[1]->isaNumber();
+
+        if (number1 == nullptr || number2 == nullptr) {
+          // callStackFrame csf(compiler, arguments[0]->pstate());
+          compiler.printWarning("math.div() will only support number arguments in a future release.\n"
+            "Use list.slash() instead for a slash separator.", pstate);
+          // compiler.addWarning();
+         }
+
+        return arguments[0]->dividedBy(arguments[1], compiler, pstate);
+
+      }
+
       BUILT_IN_FN(fnPow)
       {
 
@@ -455,6 +471,7 @@ namespace Sass {
         module.addFunction(key_hypot, ctx.createBuiltInFunction(key_hypot, "$number...", fnHypot));
         module.addFunction(key_log, ctx.createBuiltInFunction(key_log, "$number, $base: null", fnLog));
         module.addFunction(key_pow, ctx.createBuiltInFunction(key_pow, "$base, $exponent", fnPow));
+        module.addFunction(key_div, ctx.createBuiltInFunction(key_div, "$number1, $number2", fnDiv));
         module.addFunction(key_sqrt, ctx.createBuiltInFunction(key_sqrt, "$number", fnSqrt));
         module.addFunction(key_cos, ctx.createBuiltInFunction(key_cos, "$number", fnCos));
         module.addFunction(key_sin, ctx.createBuiltInFunction(key_sin, "$number", fnSin));

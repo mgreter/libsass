@@ -45,6 +45,7 @@ extern "C" {
   enum SassSeparator {
     SASS_COMMA,
     SASS_SPACE,
+    SASS_DIV,
     // A separator that hasn't yet been determined.
     // Singleton lists and empty lists don't have separators defined. This means
     // that list functions will prefer other lists' separators if possible.

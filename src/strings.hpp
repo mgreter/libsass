@@ -20,6 +20,7 @@ namespace Sass {
   extern const sass::string str_join;
   extern const sass::string str_append;
   extern const sass::string str_zip;
+  extern const sass::string str_slash;
   extern const sass::string str_list_separator;
   extern const sass::string str_is_bracketed;
 
@@ -124,6 +125,7 @@ namespace Sass {
   extern const sass::string str_abs;
   extern const sass::string str_hypot;
   extern const sass::string str_log;
+  extern const sass::string str_div;
   extern const sass::string str_pow;
   extern const sass::string str_sqrt;
   extern const sass::string str_cos;
@@ -182,6 +184,7 @@ namespace Sass {
   extern const EnvKey key_join;
   extern const EnvKey key_append;
   extern const EnvKey key_zip;
+  extern const EnvKey key_slash;
   extern const EnvKey key_list_separator;
   extern const EnvKey key_is_bracketed;
 
@@ -286,6 +289,7 @@ namespace Sass {
   extern const EnvKey key_abs;
   extern const EnvKey key_hypot;
   extern const EnvKey key_log;
+  extern const EnvKey key_div;
   extern const EnvKey key_pow;
   extern const EnvKey key_sqrt;
   extern const EnvKey key_cos;

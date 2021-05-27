@@ -72,12 +72,16 @@ namespace Sass {
     // Write warning header to error stream
     void writeWarnHead(
       bool deprecation = false);
-    
+
+  public:
+
     // Print to stderr stream
     void printWarning(
       const sass::string& message,
       const SourceSpan& pstate,
       bool deprecation = false);
+
+  private:
 
     // Format and print source-span
     void printSourceSpan(
