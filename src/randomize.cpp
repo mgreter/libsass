@@ -3,12 +3,12 @@
 /*****************************************************************************/
 #include "capi_sass.hpp"
 
+#include <thread>
 #ifdef USE_WIN_CRYPT
 #include <windows.h>
 #include <wincrypt.h>
 #else
 #include <random>
-#include <thread>
 #include <ctime>
 #endif
 
