@@ -731,9 +731,9 @@ namespace Sass {
 
   void Eval::exposeFwdRule(ForwardRule* rule)
   {
-    if (!rule->module32()) return;
     if (rule->wasExposed()) return;
     rule->wasExposed(true);
+    // if (!rule->module32()) return;
     mergeForwards(rule->module32()->idxs,
       modctx, rule, compiler);
 
@@ -742,9 +742,9 @@ namespace Sass {
   void Eval::exposeUseRule(UseRule* rule)
   {
 
-    if (!rule->module32()) return;
     if (rule->wasExposed()) return;
     rule->wasExposed(true);
+    // if (!rule->module32()) return;
 
     EnvRefs* frame(compiler.getCurrentScope());
 
