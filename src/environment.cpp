@@ -717,11 +717,11 @@ namespace Sass {
       auto parent = current->isaCssStyleRule();
       if (css && parent) {
         for (auto& inner : css->elements()) {
-          SelectorListObj copy = SASS_MEMORY_COPY(css->selector());
-          for (ComplexSelector* selector : copy->elements()) {
+          // SelectorListObj copy = SASS_MEMORY_COPY(css->selector());
+          for (ComplexSelector* selector : css->selector()->elements()) {
             selector->chroots(false);
           }
-          SelectorListObj resolved = copy->resolveParentSelectors(
+          SelectorListObj resolved = css->selector()->resolveParentSelectors(
             parent->selector(), compiler, true);
           current->parent()->append(SASS_MEMORY_NEW(CssStyleRule,
             css->pstate(), current, resolved, { inner }));
