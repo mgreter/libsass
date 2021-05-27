@@ -88,7 +88,7 @@ namespace Sass {
     return i.get_buffer();
   }
 
-  sass::string Value::toCss(Logger& logger, bool quote) const
+  sass::string Value::toCss(bool quote) const
   {
     OutputOptions out(
       SASS_STYLE_TO_CSS,

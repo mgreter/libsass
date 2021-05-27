@@ -682,7 +682,7 @@ namespace Sass {
   sass::string Eval::toCss(Expression* expression, bool quote)
   {
     ValueObj value = expression->accept(this);
-    return value->toCss(logger, quote);
+    return value->toCss(quote);
   }
 
   /// Evaluates [interpolation] into a serialized string.
@@ -944,7 +944,7 @@ namespace Sass {
           strings.emplace_back(lit->value());
         }
         else if (!result->isNull()) {
-          strings.emplace_back(result->toCss(logger, false));
+          strings.emplace_back(result->toCss(false));
         }
       }
     }
@@ -1479,7 +1479,7 @@ namespace Sass {
       callExternalMessageOverloadFunction(fn, message);
     }
     else {
-      sass::string result(message->toCss(logger, false));
+      sass::string result(message->toCss(false));
       callStackFrame frame(logger, BackTrace(node->pstate()));
       logger.addWarning(result);
     }
