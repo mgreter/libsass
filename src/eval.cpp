@@ -55,8 +55,9 @@ namespace Sass {
 
   // Helper function for the division
   Value* doDivision(Value* left, Value* right,
-    bool allowSlash, Logger& logger, SourceSpan pstate)
+    BinaryOpExpression* node, Logger& logger, SourceSpan pstate)
   {
+    bool allowSlash = node->allowsSlash();
     ValueObj result = left->dividedBy(right, logger, pstate);
     if (Number* rv = result->isaNumber()) {
       if (allowSlash && left && right) {
@@ -64,6 +65,13 @@ namespace Sass {
         rv->rhsAsSlash(right->isaNumber());
       }
       else {
+        if (!node->warned() && left && right) {
+          logger.addDeprecation("Using / for division is deprecated and will be removed "
+            "in LibSass 4.1.0.\n\nRecommendation: math.div(" + node->left()->toString() +
+            ", " + node->right()->toString() + ")\n\nMore info and automated migrator: "
+            "https://sass-lang.com/d/slash-div", pstate);
+          node->warned(true);
+        }
         rv->lhsAsSlash({}); // reset
         rv->lhsAsSlash({}); // reset
       }
@@ -1039,8 +1047,7 @@ namespace Sass {
     case SassOperator::DIV:
       right = rhs->accept(this);
       return doDivision(left, right,
-        node->allowsSlash(),
-        logger, node->pstate());
+        node, logger, node->pstate());
     case SassOperator::MOD:
       right = rhs->accept(this);
       return left->modulo(right,
