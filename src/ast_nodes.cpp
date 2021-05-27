@@ -90,6 +90,27 @@ namespace Sass {
     return SASS_MEMORY_NEW(StringExpression, pstate(), this);
   }
 
+  // Convert to string (only for debugging)
+  sass::string Interpolation::toString() const
+  {
+    StringVector parts;
+    for (auto& part : elements_) {
+      if (String* str = part->isaString()) {
+        parts.push_back(str->value());
+      }
+      else if (ItplString* str = part->isaItplString()) {
+        parts.push_back(str->text());
+      }
+      else if (Value* str = part->isaValue()) {
+        parts.push_back(str->inspect());
+      }
+      else if (Expression* ex = part->isaExpression()) {
+        parts.push_back(ex->toString());
+      }
+    }
+    return StringUtils::join(parts, "");
+  }
+
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
 
