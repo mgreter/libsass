@@ -268,7 +268,7 @@ namespace Sass {
       parts.emplace_back(part->toString());
     }
     return StringUtils::join(parts,
-      sass_list_separator(separator_));
+      ", "); // sass_list_separator(separator_));
   }
 
   /////////////////////////////////////////////////////////////////////////
