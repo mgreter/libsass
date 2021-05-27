@@ -638,18 +638,18 @@ inline void debug_ast(AstNode* node, std::string ind)
   ForwardRule* rule = Cast<ForwardRule>(node);
     std::cerr << ind << "ForwardRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    debug_idxs(rule->module());
+    debug_idxs(rule->module32());
     std::cerr << std::endl;
-    debug_ast(rule->root(), ind + " =@ ");
+    debug_ast(rule->root47(), ind + " =@ ");
 
   }
   else if (Cast<UseRule>(node)) {
     UseRule* rule = Cast<UseRule>(node);
     std::cerr << ind << "UseRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    debug_idxs(rule->module());
+    debug_idxs(rule->module32());
     std::cerr << std::endl;
-    debug_ast(rule->root(), ind + " =@ ");
+    debug_ast(rule->root47(), ind + " =@ ");
 
   }
   else if (Cast<UserDefinedCallable>(node)) {
@@ -872,9 +872,9 @@ inline void debug_ast(AstNode* node, std::string ind)
     IncludeImport* block = Cast<IncludeImport>(node);
     std::cerr << ind << "IncludeImport " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    debug_idxs(block->module());
+    debug_idxs(block->module32());
     std::cerr << std::endl;
-    debug_ast(block->root(), ind + " @ ");
+    debug_ast(block->root47(), ind + " @ ");
   }
   else if (Cast<ImportRule>(node)) {
     ImportRule* block = Cast<ImportRule>(node);
@@ -1121,10 +1121,10 @@ inline void debug_ast(AstNode* node, std::string ind)
     MapExpression* expression = Cast<MapExpression>(node);
     std::cerr << ind << "MapExpression " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " (" << expression->size() << ") " <<
+    std::cerr << " (" << expression->kvlist().size() << ") " <<
       std::endl;
-    for (size_t i = 0; i < expression->size(); i++) {
-      debug_ast(expression->get(i), ind + " ");
+    for (size_t i = 0; i < expression->kvlist().size(); i++) {
+      debug_ast(expression->kvlist().at(i), ind + " ");
     }
   }
   else if (Cast<ArgumentList>(node)) {

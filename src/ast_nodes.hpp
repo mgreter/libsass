@@ -164,14 +164,11 @@ namespace Sass {
     virtual sass::string toString() const = 0;
 
     // Declare up-casting methods
-    DECLARE_ISA_CASTER(IfExpression);
-    DECLARE_ISA_CASTER(CssFnExpression);
     DECLARE_ISA_CASTER(UnaryOpExpression);
     DECLARE_ISA_CASTER(BinaryOpExpression);
     DECLARE_ISA_CASTER(InvocationExpression);
     DECLARE_ISA_CASTER(ParenthesizedExpression);
     DECLARE_ISA_CASTER(VariableExpression);
-    DECLARE_ISA_CASTER(FunctionExpression);
     DECLARE_ISA_CASTER(BooleanExpression);
     DECLARE_ISA_CASTER(StringExpression);
     DECLARE_ISA_CASTER(NumberExpression);
