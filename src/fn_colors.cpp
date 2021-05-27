@@ -151,7 +151,7 @@ namespace Sass {
       if (separator == SASS_COMMA) sep = ", ";
       for (Value* arg : arguments) {
         if (addComma) fncall << sep;
-        fncall << arg->inspect();
+        fncall << arg->toCss();
         addComma = true;
       }
       fncall << ")";

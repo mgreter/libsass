@@ -1,5 +1,7 @@
 #include "fn_meta.hpp"
 
+#include <cstring>
+
 #include "eval.hpp"
 #include "compiler.hpp"
 #include "exceptions.hpp"
@@ -29,7 +31,6 @@
 
 #include "parser_stylesheet.hpp"
 
-#include <cstring>
 #include "compiler.hpp"
 #include "charcode.hpp"
 #include "charcode.hpp"
@@ -53,6 +54,9 @@ namespace Sass {
   Value* Eval::visitAssignRule(AssignRule* a)
   {
 
+    // Optimize case where we know to what variable to assign to
+    // This should potentially increase performance, but real-time
+    // profiling only show a very minor increase (but keep anyway).
     if (a->vidx().isValid()) {
       assigne = &compiler.varRoot.getVariable(a->vidx());
       ValueObj result = a->value()->accept(this);
@@ -70,12 +74,12 @@ namespace Sass {
 
     if (a->is_default()) {
 
-      auto frame = compiler.getCurrentScope();
+      auto scope = compiler.getCurrentScope();
 
       // If we have a config and the variable is already set
       // we still overwrite the variable beside being guarded
       WithConfigVar* wconf = nullptr;
-      if (compiler.wconfig && frame->isInternal && a->ns().empty()) {
+      if (compiler.wconfig && scope->isInternal && a->ns().empty()) {
         wconf = wconfig->getCfgVar(vname);
       }
       if (wconf) {
@@ -294,6 +298,7 @@ namespace Sass {
 
     return declaration;
   }
+  // EO readVariableDeclarationWithoutNamespace
 
   // Consumes a mixin declaration.
   // [start] should point before the `@`.
@@ -617,7 +622,10 @@ namespace Sass {
 
       // Check if we push the same stuff twice
       for (auto fwd : modFrame->forwards) {
+
         if (idxs == fwd) continue;
+
+        // Checked, needed
         for (auto& var : idxs->varIdxs) {
           auto it = fwd->varIdxs.find(var.first);
           if (it != fwd->varIdxs.end()) {
@@ -627,6 +635,7 @@ namespace Sass {
               "from multiple global modules.");
           }
         }
+        // Checked, needed
         for (auto& var : idxs->mixIdxs) {
           auto it = fwd->mixIdxs.find(var.first);
           if (it != fwd->mixIdxs.end()) {
@@ -636,6 +645,7 @@ namespace Sass {
               "available from multiple global modules.");
           }
         }
+        // Checked, needed
         for (auto& var : idxs->fnIdxs) {
           auto it = fwd->fnIdxs.find(var.first);
           if (it != fwd->fnIdxs.end()) {
@@ -898,6 +908,7 @@ namespace Sass {
 
 
   }
+  // EO exposeImpRule
 
   void Eval::acceptIncludeImport(IncludeImport* rule)
   {
@@ -975,14 +986,4 @@ namespace Sass {
     return nullptr;
   }
 
-  namespace Functions {
-
-    /////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////
-
-    namespace Meta {
-
-
-    }
-  }
 }
