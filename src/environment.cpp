@@ -577,49 +577,10 @@ namespace Sass {
 
     if (intoRoot) {
 
-      for (auto& var : idxs->varIdxs) {
-        auto it = modFrame->varIdxs.find(var.first);
-        if (it != modFrame->varIdxs.end()) {
-          if (var.first.isPrivate()) continue;
-          if (var.second == it->second) continue;
-
-          ValueObj& slot = compiler.varRoot.getVariable({ it->second });
-          if (slot == nullptr || slot->isaNull()) continue;
-
-          throw Exception::ParserException(compiler,
-            "This module and the new module both define a "
-            "variable named \"$" + var.first.norm() + "\".");
-        }
-      }
-      for (auto& mix : idxs->mixIdxs) {
-        auto it = modFrame->mixIdxs.find(mix.first);
-        if (it != modFrame->mixIdxs.end()) {
-          if (mix.first.isPrivate()) continue;
-          if (mix.second == it->second) continue;
-          CallableObj& slot = compiler.varRoot.getMixin({ it->second });
-          if (slot == nullptr) continue;
-          throw Exception::ParserException(compiler,
-            "This module and the new module both define a "
-            "mixin named \"" + mix.first.norm() + "\".");
-        }
-      }
-      for (auto& fn : idxs->fnIdxs) {
-        auto it = modFrame->fnIdxs.find(fn.first);
-        if (it != modFrame->fnIdxs.end()) {
-          if (fn.first.isPrivate()) continue;
-          if (fn.second == it->second) continue;
-          CallableObj& slot = compiler.varRoot.getFunction({ it->second });
-          if (slot == nullptr) continue;
-          throw Exception::ParserException(compiler,
-            "This module and the new module both define a "
-            "function named \"" + fn.first.norm() + "\".");
-        }
-      }
-
       // Check if we push the same stuff twice
       for (auto fwd : modFrame->forwards) {
 
-        if (idxs == fwd) continue;
+        // if (idxs == fwd) continue;
 
         // Checked, needed
         for (auto& var : idxs->varIdxs) {
