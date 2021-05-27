@@ -838,45 +838,7 @@ namespace Sass {
       pframe = pframe->pscope;
     }
 
-    if (pframe->isInternal) {
-
-      // Import to forward
-      for (auto& asd : rule->root47()->mergedFwdVar) {
-        pframe->varIdxs[asd.first] = asd.second;
-      } // a: 18
-      for (auto& asd : rule->root47()->mergedFwdMix) {
-        pframe->mixIdxs[asd.first] = asd.second;
-      }
-      for (auto& asd : rule->root47()->mergedFwdFn) {
-        pframe->fnIdxs[asd.first] = asd.second;
-      }
-
-    }
-
-
     EnvRefs* cidxs = rule->root47()->idxs;
-
-    // Merge it up through all imports
-    for (auto& var : cidxs->varIdxs) {
-      if (pframe->varIdxs.count(var.first) == 0) {
-        pframe->createVariable(var.first);
-      }
-    }
-
-    // Merge it up through all imports
-    for (auto& fn : cidxs->fnIdxs) {
-      if (pframe->fnIdxs.count(fn.first) == 0) {
-        pframe->createFunction(fn.first);
-      }
-    }
-
-    // Merge it up through all imports
-    for (auto& mix : cidxs->mixIdxs) {
-      if (pframe->mixIdxs.count(mix.first) == 0) {
-        pframe->createMixin(mix.first);
-      }
-    }
-
 
     if (!pframe->isInternal) {
 
@@ -887,6 +849,27 @@ namespace Sass {
 
     }
     else {
+
+      // Merge it up through all imports
+      for (auto& var : cidxs->varIdxs) {
+        if (pframe->varIdxs.count(var.first) == 0) {
+          pframe->createVariable(var.first);
+        }
+      }
+
+      // Merge it up through all imports
+      for (auto& fn : cidxs->fnIdxs) {
+        if (pframe->fnIdxs.count(fn.first) == 0) {
+          pframe->createFunction(fn.first);
+        }
+      }
+
+      // Merge it up through all imports
+      // for (auto& mix : cidxs->mixIdxs) {
+      //   if (pframe->mixIdxs.count(mix.first) == 0) {
+      //     pframe->createMixin(mix.first);
+      //   }
+      // }
 
       // Import to forward
       for (auto& var : rule->root47()->mergedFwdVar) {
