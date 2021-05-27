@@ -38,6 +38,12 @@ namespace Sass {
       return visitor->visitParentExpression(this);
     }
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final
+    {
+      return "&";
+    }
+
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -66,6 +72,9 @@ namespace Sass {
       return visitor->visitValueExpression(this);
     }
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
+
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ValueExpression);
   };
@@ -92,6 +101,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitNullExpression(this);
     }
+
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(NullExpression);
@@ -120,6 +132,9 @@ namespace Sass {
       return visitor->visitColorExpression(this);
     }
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
+
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ColorExpression);
   };
@@ -147,6 +162,9 @@ namespace Sass {
       return visitor->visitNumberExpression(this);
     }
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
+
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(NumberExpression);
   };
@@ -173,6 +191,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitBooleanExpression(this);
     }
+
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(BooleanExpression);
@@ -214,7 +235,7 @@ namespace Sass {
     // otherwise, it determines the best quote to add by looking at the string.
     InterpolationObj getAsInterpolation(
       bool escape = false,
-      uint8_t quote = 0);
+      uint8_t quote = 0) const;
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
@@ -227,7 +248,10 @@ namespace Sass {
     // or double quotes. When a single quote is found, we not we want a double
     // quote as quote_mark. Otherwise we check if the string contains any double
     // quotes, which will trigger the use of single quotes as best quote_mark.
-    uint8_t findBestQuote();
+    uint8_t findBestQuote() const;
+
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(StringExpression);
@@ -264,6 +288,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitMapExpression(this);
     }
+
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(MapExpression);
@@ -320,6 +347,9 @@ namespace Sass {
       return visitor->visitListExpression(this);
     }
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
+
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ListExpression);
   };
@@ -351,6 +381,9 @@ namespace Sass {
       return visitor->visitUnaryOpExpression(this);
     }
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
+
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(UnaryOpExpression);
   };
@@ -378,6 +411,9 @@ namespace Sass {
     // E.g. font: 12px/14px sans-serif
     ADD_CONSTREF(bool, allowsSlash);
 
+    // Flag if a warning was emitted (only emit once)
+    ADD_CONSTREF(bool, warned);
+
     // Obsolete: may be needed for output formats
     // ADD_CONSTREF(bool, ws_before);
     // ADD_CONSTREF(bool, ws_after);
@@ -396,6 +432,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitBinaryOpExpression(this);
     }
+
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(BinaryOpExpression);
@@ -439,6 +478,9 @@ namespace Sass {
       return visitor->visitVariableExpression(this);
     }
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
+
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(VariableExpression);
   };
@@ -466,6 +508,9 @@ namespace Sass {
       return visitor->visitParenthesizedExpression(this);
     }
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
+
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ParenthesizedExpression);
   };
@@ -489,6 +534,9 @@ namespace Sass {
       Expression(std::move(pstate)),
       arguments_(arguments)
     {}
+
+    // Convert to string (only for debugging)
+    virtual sass::string toString() const override;
 
     // Declare up-casting methods
     DECLARE_ISA_CASTER(IfExpression);
@@ -549,6 +597,9 @@ namespace Sass {
       return visitor->visitIfExpression(this);
     }
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
+
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(IfExpression);
   };
@@ -585,6 +636,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitFunctionExpression(this);
     }
+
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(FunctionExpression);

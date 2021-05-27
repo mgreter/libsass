@@ -4,6 +4,8 @@
 #include "ast_expressions.hpp"
 #include "interpolation.hpp"
 
+#include <sstream>
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
@@ -24,6 +26,12 @@ namespace Sass {
     value_(value)
   {}
 
+  // Convert to string (only for debugging)
+  sass::string ValueExpression::toString() const
+  {
+    return value_->inspect();
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +41,12 @@ namespace Sass {
     Expression(std::move(pstate)),
     value_(value)
   {}
+
+  // Convert to string (only for debugging)
+  sass::string NullExpression::toString() const
+  {
+    return "null";
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -44,6 +58,12 @@ namespace Sass {
     value_(value)
   {}
 
+  // Convert to string (only for debugging)
+  sass::string ColorExpression::toString() const
+  {
+    return value_->inspect();
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -54,6 +74,12 @@ namespace Sass {
     value_(value)
   {}
 
+  // Convert to string (only for debugging)
+  sass::string NumberExpression::toString() const
+  {
+    return value_->inspect();
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -63,6 +89,12 @@ namespace Sass {
     Expression(std::move(pstate)),
     value_(value)
   {}
+
+  // Convert to string (only for debugging)
+  sass::string BooleanExpression::toString() const
+  {
+    return value_ ? "true" : "false";
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -94,7 +126,7 @@ namespace Sass {
   // or double quotes. When a single quote is found, we not we want a double
   // quote as quote_mark. Otherwise we check if the string contains any double
   // quotes, which will trigger the use of single quotes as best quote_mark.
-  uint8_t StringExpression::findBestQuote()
+  uint8_t StringExpression::findBestQuote() const
   {
     using namespace Character;
     bool containsDoubleQuote = false;
@@ -109,6 +141,15 @@ namespace Sass {
     }
     return containsDoubleQuote ? $apos : $quote;
   }
+
+  sass::string StringExpression::toString() const
+  {
+    InterpolationObj itpl = getAsInterpolation();
+    return itpl->toString();
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   CssFnExpression::CssFnExpression(
     SourceSpan pstate,
@@ -127,7 +168,7 @@ namespace Sass {
   // the string. If [quote] is passed, it uses that character as the quote mark;
   // otherwise, it determines the best quote to add by looking at the string.
   // Note: [static] is not yet implemented in LibSass (find where we need it)
-  InterpolationObj StringExpression::getAsInterpolation(bool escape, uint8_t quote)
+  InterpolationObj StringExpression::getAsInterpolation(bool escape, uint8_t quote) const
   {
 
     using namespace Character;
@@ -194,6 +235,20 @@ namespace Sass {
     kvlist_()
   {}
 
+  // Convert to string (only for debugging)
+  sass::string MapExpression::toString() const
+  {
+    sass::sstream strm;
+    strm << Character::$lparen;
+    for (size_t i = 0; i < kvlist_.size(); i += 2) {
+      if (i != 0) strm << ", ";
+      strm << kvlist_[i]->toString() << ": ";
+      strm << kvlist_[i + 1]->toString();
+    }
+    strm << Character::$rparen;
+    return strm.str();
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -204,6 +259,17 @@ namespace Sass {
     separator_(separator),
     hasBrackets_(false)
   {}
+
+  // Convert to string (only for debugging)
+  sass::string ListExpression::toString() const
+  {
+    StringVector parts;
+    for (auto& part : items_) {
+      parts.emplace_back(part->toString());
+    }
+    return StringUtils::join(parts,
+      sass_list_separator(separator_));
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -218,8 +284,52 @@ namespace Sass {
     operand_(operand),
     left_(lhs),
     right_(rhs),
-    allowsSlash_(allowSlash)
+    allowsSlash_(allowSlash),
+    warned_(false)
   {}
+
+  // Convert to string (only for debugging)
+  sass::string BinaryOpExpression::toString() const
+  {
+    if (operand_ == SassOperator::DIV) {
+      sass::sstream buffer;
+      buffer << "math.div(";
+      auto left = this->left(); // Hack to make analysis work.
+      auto lhs = left->isaBinaryOpExpression();
+      auto leftNeedsParens = lhs && sass_op_to_precedence(lhs->operand_) < sass_op_to_precedence(operand_);
+      if (leftNeedsParens) buffer << Character::$lparen;
+      buffer << left->toString();
+      if (leftNeedsParens) buffer << Character::$rparen;
+      buffer << ", ";
+      auto right = this->right(); // Hack to make analysis work.
+      auto rhs = right->isaBinaryOpExpression();
+      auto rightNeedsParens = rhs && sass_op_to_precedence(rhs->operand_) <= sass_op_to_precedence(operand_);
+      if (rightNeedsParens) buffer << Character::$lparen;
+      buffer << right->toString();
+      if (rightNeedsParens) buffer << Character::$rparen;
+      buffer << ")";
+      return buffer.str();
+    }
+    else {
+      sass::sstream buffer;
+      auto left = this->left(); // Hack to make analysis work.
+      auto lhs = left->isaBinaryOpExpression();
+      auto leftNeedsParens = lhs && sass_op_to_precedence(lhs->operand_) < sass_op_to_precedence(operand_);
+      if (leftNeedsParens) buffer << Character::$lparen;
+      buffer << left->toString();
+      if (leftNeedsParens) buffer << Character::$rparen;
+      buffer << Character::$space;
+      buffer << sass_op_separator(operand_);
+      buffer << Character::$space;
+      auto right = this->right(); // Hack to make analysis work.
+      auto rhs = right->isaBinaryOpExpression();
+      auto rightNeedsParens = rhs && sass_op_to_precedence(rhs->operand_) <= sass_op_to_precedence(operand_);
+      if (rightNeedsParens) buffer << Character::$lparen;
+      buffer << right->toString();
+      if (rightNeedsParens) buffer << Character::$rparen;
+      return buffer.str();
+    }
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -233,6 +343,12 @@ namespace Sass {
     ns_(ns)
   {}
 
+  // Convert to string (only for debugging)
+  sass::string VariableExpression::toString() const
+  {
+    return "$" + name_.norm();
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -242,6 +358,11 @@ namespace Sass {
     Expression(std::move(pstate)),
     expression_(expression)
   {}
+
+  // Convert to string (only for debugging)
+  sass::string ParenthesizedExpression::toString() const {
+    return "(" + expression_->toString() + ")";
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -254,6 +375,23 @@ namespace Sass {
     optype_(optype),
     operand_(operand)
   {}
+
+  // Convert to string (only for debugging)
+  sass::string UnaryOpExpression::toString() const
+  {
+    sass::sstream strm;
+    switch (optype_) {
+    case PLUS: strm << Character::$plus; break;
+    case MINUS: strm << Character::$minus; break;
+    case SLASH: strm << Character::$slash; break;
+    default: break;
+    }
+    if (optype_ == NOT) {
+      strm << Character::$space;
+    }
+    strm << operand_->toString();
+    return strm.str();
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -269,6 +407,58 @@ namespace Sass {
     ns_(ns),
     name_(name)
   {}
+
+  // Convert to string (only for debugging)
+  sass::string FunctionExpression::toString() const
+  {
+    sass::sstream strm;
+    if (!ns_.empty()) {
+      strm << ns_ << "::";
+    }
+    strm << name_;
+    strm << Character::$lparen;
+    strm << InvocationExpression::toString();
+    strm << Character::$rparen;
+    return strm.str();
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Convert to string (only for debugging)
+  sass::string IfExpression::toString() const
+  {
+    return "if(" + InvocationExpression::toString() + ")";
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Convert to string (only for debugging)
+  sass::string InvocationExpression::toString() const
+  {
+    StringVector components;
+    for (auto positional : arguments_->positional()) {
+      components.emplace_back(positional->toString());
+    }
+    for (auto& name : arguments_->named()) {
+      sass::sstream strm;
+      strm << name.first.norm() << ": ";
+      strm << name.second->toString();
+      components.push_back(strm.str());
+    }
+    if (arguments_->restArg()) {
+      sass::sstream strm;
+      strm << arguments_->restArg()->toString() << "...";
+      components.push_back(strm.str());
+    }
+    if (arguments_->kwdRest()) {
+      sass::sstream strm;
+      strm << arguments_->kwdRest()->toString() << "...";
+      components.push_back(strm.str());
+    }
+    return StringUtils::join(components, ", ");
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
