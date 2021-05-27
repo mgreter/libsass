@@ -665,12 +665,14 @@ namespace Sass {
     }
 
     // Evaluate the variable expression (
-    ValueObj rest = arguments->restArg()->accept(this);
+    ValueObj result = arguments->restArg()->accept(this);
+    ValueObj rest = withoutSlash(result);
 
     SassSeparator separator = SASS_UNDEF;
 
     if (Map* restMap = rest->isaMap()) {
-      _addRestValueMap(named, restMap, arguments->restArg()->pstate());
+      _addRestValueMap(named, restMap,
+        arguments->restArg()->pstate());
     }
     else if (List* list = rest->isaList()) {
       std::copy(list->begin(), list->end(),
