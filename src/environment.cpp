@@ -552,9 +552,9 @@ namespace Sass {
       return rule->root47();
     }
 
-    if (rule->module32() && rule->module32()->isBuiltIn) {
-      return nullptr;
-    }
+    //if (rule->module32() && rule->module32()->isBuiltIn) {
+    //  return nullptr;
+    //}
 
     if (Root* sheet2 = loadModule(
       rule->prev51(),
@@ -695,12 +695,12 @@ namespace Sass {
     if (module->compiled == nullptr) return;
 
     // For imports we always reproduce
-    if (inImport) {
-      // Don't like the recursion, but OK
-      for (auto upstream : module->upstream) {
-        insertModule(upstream);
-      }
-    }
+//    if (inImport) {
+//      // Don't like the recursion, but OK
+//      for (auto upstream : module->upstream) {
+//        insertModule(upstream);
+//      }
+//    }
 
     // The children to be added to the document
     auto& children(module->compiled->elements());
