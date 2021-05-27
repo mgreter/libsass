@@ -492,7 +492,7 @@ namespace Sass {
               "module " + url->value() + " can't be configured.");
           }
 
-          return SASS_MEMORY_NEW(Null, pstate);
+          return SASS_MEMORY_NEW(Null, SourceSpan::internal("[LOADCSS]")); // pstate leaks?;
         }
 
         WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
@@ -519,7 +519,7 @@ namespace Sass {
           eval.insertModule(sheet);
         }
 
-        return SASS_MEMORY_NEW(Null, pstate);
+        return SASS_MEMORY_NEW(Null, SourceSpan::internal("[LOADCSS]")); // pstate leaks?
       }
 
       /*******************************************************************/
