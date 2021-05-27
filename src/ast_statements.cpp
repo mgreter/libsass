@@ -40,9 +40,9 @@ namespace Sass {
   {
     // Check if everything was consumed
     for (auto cfgvar : config) {
-      if (cfgvar.second.wasUsed42 == false) {
+      if (cfgvar.second.wasAssigned == false) {
         if (cfgvar.second.isGuarded41 == false) {
-          callStackFrame csf(logger, cfgvar.second.pstate2);
+          callStackFrame csf(logger, cfgvar.second.pstate);
           throw Exception::RuntimeException(logger, "$" +
             cfgvar.second.name + " was not declared "
             "with !default in the @used module.");
@@ -74,7 +74,7 @@ namespace Sass {
         // Found an unguarded value
         if (!varcfg->second.isGuarded41) {
           if (!varcfg->second.isNull43) {
-            varcfg->second.wasUsed42 = true;
+            varcfg->second.wasAssigned = true;
             return &varcfg->second;
           }
         }
@@ -106,7 +106,7 @@ namespace Sass {
       // Then try to find the named item
       auto varcfg = withcfg->config.find(key);
       if (varcfg != withcfg->config.end()) {
-        varcfg->second.wasUsed42 = true;
+        varcfg->second.wasAssigned = true;
         if (!guarded) guarded = &varcfg->second;
       }
       // Should we apply some prefixes

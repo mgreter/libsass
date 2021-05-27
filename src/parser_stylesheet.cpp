@@ -1158,13 +1158,13 @@ namespace Sass {
 
       seen.insert(name);
 
-      WithConfigVar variable;
-      variable.expression = expression;
-      variable.isGuarded41 = guarded;
-      variable.isNull43 = !expression || expression->isaNullExpression();
-      variable.pstate2 = scanner.relevantSpanFrom(variableStart);
-      variable.name = name;
-      vars.push_back(variable);
+      WithConfigVar kvar;
+      kvar.expression42 = expression;
+      kvar.isGuarded41 = guarded;
+      kvar.isNull43 = !expression || expression->isaNullExpression();
+      kvar.pstate = scanner.relevantSpanFrom(variableStart);
+      kvar.name = name;
+      vars.push_back(kvar);
 
       if (!scanner.scanChar($comma)) break;
       scanWhitespace();

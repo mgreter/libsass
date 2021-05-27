@@ -84,12 +84,12 @@ namespace Sass {
       }
       if (wconf) {
         // Via load-css
-        if (wconf->value) {
-          result = wconf->value;
+        if (wconf->value33) {
+          result = wconf->value33;
         }
         // Via regular load
-        else if (wconf->expression) {
-          a->value(wconf->expression);
+        else if (wconf->expression42) {
+          a->value(wconf->expression42);
         }
         a->is_default(wconf->isGuarded41);
       }
