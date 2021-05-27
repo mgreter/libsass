@@ -134,6 +134,9 @@ namespace Sass {
     // Wrap interpolation within a string expression
     StringExpression* wrapInStringExpression();
 
+    // Convert to string (only for debugging)
+    sass::string toString() const;
+
   };
   // EO Interpolation
 
@@ -156,6 +159,8 @@ namespace Sass {
 
     // Implementation for parent Interpolant interface
     Type getType() const override final { return ExpressionInterpolant; }
+
+    virtual sass::string toString() const = 0;
 
     // Declare up-casting methods
     DECLARE_ISA_CASTER(IfExpression);
