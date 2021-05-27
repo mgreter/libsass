@@ -157,6 +157,7 @@ namespace Sass {
         a->variable(), a->ns(), a->is_global()));
       assigne = &compiler.varRoot.getVariable(a->vidx());
       if (!result) result = a->value()->accept(this);
+      if (result) result = withoutSlash(result);
       compiler.varRoot.setVariable(
         a->vidx(),
         result,
