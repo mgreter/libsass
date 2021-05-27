@@ -1121,7 +1121,7 @@ namespace Sass {
     if (!hasAsSlash()) return this;
     // we are the only holder of this item
     // therefore should be safe to alter it
-    if (this->refcount == 1) {
+    if (this->refcount <= 1) {
       lhsAsSlash_.clear();
       rhsAsSlash_.clear();
       return this;

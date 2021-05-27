@@ -336,45 +336,6 @@ namespace Sass {
   typedef sass::vector<ExpressionObj> ExpressionVector;
   typedef std::unordered_set<sass::string> StringSet;
 
-  /////////////////////////////////////////////////////////////////////////#
-  // explicit type conversion functions
-  /////////////////////////////////////////////////////////////////////////#
-
-  template<class T>
-  T* Cast(AstNode* ptr);
-
-  template<class T>
-  const T* Cast(const AstNode* ptr);
-
-  // sometimes you know the class you want to cast to is final
-  // in this case a simple typeid check is faster and safe to use
-
-  #define DECLARE_BASE_CAST(T) \
-  template<> T* Cast(AstNode* ptr); \
-  template<> const T* Cast(const AstNode* ptr); \
-
-  /////////////////////////////////////////////////////////////////////////#
-  // implement specialization for final classes
-  /////////////////////////////////////////////////////////////////////////#
-
-  DECLARE_BASE_CAST(AstNode)
-  DECLARE_BASE_CAST(Expression)
-  DECLARE_BASE_CAST(Statement)
-  DECLARE_BASE_CAST(ParentStatement)
-  DECLARE_BASE_CAST(CssParentNode)
-  DECLARE_BASE_CAST(Value)
-  DECLARE_BASE_CAST(Callable)
-  DECLARE_BASE_CAST(Color)
-  DECLARE_BASE_CAST(List)
-  DECLARE_BASE_CAST(String)
-  DECLARE_BASE_CAST(SupportsCondition)
-  DECLARE_BASE_CAST(Selector)
-  DECLARE_BASE_CAST(SimpleSelector)
-  DECLARE_BASE_CAST(NameSpaceSelector);
-  DECLARE_BASE_CAST(SelectorComponent)
-  DECLARE_BASE_CAST(ImportBase);
-  DECLARE_BASE_CAST(CssNode);
-
   class Eval;
   class Logger;
   class Compiler;
