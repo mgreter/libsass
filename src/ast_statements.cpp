@@ -73,7 +73,7 @@ namespace Sass {
       if (varcfg != withcfg->config.end()) {
         // Found an unguarded value
         if (!varcfg->second.isGuarded41) {
-          if (!varcfg->second.isNull43) {
+          if (!varcfg->second.isNull()) {
             varcfg->second.wasAssigned = true;
             return &varcfg->second;
           }

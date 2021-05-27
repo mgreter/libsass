@@ -1161,7 +1161,6 @@ namespace Sass {
       WithConfigVar kvar;
       kvar.expression44 = expression;
       kvar.isGuarded41 = guarded;
-      kvar.isNull43 = !expression || expression->isaNullExpression();
       kvar.pstate = scanner.relevantSpanFrom(variableStart);
       kvar.name = name;
       vars.push_back(kvar);

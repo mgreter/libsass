@@ -476,7 +476,6 @@ namespace Sass {
             kvar.isGuarded41 = false;
             kvar.wasAssigned = false;
             kvar.pstate = name->pstate();
-            kvar.isNull43 = !kv.second || kv.second->isaNull();
             withConfigs.push_back(kvar);
             if (config.count(kname) == 1) {
               throw Exception::RuntimeException(compiler,

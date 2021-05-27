@@ -35,7 +35,10 @@ namespace Sass {
     ExpressionObj expression44;
     bool isGuarded41 = false;
     bool wasAssigned = false;
-    bool isNull43 = true;
+    bool isNull() const {
+      return (value33 && value33->isaNull()) ||
+        (expression44 && expression44->isaNullExpression());
+    }
   };
 
 
