@@ -180,7 +180,7 @@ namespace Sass {
       }
 
       if (!result) result = a->value()->accept(this);
-
+      if (result) result = withoutSlash(result);
 
       if (auto frame = compiler.getCurrentScope()) {
         a->vidx(frame->setModVar(
