@@ -2249,6 +2249,7 @@ namespace Sass {
           compiler.varRoot.setVariable({ vidx, 0 }, variable, false);
         }
         else {
+          value = withoutSlash(value);
           compiler.varRoot.setVariable({ vidx, 0 }, key, false);
           compiler.varRoot.setVariable({ vidx, 1 }, value, false);
         }
