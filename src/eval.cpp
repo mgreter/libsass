@@ -286,6 +286,10 @@ namespace Sass {
 
     }
 
+    for (ValueObj& arg : positional) {
+      arg = withoutSlash(arg);
+    }
+
     // Now execute the built-in function
     ValueObj result = callback(pstate,
       positional, compiler,
