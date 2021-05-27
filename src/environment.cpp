@@ -70,7 +70,7 @@ namespace Sass {
 
     if (a->is_default()) {
 
-      auto frame = compiler.getCurrentFrame();
+      auto frame = compiler.getCurrentScope();
 
       // If we have a config and the variable is already set
       // we still overwrite the variable beside being guarded
@@ -177,7 +177,7 @@ namespace Sass {
       if (!result) result = a->value()->accept(this);
 
 
-      if (auto frame = compiler.getCurrentFrame()) {
+      if (auto frame = compiler.getCurrentScope()) {
         a->vidx(frame->setModVar(
           a->variable(), a->ns(),
           result,
@@ -300,7 +300,7 @@ namespace Sass {
   MixinRule* StylesheetParser::readMixinRule(Offset start)
   {
 
-    EnvRefs* frame = compiler.getCurrentFrame();
+    EnvRefs* frame = compiler.getCurrentScope();
 
     EnvFrame local(compiler, false);
     // Create space for optional content callable
@@ -778,7 +778,7 @@ namespace Sass {
     if (rule->wasExposed()) return;
     rule->wasExposed(true);
 
-    EnvRefs* frame(compiler.getCurrentFrame());
+    EnvRefs* frame(compiler.getCurrentScope());
 
     if (rule->module32()->isBuiltIn) {
 
@@ -827,7 +827,7 @@ namespace Sass {
   void Eval::exposeImpRule(IncludeImport* rule)
   {
 
-    EnvRefs* pframe = compiler.getCurrentFrame();
+    EnvRefs* pframe = compiler.getCurrentScope();
 
     while (pframe->isImport) {
       pframe = pframe->pscope;

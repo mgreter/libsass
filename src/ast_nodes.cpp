@@ -627,6 +627,9 @@ namespace Sass {
           else return false;
         }
       }
+      else if (list->separator() == SASS_DIV) {
+        return false;
+      }
       else {
         for (auto compound : list->elements()) {
           String* cmpdStr = compound->isaString();
