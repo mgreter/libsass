@@ -1117,7 +1117,9 @@ namespace Sass {
 
     ValueObj rv = condition ? condition->accept(this) : nullptr;
     Expression* ex = rv && rv->isTruthy() ? ifTrue : ifFalse;
-    return ex ? ex->accept(this) : nullptr;
+    if (ex == nullptr) return nullptr;
+    ValueObj result(ex->accept(this));
+    return withoutSlash(result);
   }
 
   Value* Eval::visitParenthesizedExpression(ParenthesizedExpression* ex)
