@@ -72,6 +72,10 @@ namespace Sass {
       extenders[complex] = complex;
     }
 
+    ExtSelExtMap extensions;
+
+    Extender extender(mode, logger);
+
     for (auto complex : targets->elements()) {
 
       if (complex->size() > 1) {
@@ -94,22 +98,15 @@ namespace Sass {
 
       if (const CompoundSelector* compound = complex->first()->isaCompoundSelector()) {
 
-        ExtSelExtMap extensions;
-
         for (const SimpleSelectorObj& simple : compound->elements()) {
           extensions.insert(std::make_pair(simple, extenders));
         }
-
-        Extender extender(mode, logger);
 
         // if (!selector->hasInvisible()) {
         for (auto sel : selector->elements()) {
           extender.originals.insert(sel);
         }
         // }
-
-        extender.extendList(selector, extensions,
-          {}, selector->elements());
 
       }
       else {
@@ -119,6 +116,9 @@ namespace Sass {
       }
 
     }
+
+    extender.extendList(selector, extensions,
+      {}, selector->elements());
 
     return selector;
 
