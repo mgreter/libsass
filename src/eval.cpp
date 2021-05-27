@@ -71,6 +71,23 @@ namespace Sass {
     return result.detach();
   }
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  Value* Eval::withoutSlash(ValueObj value) {
+    return value.detach();
+    if (value == nullptr) return value;
+    Number* number = value->isaNumber();
+    if (number && number->hasAsSlash()) {
+      logger.addDeprecation("Using / for division is deprecated and will be removed " 
+        "in LibSass 4.1.0.\n\nRecommendation: math.div(" + number->lhsAsSlash()->inspect() +
+        ", " + number->rhsAsSlash()->inspect() + ")\n\nMore info and automated migrator: "
+        "https://sass-lang.com/d/slash-div", value->pstate());
+    }
+    // Make sure to collect all memory
+    ValueObj result = value->withoutSlash();
+    return result.detach();
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

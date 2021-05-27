@@ -28,6 +28,8 @@ namespace Sass {
     void exposeFwdRule(ForwardRule* rule);
     void exposeImpRule(IncludeImport* rule);
 
+    Value* withoutSlash(ValueObj value);
+
     // Some references
     Logger& logger;
     Compiler& compiler;

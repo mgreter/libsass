@@ -754,7 +754,8 @@ namespace Sass {
 
     EnvRefs* mframe(compiler.getCurrentModule());
 
-    EnvScope scoped2(compiler.varRoot, idxs);
+    // Make frame scope active for evaluation
+    EnvScope scoped(compiler.varRoot, idxs);
 
     selectorStack.push_back(nullptr);
     for (auto& child : root->elements()) {
@@ -794,7 +795,6 @@ namespace Sass {
 
       if (rule->ns().empty()) {
         frame->forwards.push_back(rule->module32()->idxs);
-        rule->wasExposed(true);
       }
       else if (frame->module->moduse.count(rule->ns())) {
         throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
@@ -802,7 +802,6 @@ namespace Sass {
       else {
         frame->module->moduse.insert({ rule->ns(),
           { rule->module32()->idxs, nullptr } });
-        rule->wasExposed(true);
       }
 
     }
@@ -905,7 +904,6 @@ namespace Sass {
       }
 
     }
-
 
   }
   // EO exposeImpRule
