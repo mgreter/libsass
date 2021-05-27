@@ -167,11 +167,11 @@ namespace Sass {
       EnvRefs* mod = compiler.getCurrentModule();
 
       auto it = mod->module->moduse.find(a->ns());
-      if (it == mod->module->moduse.end()) {
+      /* if (it == mod->module->moduse.end()) {
         callStackFrame csf(compiler, a->pstate());
         throw Exception::ModuleUnknown(compiler, a->ns());
       }
-      else if (it->second.second && !it->second.second->isCompiled) {
+      else */ if (it->second.second && !it->second.second->isCompiled) {
         callStackFrame csf(compiler, a->pstate());
         throw Exception::ModuleUnknown(compiler, a->ns());
       }
