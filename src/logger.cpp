@@ -118,7 +118,7 @@ namespace Sass {
   // EO wrap
 
   // Print a warning without any SourceSpan (used by @warn)
-  void Logger::addWarning(const sass::string& message)
+  void Logger::addWarning(const sass::string& message, enum WarningType type)
   {
     writeWarnHead(false);
     logstrm << ": ";
@@ -139,10 +139,17 @@ namespace Sass {
   // EO addDebug
 
   // Print a regular warning or deprecation
-  void Logger::printWarning(const sass::string& message, const SourceSpan& pstate, bool deprecation)
+  void Logger::printWarning(const sass::string& message, const SourceSpan& pstate, enum WarningType type, bool deprecation)
   {
 
     callStackFrame frame(*this, pstate);
+
+    if (reported[type]) {
+      if (type != WARN_RULE) {
+        suppressed += 1;
+        return;
+      }
+    }
 
     writeWarnHead(deprecation);
     logstrm << " on line " << pstate.getLine();
@@ -157,6 +164,7 @@ namespace Sass {
     StackTraces stack(callStack.begin(), callStack.end());
     writeStackTraces(logstrm, stack, "    ", true);
 
+    reported[type] = true;
   }
   // EO printWarning
 

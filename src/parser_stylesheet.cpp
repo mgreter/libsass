@@ -304,7 +304,7 @@ namespace Sass {
     if (isIndented() && styles->empty()) {
       compiler.addWarning(
         "This selector doesn't have any properties and won't be rendered.",
-        itpl ? itpl->pstate() : SourceSpan{});
+        itpl ? itpl->pstate() : SourceSpan{}, Logger::WARN_EMPTY_SELECTOR);
     }
 
     return styles.detach();
@@ -381,7 +381,7 @@ namespace Sass {
     if (isIndented() && rule->empty()) {
       compiler.addWarning(
         "This selector doesn't have any properties and won't be rendered.",
-        selectorPstate);
+        selectorPstate, Logger::WARN_EMPTY_SELECTOR);
     }
     return rule.detach();
   }
@@ -1569,7 +1569,7 @@ namespace Sass {
       compiler.addDeprecation(
         "@-moz-document is deprecated and support will be removed from Sass in a future\n"
         "release. For details, see http://bit.ly/moz-document.",
-        atRule->pstate());
+        atRule->pstate(), Logger::WARN_MOZ_DOC);
     }
 
     return atRule;
@@ -2776,7 +2776,8 @@ namespace Sass {
       compiler.addWarning(
         "In Sass, \"&&\" means two copies of the parent selector. You "
         "probably want to use \"and\" instead.",
-        scanner.relevantSpanFrom(start));
+        scanner.relevantSpanFrom(start),
+        Logger::WARN_DOUBLE_PARENT);
       scanner.offset.column -= 1;
       scanner.position -= 1;
     }

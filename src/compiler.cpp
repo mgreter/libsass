@@ -178,6 +178,7 @@ namespace Sass {
     // return processed tree
     return compiled;
   }
+  // EO compileRoot
 
   void Compiler::compile()
   {
@@ -245,6 +246,27 @@ namespace Sass {
     return sass_copy_string(buffer.str());
   }
   // EO renderEmbeddedSrcMap
+
+  // Render an additional message if warnings were suppressed
+  void Compiler::reportSuppressedWarnings()
+  {
+    if (suppressed > 0) {
+      sass::sstream message;
+      message << getTerm(Terminal::yellow);
+      if (suppressed == 1) {
+        message << "Additionally, one similar warning was suppressed!\n";
+      }
+      else {
+        message << "Additionally, " << suppressed
+          << " similar warnings were suppressed!\n";
+      }
+      message << getTerm(Terminal::reset);
+      warnings += message.str();
+      reported.reset();
+      suppressed = 0;
+    }
+  }
+  // EO reportSuppressedWarnings
 
   // Memory returned by this function must be freed by caller via `sass_free_c_string`
   char* Compiler::renderSrcMapJson(const SourceMap& source_map)

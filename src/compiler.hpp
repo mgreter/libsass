@@ -243,6 +243,8 @@ namespace Sass {
 
     char* renderEmbeddedSrcMap(const SourceMap& source_map);
 
+    void reportSuppressedWarnings();
+
     // Check if we should write output file
     bool hasOutputFile() const;
 

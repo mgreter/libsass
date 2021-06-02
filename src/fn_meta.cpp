@@ -428,7 +428,7 @@ namespace Sass {
           compiler.addDeprecation(
             "Passing a string to call() is deprecated and will be illegal in LibSass 4.1.0.\n"
             "Use call(get-function(" + str->inspect() + ")) instead.",
-            str->pstate());
+            str->pstate(), Logger::WARN_STRING_CALL);
 
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
           itpl->append(SASS_MEMORY_NEW(String, pstate, sass::string(str->value())));

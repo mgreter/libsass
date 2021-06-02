@@ -69,7 +69,7 @@ namespace Sass {
           logger.addDeprecation("Using / for division is deprecated and will be removed "
             "in LibSass 4.1.0.\n\nRecommendation: math.div(" + node->left()->toString() +
             ", " + node->right()->toString() + ")\n\nMore info and automated migrator: "
-            "https://sass-lang.com/d/slash-div", pstate);
+            "https://sass-lang.com/d/slash-div", pstate, Logger::WARN_MATH_DIV);
           node->warned(true);
         }
         rv->lhsAsSlash({}); // reset
@@ -89,7 +89,7 @@ namespace Sass {
       logger.addDeprecation("Using / for division is deprecated and will be removed " 
         "in LibSass 4.1.0.\n\nRecommendation: math.div(" + number->lhsAsSlash()->inspect() +
         ", " + number->rhsAsSlash()->inspect() + ")\n\nMore info and automated migrator: "
-        "https://sass-lang.com/d/slash-div", value->pstate());
+        "https://sass-lang.com/d/slash-div", value->pstate(), Logger::WARN_MATH_DIV);
     }
     // Make sure to collect all memory
     ValueObj result = value->withoutSlash();
@@ -525,7 +525,8 @@ namespace Sass {
       // warn->pstate(pstate);
       sass_delete_value(c_args);
       sass_delete_value(c_val);
-      logger.addWarning(message);
+      logger.addWarning(message,
+        Logger::WARN_CAPI_FN);
     }
     sass_delete_value(c_val);
     sass_delete_value(c_args);
@@ -767,7 +768,7 @@ namespace Sass {
               msg << "keys (for example, \"" << disp << "\"). If you really want to ";
               msg << "use the color value, append it to an empty string first to avoid ";
               msg << "this warning (for example, '\"\" + " << disp << "').";
-              logger.addWarning(msg.str(), itpl->pstate());
+              logger.addWarning(msg.str(), itpl->pstate(), Logger::WARN_COLOR_ITPL);
             }
           }
         }
@@ -1516,7 +1517,7 @@ namespace Sass {
     else {
       sass::string result(message->toCss(false));
       callStackFrame frame(logger, BackTrace(node->pstate()));
-      logger.addWarning(result);
+      logger.addWarning(result, Logger::WARN_RULE);
     }
     return nullptr;
   }

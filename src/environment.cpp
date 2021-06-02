@@ -136,13 +136,13 @@ namespace Sass {
             "As of LibSass 4.1, !global assignments won't be able to declare new variables.\n"
             "Since this assignment is at the root of the stylesheet, the !global"
             " flag is unnecessary and can safely be removed.",
-            a->pstate());
+            a->pstate(), Logger::WARN_GLOBAL_ASSIGN);
         }
         else {
           logger.addDeprecation(
             "As of LibSass 4.1, !global assignments won't be able to declare new variables.\n"
             "Consider adding `$" + a->variable().orig() + ": null` at the root of the stylesheet.",
-            a->pstate());
+            a->pstate(), Logger::WARN_GLOBAL_ASSIGN);
         }
 
       }

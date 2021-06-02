@@ -578,6 +578,7 @@ extern "C" {
   const char* ADDCALL sass_compiler_get_warn_string(struct SassCompiler* compiler)
   {
     if (Compiler::unwrap(compiler).warnings.empty()) return nullptr;
+    Compiler::unwrap(compiler).reportSuppressedWarnings();
     return Compiler::unwrap(compiler).warnings.c_str();
   }
 

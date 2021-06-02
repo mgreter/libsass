@@ -8,6 +8,7 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+#include <bitset>
 #include <sstream>
 #include "strings.hpp"
 #include "constants.hpp"
@@ -23,6 +24,21 @@ namespace Sass {
   class Logger {
 
   public:
+
+    enum WarningType {
+      WARN_MATH_DIV,
+      WARN_CAPI_FN,
+      WARN_ANGLE_CONVERT,
+      WARN_NUMBER_ARG,
+      WARN_NUMBER_PERCENT,
+      WARN_GLOBAL_ASSIGN,
+      WARN_COLOR_ITPL,
+      WARN_EMPTY_SELECTOR,
+      WARN_DOUBLE_PARENT,
+      WARN_STRING_CALL,
+      WARN_MOZ_DOC,
+      WARN_RULE
+    };
 
     // Epsilon for precision
     double epsilon;
@@ -49,6 +65,14 @@ namespace Sass {
       }
       return Constants::String::empty;
     }
+
+    // Remember which warnings have already reported.
+    // Only report them once and just write an additional
+    // line reporting how many additional warnings are waiting
+    std::bitset<sizeof(Logger::WarningType)> reported;
+
+    // How many warnings have been suppressed
+    int suppressed = 0;
 
   private:
 
@@ -79,6 +103,7 @@ namespace Sass {
     void printWarning(
       const sass::string& message,
       const SourceSpan& pstate,
+      enum WarningType type,
       bool deprecation = false);
 
   private:
@@ -120,21 +145,21 @@ namespace Sass {
     void setPrecision(int precision);
 
     // Print a warning without any SourceSpan (used by @warn)
-    void addWarning(const sass::string& message);
+    void addWarning(const sass::string& message, enum WarningType);
 
     // Print a debug message without any SourceSpan (used by @debug)
     void addDebug(const sass::string& message, const SourceSpan& pstate);
 
     // Print a warning with SourceSpan attached (used internally)
-    void addWarning(const sass::string& message, const SourceSpan& pstate)
+    void addWarning(const sass::string& message, const SourceSpan& pstate, enum WarningType type)
     {
-      printWarning(message, pstate, false);
+      printWarning(message, pstate, type, false);
     }
 
     // Print a deprecation warning with SourceSpan attached (used internally)
-    void addDeprecation(const sass::string& message, const SourceSpan& pstate)
+    void addDeprecation(const sass::string& message, const SourceSpan& pstate, enum WarningType type)
     {
-      printWarning(message, pstate, true);
+      printWarning(message, pstate, type, true);
     }
 
   public:

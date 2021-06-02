@@ -170,7 +170,7 @@ namespace Sass {
         if (number1 == nullptr || number2 == nullptr) {
           // callStackFrame csf(compiler, arguments[0]->pstate());
           compiler.printWarning("math.div() will only support number arguments in a future release.\n"
-            "Use list.slash() instead for a slash separator.", pstate);
+            "Use list.slash() instead for a slash separator.", pstate, Logger::WARN_MATH_DIV);
           // compiler.addWarning();
          }
 

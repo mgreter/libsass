@@ -120,7 +120,7 @@ namespace Sass {
       }
 
       message << STRMLF << "See https://sass-lang.com/d/color-units" << STRMLF;
-      logger.addDeprecation(message.str(), angle->pstate());
+      logger.addDeprecation(message.str(), angle->pstate(), Logger::WARN_ANGLE_CONVERT);
     }
 
     // Helper function for debugging
@@ -876,7 +876,8 @@ namespace Sass {
           compiler.addWarning("Passing a number to "
             "color.invert() is deprecated.\n\nRecommendation: "
             "invert(" + arguments[0]->inspect() + ")",
-            arguments[0]->pstate());
+            arguments[0]->pstate(),
+            Logger::WARN_NUMBER_ARG);
         }
         return invert(pstate, arguments, compiler, eval);
       }
@@ -1163,7 +1164,8 @@ namespace Sass {
           compiler.addWarning("Passing a number to "
             "color.grayscale() is deprecated.\n\nRecommendation: "
             "grayscale(" + arguments[0]->inspect() + ")",
-            arguments[0]->pstate());
+            arguments[0]->pstate(),
+            Logger::WARN_NUMBER_ARG);
         }
         return grayscale(pstate, arguments, compiler, eval);
       }
@@ -1176,7 +1178,8 @@ namespace Sass {
           compiler.addWarning("Passing a number to "
             "color.opacity() is deprecated.\n\nRecommendation: "
             "opacity(" + arguments[0]->inspect() + ")",
-            arguments[0]->pstate());
+            arguments[0]->pstate(),
+            Logger::WARN_NUMBER_ARG);
         }
         return opacity(pstate, arguments, compiler, eval);
       }

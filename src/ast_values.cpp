@@ -1097,7 +1097,7 @@ namespace Sass {
       sass::string reunit(StringUtils::join(mul, "") + StringUtils::join(dif, ""));
       msg << "$" << name << ": Passing a number without unit % (" << inspect() << ") is deprecated." << STRMLF;
       msg << "To preserve current behavior: $" << name << reunit << " * 1%" << STRMLF;
-      logger.addDeprecation(msg.str(), pstate());
+      logger.addDeprecation(msg.str(), pstate(), Logger::WARN_NUMBER_PERCENT);
     }
     return this;
   }
