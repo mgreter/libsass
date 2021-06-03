@@ -42,6 +42,7 @@ public:
 #define RAII_FLAG(name,opt) LocalOption<bool> flag_##name(name, opt)
 #define RAII_PTR(var,name,opt) LocalOption<var*> flag_##name(name, opt)
 #define RAII_SELECTOR(name,opt) LocalStack<SelectorListObj> stack_##name(name, opt)
+#define RAII_MODULE(name,opt) LocalStack<Root*> stack_##name(name, opt)
 
 // Macro to help impose maximum nesting to avoid stack overflow
 #define NESTING_GUARD(name) \

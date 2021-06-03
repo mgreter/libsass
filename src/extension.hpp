@@ -34,6 +34,7 @@ namespace Sass {
     // originally in the document, rather than one defined with `@extend`.
     bool isOriginal;
 
+    // Whether or not this extension was consumed.
     bool isConsumed;
 
     // The media query context to which this extend is restricted,

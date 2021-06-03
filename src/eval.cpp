@@ -1582,7 +1582,19 @@ namespace Sass {
       // If previous extend rules match this selector it will
       // immediately do the extending, extend rules that occur
       // later will apply the extending to the existing ones.
+      if (modules.size()) {
+        // just get start accordingly?
+        // if (slist->hasPlaceholder()) {
+      }
+      if (slist->hasPlaceholder()) {
+        for (size_t i = 0; i < modules.size() - 1; i += 1) {
+          if (modules[i]->extender == nullptr) continue;
+          modules[i]->extender->addSelector(slist, mediaStack.back());
+        }
+      }
       if (extender2) extender2->addSelector(slist, mediaStack.back());
+      // check if selector must be extendable by downstream extends
+
       // Find the parent we should append to (bubble up)
       auto chroot = current->bubbleThrough(true);
       // Create a new style rule at the correct parent
@@ -1614,6 +1626,7 @@ namespace Sass {
     RAII_PTR(CssParentNode, current, css);
     root->isCompiled = true;
 
+    RAII_MODULE(modules, root);
     RAII_PTR(Root, modctx, root);
 
     ImportStackFrame iframe(compiler, root->import);
@@ -2212,14 +2225,19 @@ namespace Sass {
 
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {
+              for (Root* mod : modctx->upstream) {
+                if (mod->extender) mod->extender->addExtension(selector(), simple, mediaStack.back(), e->is_optional());
+              }
               // Pass every selector we ever see to extender (to make them findable for extend)
-              if (extender2) extender2->addExtension(selector(), simple, mediaStack.back(), e->is_optional());
+              if (modctx) modctx->addExtension(selector(), simple, mediaStack.back(), e->is_optional());
+              else if (extender2) extender2->addExtension(selector(), simple, mediaStack.back(), e->is_optional());
             }
 
           }
           else {
-            // Pass every selector we ever see to extender (to make them findable for extend)
-            if (extender2) extender2->addExtension(selector(), compound->first(), mediaStack.back(), e->is_optional());
+            // Add to all upstreams we saw sofar
+            if (modctx) modctx->addExtension(selector(), compound->first(), mediaStack.back(), e->is_optional());
+            else if (extender2) extender2->addExtension(selector(), compound->first(), mediaStack.back(), e->is_optional());
           }
 
         }

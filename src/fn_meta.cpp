@@ -503,6 +503,9 @@ namespace Sass {
         sass::string prev(pstate.getAbsPath());
         if (Root* sheet = eval.loadModule(
           prev, url->value(), false)) {
+
+          sheet->extender = eval.extender2;
+
           if (!sheet->isCompiled) {
             ImportStackFrame iframe(compiler, sheet->import);
             LocalOption<bool> scoped(compiler.hasWithConfig,

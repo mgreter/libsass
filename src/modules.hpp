@@ -66,7 +66,7 @@ namespace Sass {
     FidxEnvKeyMap mergedFwdFn;
 
     // Modules that this module uses.
-    sass::vector<Module*> upstream;
+    sass::vector<Root*> upstream;
 
     ModuleMap<std::pair<EnvRefs*, Module*>> moduse;
 

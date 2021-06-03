@@ -33,6 +33,8 @@ namespace Sass {
     // Alias into context
     Root*& modctx;
 
+    sass::vector<Root*> modules;
+
     // Alias into context
     WithConfig*& wconfig;
 

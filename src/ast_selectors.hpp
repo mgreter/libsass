@@ -71,6 +71,9 @@ namespace Sass {
     virtual unsigned long maxSpecificity() const { return specificity(); }
     virtual unsigned long minSpecificity() const { return specificity(); }
 
+    // Specialized by CompoundSelector
+    virtual bool hasPlaceholder() const { return false; }
+
     // Convert the selector to string, mostly for debugging
     sass::string inspect(int precision = SassDefaultPrecision) const;
 
@@ -253,7 +256,7 @@ namespace Sass {
 
     // Returns whether this is a private selector.
     // That is, whether it begins with `-` or `_`.
-    bool isPrivate() const {
+    bool isPrivate93() const {
       return name_[0] == Character::$minus
         || name_[0] == Character::$underscore;
     }
@@ -567,6 +570,9 @@ namespace Sass {
     // a few other criteria.
     bool hasInvisible() const;
 
+    // Check if any of the selectors is/has a placeholder
+    bool hasPlaceholder() const override final;
+
     // Wrap inside another selector type
     SelectorList* wrapInList();
 
@@ -633,9 +639,6 @@ namespace Sass {
     virtual bool empty() const { return false; }
 
     virtual bool hasInvisible() const { return false; }
-
-    // Specialized by CompoundSelector
-    virtual bool hasPlaceholder() const { return false; }
 
     // Wrap inside another selector type
     ComplexSelector* wrapInComplex();
@@ -826,6 +829,9 @@ namespace Sass {
       SelectorList* parent,
       BackTraces& traces,
       bool implicit_parent = true);
+
+    // Check if any of the selectors is/has a placeholder
+    bool hasPlaceholder() const override final;
 
     // Determine if given `this` is a sub-selector of `sub`
     bool isSuperselectorOf(const SelectorList* sub) const;

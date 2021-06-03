@@ -705,6 +705,11 @@ namespace Sass {
     auto oldCurrent = current;
     current = root->compiled;
 
+    if (modctx) {
+      modctx->upstreams.push_back(root);
+    }
+
+    RAII_MODULE(modules, root);
     RAII_PTR(Root, modctx, root);
     EnvRefs* idxs = root->idxs;
 
@@ -763,6 +768,8 @@ namespace Sass {
 
     }
     else if (rule->root47()) {
+
+      Root* root = rule->root47();
 
       pudding(rule->root47()->idxs, rule->ns().empty(), frame);
 
@@ -855,6 +862,10 @@ namespace Sass {
     if (Root* root = loadModRule(rule)) {
       ImportStackFrame iframe(compiler, root->import);
       EnvScope scoped(compiler.varRoot, root->idxs);
+      if (modctx) {
+        modctx->upstreams.push_back(root);
+      }
+      RAII_MODULE(modules, root);
       RAII_PTR(Root, modctx, root);
       RAII_FLAG(inImport, true);
       exposeImpRule(rule);
@@ -904,6 +915,7 @@ namespace Sass {
     callStackFrame frame333(logger, trace);
 
     if (Root* root = loadModRule(rule)) {
+      compiler.modctx->upstream.push_back(root);
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.hasWithConfig,

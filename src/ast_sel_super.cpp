@@ -527,6 +527,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Implement selector methods (dispatch to functions)
   /////////////////////////////////////////////////////////////////////////
+
   bool SelectorList::isSuperselectorOf(const SelectorList* sub) const
   {
     return listIsSuperslector(elements(), sub->elements());

@@ -62,6 +62,7 @@ namespace Sass {
     compiler.varRoot.stack.back()->module = root;
 
     // Set the current module context
+    RAII_MODULE(modules, root);
     RAII_PTR(Root, modctx, root);
 
     // Get reference to (not yet) parsed children

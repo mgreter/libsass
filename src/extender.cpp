@@ -159,18 +159,28 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   bool Extender::checkForUnsatisfiedExtends(Extension& unsatisfied) const
   {
-    if (selectors.empty()) return false; // Remove?
+    // if (selectors.empty()) return false; // Remove?
     ExtSmplSelSet originals = getSimpleSelectors();
-    for (auto target : extensionsBySimpleSelector) {
+    for (auto& target : extensionsBySimpleSelector) {
       SimpleSelector* key = target.first;
-      ExtSelExtMapEntry& val = target.second;
-      if (originals.find(key) == originals.end()) {
-        const Extension& extension = val.begin()->second;
-        if (extension.isOptional) continue;
-        unsatisfied = extension;
-        return true;
+      const ExtSelExtMapEntry& val = target.second;
+      for (auto qwe : val) {
+        auto asd = qwe.second;
+        if (!asd->isConsumed) {
+          if (!asd->isOptional) {
+            unsatisfied = asd;
+            return true;
+          }
+        }
       }
+      // if (originals.find(key) == originals.end()) {
+      //   const Extension& extension = val.begin()->second;
+      //   if (extension.isOptional) continue;
+      //   unsatisfied = extension;
+      //   return true;
+      // }
     }
+    // for (auto asd : upstream)
     return false;
   }
   // EO checkUnsatisfiedExtends
@@ -913,7 +923,7 @@ namespace Sass {
 
     auto extension = extensions.find(simple);
     if (extension == extensions.end()) return {};
-    const ExtSelExtMapEntry& extenders = extension->second;
+    ExtSelExtMapEntry& extenders = const_cast<ExtSelExtMapEntry&>(extension->second); // ToDo: fix const
 
     if (targetsUsed != nullptr) {
       targetsUsed->insert(simple);
@@ -922,7 +932,10 @@ namespace Sass {
     sass::vector<ExtensionObj> values;
     for (auto& kv : extenders) {
       // std::cerr << "EMPLACE " << kv.first->inspect() << "\n";
+      extenders[kv.first]->isConsumed = true;
       values.emplace_back(kv.second);
+      auto& asad = kv.second;
+      // asad.isConsumed = true;
     }
 
     if (mode == ExtendMode::REPLACE) {

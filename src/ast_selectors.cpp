@@ -345,6 +345,16 @@ namespace Sass {
     return false;
   }
 
+  bool ComplexSelector::hasPlaceholder() const
+  {
+    for (const auto& child : elements()) {
+      if (child->hasPlaceholder()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   SelectorList* ComplexSelector::wrapInList()
   {
     return SASS_MEMORY_NEW(SelectorList, pstate(), { this });
@@ -593,6 +603,16 @@ namespace Sass {
     }
     if (list->size()) return list.detach();
     return SASS_MEMORY_NEW(Null, pstate());
+  }
+
+  bool SelectorList::hasPlaceholder() const
+  {
+    for (const auto& child : elements()) {
+      if (child->hasPlaceholder()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // Wrap the compound selector with a complex selector

@@ -31,6 +31,7 @@ namespace Sass {
   void Preloader::acceptRoot(Root* sheet)
   {
     if (sheet && !sheet->empty()) {
+      RAII_MODULE(modules, root);
       RAII_PTR(Root, modctx, sheet);
       RAII_PTR(EnvRefs, idxs, sheet->idxs);
       ImportStackFrame isf(compiler, sheet->import);

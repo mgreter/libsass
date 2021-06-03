@@ -17,8 +17,17 @@ namespace Sass {
 
   // Check if there are any unsatisfied extends (will throw)
 
-  bool Module::checkForUnsatisfiedExtends(Extension & unsatisfied) const {
-    return extender->checkForUnsatisfiedExtends(unsatisfied);
+  bool Module::checkForUnsatisfiedExtends(Extension & unsatisfied) const
+  {
+    if (extender->checkForUnsatisfiedExtends(unsatisfied)) {
+      return true;
+    }
+    for (auto& asd : upstream) {
+      if (asd->checkForUnsatisfiedExtends(unsatisfied)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /////////////////////////////////////////////////////////////////////////
