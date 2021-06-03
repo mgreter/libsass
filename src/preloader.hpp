@@ -8,7 +8,6 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-#include "modules.hpp"
 #include "environment_key.hpp"
 #include "environment_cnt.hpp"
 #include "visitor_statement.hpp"

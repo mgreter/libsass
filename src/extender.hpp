@@ -11,7 +11,8 @@
 #include <set>
 #include <map>
 
-#include "extension.hpp"
+#include "ast_helpers.hpp"
+#include "backtrace.hpp"
 
 namespace Sass {
 
@@ -93,7 +94,7 @@ namespace Sass {
     // Shared back-traces with context and expander. Needed the throw
     // errors when e.g. extending across media query boundaries.
     /////////////////////////////////////////////////////////////////////////
-    BackTraces& traces;
+    BackTraces* traces = nullptr;
 
     /////////////////////////////////////////////////////////////////////////
     // A map from all simple selectors in the stylesheet to the rules that
@@ -162,6 +163,7 @@ namespace Sass {
     // [traces] are needed to throw errors.
     /////////////////////////////////////////////////////////////////////////
     Extender(ExtendMode mode, BackTraces& traces);
+    Extender();
 
     /////////////////////////////////////////////////////////////////////////
     // Empty desctructor
@@ -409,5 +411,7 @@ namespace Sass {
   };
 
 }
+
+#include "extension.hpp"
 
 #endif

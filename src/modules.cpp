@@ -4,7 +4,6 @@
 #include "modules.hpp"
 
 #include "stylesheet.hpp"
-#include "modules.hpp"
 
 namespace Sass {
 
@@ -12,7 +11,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Module::Module(EnvRefs* idxs) :
-    Env(idxs)
+    Env(idxs),
+    extender()
   {}
 
   /////////////////////////////////////////////////////////////////////////

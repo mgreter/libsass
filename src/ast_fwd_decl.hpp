@@ -26,6 +26,7 @@ namespace Sass {
   class EnvFrame;
 
   class Module;
+  class Extender;
   class BuiltInMod;
   class WithConfig;
   class OutputBuffer;

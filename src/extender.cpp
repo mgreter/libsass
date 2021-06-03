@@ -17,7 +17,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   Extender::Extender(ExtendMode mode, BackTraces& traces) :
     mode(mode),
-    traces(traces),
+    traces(&traces),
+    selectors(),
+    extensions(),
+    extensionsByExtender(),
+    mediaContexts(),
+    sourceSpecificity(),
+    originals()
+  {}
+
+  Extender::Extender() :
+    mode(NORMAL),
+    traces(nullptr),
     selectors(),
     extensions(),
     extensionsByExtender(),
@@ -667,8 +678,8 @@ namespace Sass {
         }
 
         if (result.size() > 500) {
-          traces.push_back(complex->pstate());
-          throw Exception::EndlessExtendError(traces);
+          traces->push_back(complex->pstate());
+          throw Exception::EndlessExtendError(*traces);
         }
 
       }
@@ -777,9 +788,9 @@ namespace Sass {
       for (size_t n = 0; n < exts.size(); n += 1) {
         if (!exts[n].mediaContext.isNull()) {
           SourceSpan span(exts[n].target->pstate());
-          callStackFrame outer(traces, BackTrace(span, Strings::extendRule));
-          callStackFrame inner(traces, BackTrace(compound->pstate()));
-          exts[n].assertCompatibleMediaContext(mediaQueryContext, traces);
+          callStackFrame outer(*traces, BackTrace(span, Strings::extendRule));
+          callStackFrame inner(*traces, BackTrace(compound->pstate()));
+          exts[n].assertCompatibleMediaContext(mediaQueryContext, *traces);
         }
         result.emplace_back(exts[n].extender);
       }
@@ -868,9 +879,9 @@ namespace Sass {
       for (const Extension& state : path) {
         if (!state.mediaContext.isNull()) {
           SourceSpan span(state.target->pstate());
-          callStackFrame outer(traces, BackTrace(span, Strings::extendRule));
-          callStackFrame inner(traces, BackTrace(compound->pstate()));
-          state.assertCompatibleMediaContext(mediaQueryContext, traces);
+          callStackFrame outer(*traces, BackTrace(span, Strings::extendRule));
+          callStackFrame inner(*traces, BackTrace(compound->pstate()));
+          state.assertCompatibleMediaContext(mediaQueryContext, *traces);
         }
         lineBreak = lineBreak || state.extender->hasPreLineFeed();
         // specificity = math.max(specificity, state.specificity);

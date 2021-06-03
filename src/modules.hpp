@@ -10,22 +10,9 @@
 
 #include "ast_fwd_decl.hpp"
 #include "environment_cnt.hpp"
+#include "environment_stack.hpp"
 
 namespace Sass {
-
-  /////////////////////////////////////////////////////////////////////////
-  // Base class for any scope. We want to keep the pointer
-  // separate from the main object in this case here. They are
-  // mostly managed by EnvRoot and stay alive with main context.
-  /////////////////////////////////////////////////////////////////////////
-
-  class Env
-  {
-  public:
-    EnvRefs* idxs = nullptr;
-    Env(EnvRefs* idxs)
-      : idxs(idxs) {}
-  };
 
   /////////////////////////////////////////////////////////////////////////
   // A module is first and foremost a unit that provides variables,
@@ -85,7 +72,7 @@ namespace Sass {
 
     // The extensions defined in this module, which is also able to update
     // [css]'s style rules in-place based on downstream extensions.
-    // Extender extender;
+    Extender* extender = nullptr;
 
     // Special set with global assignments
     // Needed for imports within style-rules
@@ -115,5 +102,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
 }
+
+#include "extender.hpp"
 
 #endif
