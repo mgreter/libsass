@@ -9,7 +9,7 @@
 #include "capi_sass.hpp"
 
 // #include "context.hpp"
-#include "extender.hpp"
+// #include "extender.hpp"
 #include "ast_supports.hpp"
 #include "ast_callables.hpp"
 
@@ -42,8 +42,10 @@ namespace Sass {
     WithConfig*& wconfig;
 
     // The extend handler
-    Extender extender;
+    Extender* extender2 = nullptr;
+
   public:
+
     CssParentNode* current;
     CssMediaVector mediaStack;
     SelectorLists originalStack;
@@ -125,9 +127,9 @@ namespace Sass {
     }
 
     // Check if there are any unsatisfied extends (will throw)
-    bool checkForUnsatisfiedExtends(Extension& unsatisfied) const {
-      return extender.checkForUnsatisfiedExtends(unsatisfied);
-    }
+//    bool checkForUnsatisfiedExtends(Extension& unsatisfied) const {
+//      return extender.checkForUnsatisfiedExtends(unsatisfied);
+//    }
 
     // Main entry point to evaluation
     CssRoot* acceptRoot(Root* b);

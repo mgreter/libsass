@@ -31,9 +31,9 @@ namespace Sass {
     traces(logger),
     modctx(compiler.modctx),
     wconfig(compiler.wconfig),
-    extender(
-      Extender::NORMAL,
-      logger),
+//    extender(
+//      Extender::NORMAL,
+//      logger),
     plainCss(plainCss),
     inMixin(false),
     inFunction(false),
@@ -1582,7 +1582,7 @@ namespace Sass {
       // If previous extend rules match this selector it will
       // immediately do the extending, extend rules that occur
       // later will apply the extending to the existing ones.
-      extender.addSelector(slist, mediaStack.back());
+      if (extender2) extender2->addSelector(slist, mediaStack.back());
       // Find the parent we should append to (bubble up)
       auto chroot = current->bubbleThrough(true);
       // Create a new style rule at the correct parent
@@ -1610,6 +1610,7 @@ namespace Sass {
 
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
 
+    RAII_PTR(Extender, extender2, root->extender);
     RAII_PTR(CssParentNode, current, css);
     root->isCompiled = true;
 
@@ -2212,13 +2213,13 @@ namespace Sass {
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {
               // Pass every selector we ever see to extender (to make them findable for extend)
-              extender.addExtension(selector(), simple, mediaStack.back(), e->is_optional());
+              if (extender2) extender2->addExtension(selector(), simple, mediaStack.back(), e->is_optional());
             }
 
           }
           else {
             // Pass every selector we ever see to extender (to make them findable for extend)
-            extender.addExtension(selector(), compound->first(), mediaStack.back(), e->is_optional());
+            if (extender2) extender2->addExtension(selector(), compound->first(), mediaStack.back(), e->is_optional());
           }
 
         }

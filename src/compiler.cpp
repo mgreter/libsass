@@ -157,11 +157,13 @@ namespace Sass {
 
     Eval eval(*this, *this, plainCss);
 
+    root->extender = new Extender(Extender::NORMAL, eval.logger);
+
     CssRootObj compiled = eval.acceptRoot(root);
 
     Extension unsatisfied;
     // check that all extends were used
-    if (eval.checkForUnsatisfiedExtends(unsatisfied)) {
+    if (root->checkForUnsatisfiedExtends(unsatisfied)) {
       throw Exception::UnsatisfiedExtend(*this, unsatisfied);
     }
 
@@ -731,6 +733,8 @@ namespace Sass {
     if (stylesheet.ptr() != nullptr) {
       stylesheet->import = import;
     }
+
+    stylesheet->extender = new Extender(Extender::NORMAL, *this);
 
     // Return pointer, it is already managed
     // Don't call detach, as it could leak then

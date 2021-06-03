@@ -712,6 +712,7 @@ namespace Sass {
 
     // Make frame scope active for evaluation
     EnvScope scoped(compiler.varRoot, idxs);
+    RAII_PTR(Extender, extender2, root->extender);
 
     selectorStack.push_back(nullptr);
     for (auto& child : root->elements()) {

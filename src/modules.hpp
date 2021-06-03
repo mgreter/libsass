@@ -83,6 +83,9 @@ namespace Sass {
 
     Module(EnvRefs* idxs);
 
+    // Check if there are any unsatisfied extends (will throw)
+    bool checkForUnsatisfiedExtends(Extension& unsatisfied) const;
+
   };
 
   /////////////////////////////////////////////////////////////////////////

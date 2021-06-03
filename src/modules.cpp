@@ -15,6 +15,12 @@ namespace Sass {
     extender()
   {}
 
+  // Check if there are any unsatisfied extends (will throw)
+
+  bool Module::checkForUnsatisfiedExtends(Extension & unsatisfied) const {
+    return extender->checkForUnsatisfiedExtends(unsatisfied);
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
