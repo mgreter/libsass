@@ -209,7 +209,7 @@ namespace Sass {
 
     // Returns true if namespaces are considered compatible
     bool nsMatch(const NameSpaceSelector& rhs) const {
-      return /* (isUniversalNs() || */ nsEqual(rhs);
+      return isUniversalNs() || nsEqual(rhs);
     }
 
     // Returns true if namespace was explicitly set to '*'

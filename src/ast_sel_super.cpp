@@ -63,7 +63,7 @@ namespace Sass {
   {
 
     if (simple1->isUniversal()) {
-      if (!simple2->isUniversal()) return false;
+      // if (!simple2->isUniversal()) return false;
       return simple1->nsMatch(*simple2);
     }
 

@@ -108,7 +108,7 @@ namespace Sass {
     if (auto simple = rhs.isaNameSpaceSelector()) {
       return NameSpaceSelector::nsMatch(*simple);
     }
-    return false;
+    return !hasNs();
   }
 
   /////////////////////////////////////////////////////////////////////////
