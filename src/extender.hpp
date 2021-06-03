@@ -53,10 +53,10 @@ namespace Sass {
 
   typedef OrderedMap<
     ComplexSelectorObj,
-    Extension,
+    ExtensionObj,
     ObjHash,
     ObjEquality,
-    Sass::Allocator<std::pair<ComplexSelectorObj, Extension>>
+    Sass::Allocator<std::pair<ComplexSelectorObj, ExtensionObj>>
   > ExtSelExtMapEntry;
 
   typedef UnorderedMap<
@@ -70,11 +70,11 @@ namespace Sass {
   typedef UnorderedMap<
     SimpleSelectorObj,
     sass::vector<
-      Extension
+    ExtensionObj
     >,
     ObjHash,
     ObjEquality,
-    Sass::Allocator<std::pair<const SimpleSelectorObj, sass::vector<Extension>>>
+    Sass::Allocator<std::pair<const SimpleSelectorObj, sass::vector<ExtensionObj>>>
   > ExtByExtMap;
   
   class Extender {
@@ -106,7 +106,7 @@ namespace Sass {
     // A map from all extended simple selectors
     // to the sources of those extensions.
     /////////////////////////////////////////////////////////////////////////
-    ExtSelExtMap extensions;
+    ExtSelExtMap extensionsBySimpleSelector;
 
     /////////////////////////////////////////////////////////////////////////
     // A map from all simple selectors in extenders to
@@ -260,9 +260,9 @@ namespace Sass {
     // media contexts. Throws an [ArgumentError] if [left]
     // and [right] don't have the same extender and target.
     /////////////////////////////////////////////////////////////////////////
-    static Extension mergeExtension(
-      const Extension& lhs,
-      const Extension& rhs);
+    static Extension* mergeExtension(
+      Extension* lhs,
+      Extension* rhs);
 
     /////////////////////////////////////////////////////////////////////////
     // Extend [extensions] using [newExtensions].
@@ -282,7 +282,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     void extendExistingExtensions( // was ExtSelExtMap
       // Taking in a reference here makes MSVC debug stuck!?
-      const sass::vector<Extension>& extensions,
+      const sass::vector<ExtensionObj>& extensions,
       const ExtSelExtMap& newExtensions);
 
     /////////////////////////////////////////////////////////////////////////
@@ -308,14 +308,14 @@ namespace Sass {
     // Returns a one-off [Extension] whose
     // extender is composed solely of [simple].
     /////////////////////////////////////////////////////////////////////////
-    Extension extensionForSimple(
+    Extension* extensionForSimple(
       const SimpleSelectorObj& simple) const;
 
     /////////////////////////////////////////////////////////////////////////
     // Returns a one-off [Extension] whose extender is composed
     // solely of a compound selector containing [simples].
     /////////////////////////////////////////////////////////////////////////
-    Extension extensionForCompound(
+    Extension* extensionForCompound(
       // Taking in a reference here makes MSVC debug stuck!?
       const CompoundSelectorObj& compound) const;
 
@@ -335,7 +335,7 @@ namespace Sass {
     // Extends [simple] without extending the
     // contents of any selector pseudos it contains.
     /////////////////////////////////////////////////////////////////////////
-    sass::vector<Extension> extendWithoutPseudo(
+    sass::vector<ExtensionObj> extendWithoutPseudo(
       const SimpleSelectorObj& simple,
       const ExtSelExtMap& extensions,
       ExtSmplSelSet* targetsUsed) const;
@@ -344,7 +344,7 @@ namespace Sass {
     // Extends [simple] and also extending the
     // contents of any selector pseudos it contains.
     /////////////////////////////////////////////////////////////////////////
-    sass::vector<sass::vector<Extension>> extendSimple(
+    sass::vector<sass::vector<ExtensionObj>> extendSimple(
       const SimpleSelectorObj& simple,
       const ExtSelExtMap& extensions,
       const CssMediaRuleObj& mediaQueryContext,

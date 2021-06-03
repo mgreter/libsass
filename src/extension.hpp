@@ -12,7 +12,7 @@
 
 namespace Sass {
 
-  class Extension {
+  class Extension : public RefCounted {
 
   public:
 
@@ -34,6 +34,8 @@ namespace Sass {
     // originally in the document, rather than one defined with `@extend`.
     bool isOriginal;
 
+    bool isConsumed;
+
     // The media query context to which this extend is restricted,
     // or `null` if it can apply within any context.
     CssMediaRuleObj mediaContext;
@@ -44,7 +46,8 @@ namespace Sass {
       extender(extender),
       specificity(0),
       isOptional(true),
-      isOriginal(false)
+      isOriginal(false),
+      isConsumed(false)
     {}
 
     // Copy constructor
@@ -54,6 +57,7 @@ namespace Sass {
       specificity(extension.specificity),
       isOptional(extension.isOptional),
       isOriginal(extension.isOriginal),
+      isConsumed(extension.isConsumed),
       mediaContext(extension.mediaContext)
     {}
 
@@ -61,7 +65,8 @@ namespace Sass {
     Extension() :
       specificity(0),
       isOptional(false),
-      isOriginal(false)
+      isOriginal(false),
+      isConsumed(false)
     {}
 
     // Copy assignment operator
@@ -72,6 +77,7 @@ namespace Sass {
       specificity = other.specificity;
       isOptional = other.isOptional;
       isOriginal = other.isOriginal;
+      isConsumed = other.isConsumed;
       mediaContext = other.mediaContext;
       return *this;
     }
@@ -80,7 +86,7 @@ namespace Sass {
     // compatible with the query context for this extender.
     void assertCompatibleMediaContext(CssMediaRuleObj mediaContext, BackTraces& traces) const;
 
-    Extension withExtender(const ComplexSelectorObj& newExtender) const;
+    Extension* withExtender(const ComplexSelectorObj& newExtender) const;
 
   };
 

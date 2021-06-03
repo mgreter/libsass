@@ -19,7 +19,7 @@ namespace Sass {
     mode(mode),
     traces(&traces),
     selectors(),
-    extensions(),
+    extensionsBySimpleSelector(),
     extensionsByExtender(),
     mediaContexts(),
     sourceSpecificity(),
@@ -30,7 +30,7 @@ namespace Sass {
     mode(NORMAL),
     traces(nullptr),
     selectors(),
-    extensions(),
+    extensionsBySimpleSelector(),
     extensionsByExtender(),
     mediaContexts(),
     sourceSpecificity(),
@@ -80,7 +80,7 @@ namespace Sass {
 
     for (auto complex : source->elements()) {
       // Extension.oneOff(complex as ComplexSelector)
-      extenders[complex] = complex;
+      extenders[complex] = SASS_MEMORY_NEW(Extension, complex);
     }
 
     ExtSelExtMap extensions;
@@ -161,7 +161,7 @@ namespace Sass {
   {
     if (selectors.empty()) return false; // Remove?
     ExtSmplSelSet originals = getSimpleSelectors();
-    for (auto target : extensions) {
+    for (auto target : extensionsBySimpleSelector) {
       SimpleSelector* key = target.first;
       ExtSelExtMapEntry& val = target.second;
       if (originals.find(key) == originals.end()) {
@@ -199,8 +199,8 @@ namespace Sass {
     }
     // }
 
-    if (!extensions.empty()) {
-      extendList(selector, extensions,
+    if (!extensionsBySimpleSelector.empty()) {
+      extendList(selector, extensionsBySimpleSelector,
         mediaContext, selector->elements());
     }
 
@@ -247,19 +247,18 @@ namespace Sass {
   // media contexts. Throws an [ArgumentError] if [left]
   // and [right] don't have the same extender and target.
   /////////////////////////////////////////////////////////////////////////
-  Extension Extender::mergeExtension(
-    const Extension& lhs,
-    const Extension& rhs)
+  Extension* Extender::mergeExtension(
+    Extension* lhs, Extension* rhs)
   {
     // If one extension is optional and doesn't add a
     // special media context, it doesn't need to be merged.
-    if (rhs.isOptional && rhs.mediaContext.isNull()) return lhs;
-    if (lhs.isOptional && lhs.mediaContext.isNull()) return rhs;
+    if (rhs->isOptional && rhs->mediaContext.isNull()) return lhs;
+    if (lhs->isOptional && lhs->mediaContext.isNull()) return rhs;
 
-    Extension rv(lhs);
+    Extension* rv = SASS_MEMORY_NEW(Extension, *lhs);
     // ToDo: is this right?
-    rv.isOptional = true;
-    rv.isOriginal = false;
+    rv->isOptional = true;
+    rv->isOriginal = false;
     return rv;
   }
   // EO mergeExtension
@@ -320,15 +319,15 @@ namespace Sass {
     // ToDo: we check this here first and fetch the same? item again after the loop!?
     bool hasExistingExtensions = extensionsByExtender.find(target) != extensionsByExtender.end();
 
-    ExtSelExtMapEntry& sources = extensions[target];
+    ExtSelExtMapEntry& sources = extensionsBySimpleSelector[target];
 
     for (auto& complex : extender->elements()) {
 
-      Extension state(complex);
+      ExtensionObj state = SASS_MEMORY_NEW(Extension, complex);
       // ToDo: fine-tune public API
-      state.target = target;
-      state.isOptional = is_optional;
-      state.mediaContext = mediaQueryContext;
+      state->target = target;
+      state->isOptional = is_optional;
+      state->mediaContext = mediaQueryContext;
 
       if (sources.count(complex) == 1) {
         // If there's already an extend from [extender] to [target],
@@ -434,7 +433,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   void Extender::extendExistingExtensions(
     // Taking in a reference here makes MSVC debug stuck!?
-    const sass::vector<Extension>& oldExtensions,
+    const sass::vector<ExtensionObj>& oldExtensions,
     const ExtSelExtMap& newExtensions)
   {
 
@@ -445,7 +444,7 @@ namespace Sass {
     // that points back to the `sources` vector from `extensions`.
     for (size_t i = 0, iL = oldExtensions.size(); i < iL; i += 1) {
       const Extension& extension = oldExtensions[i];
-      ExtSelExtMapEntry& sources = extensions[extension.target];
+      ExtSelExtMapEntry& sources = extensionsBySimpleSelector[extension.target];
       sass::vector<ComplexSelectorObj> selectors(extendComplex(
         extension.extender,
         newExtensions,
@@ -466,7 +465,7 @@ namespace Sass {
           continue;
         }
 
-        const Extension withExtender =
+        Extension* withExtender =
           extension.withExtender(complex);
         auto it = sources.find(complex);
         if (it != sources.end()) {
@@ -694,12 +693,12 @@ namespace Sass {
   // Returns a one-off [Extension] whose
   // extender is composed solely of [simple].
   /////////////////////////////////////////////////////////////////////////
-  Extension Extender::extensionForSimple(
+  Extension* Extender::extensionForSimple(
     const SimpleSelectorObj& simple) const
   {
-    Extension extension(simple->wrapInComplex());
-    extension.specificity = maxSourceSpecificity(simple);
-    extension.isOriginal = true;
+    Extension* extension = SASS_MEMORY_NEW(Extension, simple->wrapInComplex());
+    extension->specificity = maxSourceSpecificity(simple);
+    extension->isOriginal = true;
     return extension;
   }
   // Extender::extensionForSimple
@@ -708,13 +707,13 @@ namespace Sass {
   // Returns a one-off [Extension] whose extender is composed
   // solely of a compound selector containing [simples].
   /////////////////////////////////////////////////////////////////////////
-  Extension Extender::extensionForCompound(
+  Extension* Extender::extensionForCompound(
     // Taking in a reference here makes MSVC debug stuck!?
     const CompoundSelectorObj& compound) const
   {
-    Extension extension(compound->wrapInComplex());
-    extension.specificity = maxSourceSpecificity(compound);
-    extension.isOriginal = true;
+    Extension* extension = SASS_MEMORY_NEW(Extension, compound->wrapInComplex());
+    extension->specificity = maxSourceSpecificity(compound);
+    extension->isOriginal = true;
     return extension;
   }
   // EO extensionForCompound
@@ -741,7 +740,7 @@ namespace Sass {
 
     sass::vector<ComplexSelectorObj> result;
     // The complex selectors produced from each component of [compound].
-    sass::vector<sass::vector<Extension>> options;
+    sass::vector<sass::vector<ExtensionObj>> options;
     for (size_t i = 0; i < compound->size(); i++) {
       const SimpleSelectorObj& simple = compound->get(i);
       auto extended = extendSimple(simple, extensions,
@@ -784,15 +783,15 @@ namespace Sass {
     // Optimize for the simple case of a single simple
     // selector that doesn't need any unification.
     if (options.size() == 1) {
-      sass::vector<Extension> exts = options[0];
+      sass::vector<ExtensionObj> exts = options[0];
       for (size_t n = 0; n < exts.size(); n += 1) {
-        if (!exts[n].mediaContext.isNull()) {
-          SourceSpan span(exts[n].target->pstate());
+        if (!exts[n]->mediaContext.isNull()) {
+          SourceSpan span(exts[n]->target->pstate());
           callStackFrame outer(*traces, BackTrace(span, Strings::extendRule));
           callStackFrame inner(*traces, BackTrace(compound->pstate()));
-          exts[n].assertCompatibleMediaContext(mediaQueryContext, *traces);
+          exts[n]->assertCompatibleMediaContext(mediaQueryContext, *traces);
         }
-        result.emplace_back(exts[n].extender);
+        result.emplace_back(exts[n]->extender);
       }
       return result;
     }
@@ -824,11 +823,11 @@ namespace Sass {
 
     bool first = mode != ExtendMode::REPLACE;
     sass::vector<ComplexSelectorObj> unifiedPaths;
-    sass::vector<sass::vector<Extension>> prePaths = permutate(options);
+    sass::vector<sass::vector<ExtensionObj>> prePaths = permutate(options);
 
     for (size_t i = 0; i < prePaths.size(); i += 1) {
       sass::vector<SelectorComponentVector> complexes;
-      const sass::vector<Extension>& path = prePaths[i];
+      const sass::vector<ExtensionObj>& path = prePaths[i];
       if (first) {
         // The first path is always the original selector. We can't just
         // return [compound] directly because pseudo selectors may be
@@ -838,7 +837,7 @@ namespace Sass {
           SASS_MEMORY_NEW(CompoundSelector,
             compound->pstate());
         for (size_t n = 0; n < path.size(); n += 1) {
-          const ComplexSelectorObj& sel = path[n].extender;
+          const ComplexSelectorObj& sel = path[n]->extender;
           if (CompoundSelector* compound = sel->last()->isaCompoundSelector()) {
             mergedSelector->concat(compound->elements());
           }
@@ -850,14 +849,14 @@ namespace Sass {
         sass::vector<SelectorComponentVector> toUnify;
 
         for (auto& state : path) {
-          if (state.isOriginal) {
-            const ComplexSelectorObj& sel = state.extender;
+          if (state->isOriginal) {
+            const ComplexSelectorObj& sel = state->extender;
             if (CompoundSelector* compound = sel->last()->isaCompoundSelector()) {
               originals.insert(originals.end(), compound->last());
             }
           }
           else {
-            toUnify.emplace_back(state.extender->elements());
+            toUnify.emplace_back(state->extender->elements());
           }
         }
         if (!originals.empty()) {
@@ -904,7 +903,7 @@ namespace Sass {
   // Extends [simple] without extending the
   // contents of any selector pseudos it contains.
   /////////////////////////////////////////////////////////////////////////
-  sass::vector<Extension> Extender::extendWithoutPseudo(
+  sass::vector<ExtensionObj> Extender::extendWithoutPseudo(
     const SimpleSelectorObj& simple,
     const ExtSelExtMap& extensions,
     ExtSmplSelSet* targetsUsed) const
@@ -920,7 +919,7 @@ namespace Sass {
       targetsUsed->insert(simple);
     }
 
-    sass::vector<Extension> values;
+    sass::vector<ExtensionObj> values;
     for (auto& kv : extenders) {
       // std::cerr << "EMPLACE " << kv.first->inspect() << "\n";
       values.emplace_back(kv.second);
@@ -930,7 +929,7 @@ namespace Sass {
       return values;
     }
 
-    sass::vector<Extension> result;
+    sass::vector<ExtensionObj> result;
     result.reserve(values.size() + 1);
     result.emplace_back(extensionForSimple(simple));
     result.insert(result.end(), values.begin(), values.end());
@@ -942,7 +941,7 @@ namespace Sass {
   // Extends [simple] and also extending the
   // contents of any selector pseudos it contains.
   /////////////////////////////////////////////////////////////////////////
-  sass::vector<sass::vector<Extension>> Extender::extendSimple(
+  sass::vector<sass::vector<ExtensionObj>> Extender::extendSimple(
     const SimpleSelectorObj& simple,
     const ExtSelExtMap& extensions,
     const CssMediaRuleObj& mediaQueryContext,
@@ -950,12 +949,12 @@ namespace Sass {
   {
     if (PseudoSelector* pseudo = simple->isaPseudoSelector()) {
       if (pseudo->selector()) {
-        sass::vector<sass::vector<Extension>> merged;
+        sass::vector<sass::vector<ExtensionObj>> merged;
         sass::vector<PseudoSelectorObj> extended =
           extendPseudo(pseudo, extensions, mediaQueryContext);
         for (PseudoSelectorObj& extend : extended) {
           SimpleSelectorObj simple = extend.ptr();
-          sass::vector<Extension> result =
+          sass::vector<ExtensionObj> result =
             extendWithoutPseudo(simple, extensions, targetsUsed);
           if (result.empty()) result = { extensionForSimple(extend.ptr()) };
           merged.emplace_back(result);
@@ -965,7 +964,7 @@ namespace Sass {
         }
       }
     }
-    sass::vector<Extension> result =
+    sass::vector<ExtensionObj> result =
       extendWithoutPseudo(simple, extensions, targetsUsed);
     if (result.empty()) return {};
     return { result };

@@ -12,12 +12,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Static function to create a copy with a new extender
   /////////////////////////////////////////////////////////////////////////
-  Extension Extension::withExtender(const ComplexSelectorObj& newExtender) const
+  Extension* Extension::withExtender(const ComplexSelectorObj& newExtender) const
   {
-    Extension extension(newExtender);
-    extension.specificity = specificity;
-    extension.isOptional = isOptional;
-    extension.target = target;
+    Extension* extension = SASS_MEMORY_NEW(Extension, newExtender);
+    extension->specificity = specificity;
+    extension->isOptional = isOptional;
+    extension->target = target;
     return extension;
   }
 
