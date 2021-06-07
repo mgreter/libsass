@@ -36,7 +36,9 @@ namespace Sass {
     BackTraces& traces;
 
     // Alias into context
-    Root*& modctx;
+    Root*& modctx42;
+
+    Root* extctx33 = nullptr;
 
     sass::vector<Root*> modules;
 
@@ -44,9 +46,15 @@ namespace Sass {
     WithConfig*& wconfig;
 
     // The extend handler
-    Extender* extender2 = nullptr;
+    ExtensionStore* extender2;
 
   public:
+
+    void _visitUpstreamModule(Root* upstream, sass::vector<Root*>& sorted, std::set<sass::string>& seen);
+    CssRoot* _combineCss(Root* module, bool clone = false);
+    sass::vector<Root*> _topologicalModules(Root* root);
+    void _extendModules(sass::vector<Root*> sortedModules);
+
 
     CssParentNode* current;
     CssMediaVector mediaStack;
@@ -133,8 +141,11 @@ namespace Sass {
 //      return extender.checkForUnsatisfiedExtends(unsatisfied);
 //    }
 
+    ExtSmplSelSet wasExtended;
+
     // Main entry point to evaluation
     CssRoot* acceptRoot(Root* b);
+    CssRoot* acceptRoot2(Root* b);
 
     // Another entry point for the `call` sass-function
     Value* acceptFunctionExpression(FunctionExpression* expression) {

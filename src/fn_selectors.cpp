@@ -132,7 +132,7 @@ namespace Sass {
           assertSelector(compiler, "extendee");
         SelectorListObj source = arguments[2]->
           assertSelector(compiler, "extender");
-        SelectorListObj result = Extender::extend(selector, source, target, compiler);
+        SelectorListObj result = ExtensionStore::extend(selector, source, target, compiler);
         return result->toValue();
       }
 
@@ -144,7 +144,7 @@ namespace Sass {
           assertSelector(compiler, "original");
         SelectorListObj source = arguments[2]->
           assertSelector(compiler, "replacement");
-        SelectorListObj result = Extender::replace(selector, source, target, compiler);
+        SelectorListObj result = ExtensionStore::replace(selector, source, target, compiler);
         return result->toValue();
       }
 

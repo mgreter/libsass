@@ -50,7 +50,7 @@ namespace Sass {
 
   public:
 
-    Root* modctx = nullptr;
+    Root* modctx3 = nullptr;
 
     WithConfig* wconfig = nullptr;
 

@@ -257,8 +257,9 @@ namespace Sass {
     // Returns whether this is a private selector.
     // That is, whether it begins with `-` or `_`.
     bool isPrivate93() const {
-      return name_[0] == Character::$minus
-        || name_[0] == Character::$underscore;
+      if (name_[1] == 0) return false;
+      return name_[1] == Character::$minus
+        || name_[1] == Character::$underscore;
     }
 
     IMPLEMENT_SEL_COPY_IGNORE(PlaceholderSelector);
@@ -602,6 +603,8 @@ namespace Sass {
     unsigned long maxSpecificity() const override final;
     unsigned long minSpecificity() const override final;
 
+    ComplexSelector* produce();
+
     IMPLEMENT_SEL_COPY_CHILDREN(ComplexSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, ComplexSelector)
     IMPLEMENT_ACCEPT(void, Selector, ComplexSelector);
@@ -642,6 +645,8 @@ namespace Sass {
 
     // Wrap inside another selector type
     ComplexSelector* wrapInComplex();
+
+    virtual SelectorComponent* produce() = 0;
 
     // This is a very interesting line, as it seems pointless, since the base class
     // already marks this as an unimplemented interface methods, but by defining this
@@ -699,6 +704,10 @@ namespace Sass {
 
     // Implement hash functionality
     size_t hash() const override final;
+
+    SelectorComponent* produce() override final {
+      return this;
+    }
 
     IMPLEMENT_SEL_COPY_IGNORE(SelectorCombinator);
     IMPLEMENT_ACCEPT(void, Selector, SelectorCombinator);
@@ -783,6 +792,8 @@ namespace Sass {
     unsigned long maxSpecificity() const override final;
     unsigned long minSpecificity() const override final;
 
+    CompoundSelector* produce() override final;
+
     IMPLEMENT_SEL_COPY_CHILDREN(CompoundSelector);
     IMPLEMENT_ACCEPT(void, Selector, CompoundSelector);
     IMPLEMENT_EQ_OPERATOR(Selector, CompoundSelector);
@@ -844,6 +855,19 @@ namespace Sass {
     // Specialize min and max specificity functions
     unsigned long maxSpecificity() const override final;
     unsigned long minSpecificity() const override final;
+
+    SelectorList* produce() {
+      sass::vector<ComplexSelectorObj> copy;
+      for (ComplexSelector* child : elements_) {
+        copy.emplace_back(child->produce());
+      }
+      return SASS_MEMORY_NEW(SelectorList,
+        pstate_, std::move(copy));
+    }
+
+    sass::string toString() const {
+      return toValue()->toCss();
+    }
 
     IMPLEMENT_SEL_COPY_CHILDREN(SelectorList);
     IMPLEMENT_ACCEPT(void, Selector, SelectorList);

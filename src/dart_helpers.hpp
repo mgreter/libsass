@@ -118,6 +118,41 @@ namespace Sass {
   // EO flatVertically
 
   /////////////////////////////////////////////////////////////////////////
+  // Implementation of [Map.addAll], but for LibSass.
+  /////////////////////////////////////////////////////////////////////////
+  template <class K1, class K2>
+  void mapAddAll(K1 dst, K2 source)
+  {
+    for (auto& src : source) {
+      dst[src.first] = src.second;
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // Like [Map.addAll], but for two-layer maps.
+  // This avoids copying inner maps from [source] if possible.
+  /////////////////////////////////////////////////////////////////////////
+  template <class K1, class K2>
+  void mapAddAll2(K1 dst, K2 source)
+  {
+    for (auto& src : source) {
+      mapAddAll(dst[src.first], src.second);
+    }
+  }
+
+  // Map<K1, Map<K2, V>> destination, Map<K1, Map<K2, V>> source) {
+  //   source.forEach((key, inner) {
+  //     var innerDestination = destination[key];
+  //     if (innerDestination != null) {
+  //       innerDestination.addAll(inner);
+  //     }
+  //     else {
+  //       destination[key] = inner;
+  //     }
+  //   });
+  // }
+
+  /////////////////////////////////////////////////////////////////////////
   // Equivalent to dart `cnt.any`
   // Passes additional closure variables to `fn`
   /////////////////////////////////////////////////////////////////////////

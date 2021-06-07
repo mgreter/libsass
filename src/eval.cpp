@@ -29,10 +29,10 @@ namespace Sass {
     logger(logger),
     compiler(compiler),
     traces(logger),
-    modctx(compiler.modctx),
+    modctx42(compiler.modctx3),
     wconfig(compiler.wconfig),
 //    extender(
-//      Extender::NORMAL,
+//      ExtensionStore::NORMAL,
 //      logger),
     plainCss(plainCss),
     inMixin(false),
@@ -878,6 +878,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // CssStylesheet _combineCss(Module<Callable> root, { bool clone = false }) {
+  // void _extendModules(List<Module<Callable>> sortedModules) {
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   Value* Eval::visitBooleanExpression(BooleanExpression* ex)
   {
     #ifdef SASS_ELIDE_COPIES
@@ -1589,10 +1595,13 @@ namespace Sass {
       if (slist->hasPlaceholder()) {
         for (size_t i = 0; i < modules.size() - 1; i += 1) {
           if (modules[i]->extender == nullptr) continue;
-          modules[i]->extender->addSelector(slist, mediaStack.back());
+          // modules[i]->extender->addSelector(slist, mediaStack.back());
         }
       }
-      if (extender2) extender2->addSelector(slist, mediaStack.back());
+      if (extender2) {
+        //        std::cerr << "Adding selector with media stack\n";
+        extender2->addSelector(slist, mediaStack.back());
+      }
       // check if selector must be extendable by downstream extends
 
       // Find the parent we should append to (bubble up)
@@ -1619,15 +1628,16 @@ namespace Sass {
 
     Preloader preloader(*this, root);
     preloader.process();
-
-    CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
-
-    RAII_PTR(Extender, extender2, root->extender);
-    RAII_PTR(CssParentNode, current, css);
     root->isCompiled = true;
 
+    RAII_PTR(ExtensionStore, extender2, root->extender);
+
+    CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
+    RAII_PTR(CssParentNode, current, css);
+
     RAII_MODULE(modules, root);
-    RAII_PTR(Root, modctx, root);
+    RAII_PTR(Root, modctx42, root);
+    RAII_PTR(Root, extctx33, root);
 
     ImportStackFrame iframe(compiler, root->import);
 
@@ -1636,6 +1646,179 @@ namespace Sass {
       if (child) delete child;
     }
     return css.detach();
+
+  }
+
+  CssRoot* Eval::acceptRoot2(Root* root)
+  {
+
+    Preloader preloader(*this, root);
+    preloader.process();
+    root->isCompiled = true;
+
+    return _combineCss(root);
+  }
+
+  // Make non recursive later!
+  void Eval::_visitUpstreamModule(Root* current, sass::vector<Root*>& sorted, std::set<sass::string>& seen)
+  {
+    //std::cerr << "Visit " << current->import->getImpPath() << "\n";
+    if (current->idxs->isImport) return;
+    for (Root* upstream : current->upstream) {
+      if (upstream->idxs->isImport) continue;
+      if (seen.count(upstream->import->getAbsPath())) continue;
+      _visitUpstreamModule(upstream, sorted, seen);
+      //std::cerr << " ++ " << current->import->getImpPath() << "\n";
+      seen.insert(upstream->import->getAbsPath());
+    }
+    sorted.push_back(current);
+  }
+
+  sass::vector<Root*> Eval::_topologicalModules(Root* root)
+  {
+    // Construct a topological ordering using depth-first traversal, as in
+    // https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search.
+    std::set<sass::string> seen;
+    sass::vector<Root*> sorted;
+
+    // Probably more efficient to push and resort
+    _visitUpstreamModule(root, sorted, seen);
+    std::reverse(sorted.begin(), sorted.end());
+
+    return sorted;
+  }
+
+  CssRoot* Eval::_combineCss(Root* root, bool clone)
+  {
+
+    RAII_PTR(ExtensionStore, extender2, root->extender);
+
+    CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
+    RAII_PTR(CssParentNode, current, css);
+
+    RAII_MODULE(modules, root);
+    RAII_PTR(Root, modctx42, root);
+    RAII_PTR(Root, extctx33, root);
+
+    ImportStackFrame iframe(compiler, root->import);
+
+    for (const StatementObj& item : root->elements()) {
+      Value* child = item->accept(this);
+      if (child) delete child;
+    }
+
+    auto sorted = _topologicalModules(root);
+
+    _extendModules(sorted);
+
+    //std::cerr << "=========== Accept root2 - Combine CSS ";
+
+    for (auto asd : sorted) {
+      //std::cerr << asd->import->getImpPath() << ", ";
+    }
+    //std::cerr << "\n";
+
+    return css.detach();
+
+  }
+
+  sass::string SetToString(ExtSet& set) {
+    sass::string msg = "{";
+    for (auto& item : set) {
+      msg += item->toString();
+      msg += ", ";
+    }
+    return msg + "}";
+  }
+
+  sass::string MapToString(ExtSmplSelSet& set) {
+    sass::string msg = "{";
+    for (auto& item : set) {
+      msg += item->inspect();
+      msg += ", ";
+    }
+    return msg + "}";
+  }
+
+  void Eval::_extendModules(sass::vector<Root*> sortedModules)
+  {
+
+    // std::cerr << "!!!!!!!!!! Extend modules " << sortedModules.size() << "\n";
+
+    std::unordered_map<sass::string, sass::vector<ExtensionStoreObj>> downstreamExtensionStores;
+
+    /// Extensions that haven't yet been satisfied by some upstream module. This
+    /// adds extensions when they're defined but not satisfied, and removes them
+    /// when they're satisfied by any module.
+    ExtSet unsatisfiedExtensions;
+
+    for (Root* module : sortedModules) {
+
+      const sass::string& key(module->import->getAbsPath());
+
+      //std::cerr << "Wade through sorted " << key << "\n";
+
+      // Create a snapshot of the simple selectors currently in the
+      // [ExtensionStore] so that we don't consider an extension "satisfied"
+      // below because of a simple selector added by another (sibling)
+      // extension.
+      ExtSmplSelSet originalSelectors;
+      for (auto& sel : module->extender->selectors54) {
+        originalSelectors.insert(sel.first);
+      }
+
+      module->extender->addNonOriginalSelectors(
+        originalSelectors, unsatisfiedExtensions);
+
+      // std::cerr << "OriginalsIn: " << MapToString(originalSelectors) << "\n";
+
+      //      std::cerr << "unsatisfiedExtensions " << SetToString(unsatisfiedExtensions) << "\n";
+
+      auto downStreamIt = downstreamExtensionStores.find(key);
+      if (downStreamIt != downstreamExtensionStores.end()) {
+        // std::cerr << "+++++ Add url to ext " << key << "\n";
+        // std::cerr << downStreamIt->second.at(0)->toString() << "\n";
+        //        std::cerr << "------------ Add downstream to extender\n";
+        module->extender->addExtensions(downStreamIt->second);
+      }
+      else {
+        // std::cerr << "Could not find " << key << "\n";
+      }
+
+      if (module->extender->extensionsBySimpleSelector.empty()) {
+        //std::cerr << "!!!!!!!!!! Module extender " << module->import->getAbsPath() << " is empty\n";
+        //auto& qwe = downstreamExtensionStores[module->import->getAbsPath()];
+        //if (qwe.size()) std::cerr << "And the other " << qwe[0]->isEmpty() << "\n";
+        //if (qwe.size()) {
+          //ExtensionStore* a = module->extender;
+          //ExtensionStore* other = qwe[0];
+          //std::cerr << a << " DOWN " << other << "\n";
+        //}
+        continue;
+      }
+
+      for (auto& upstream : module->upstream) {
+        const sass::string& url(upstream->import->getAbsPath());
+        //std::cerr << "+++++ register " << url << " at " << module->extender << "\n";
+        //std::cerr << module->extender->toString() << "\n";
+        downstreamExtensionStores[url].push_back(module->extender);
+      }
+
+      //std::cerr << "unsatisfiedExtensions before del " << SetToString(unsatisfiedExtensions) << "\n";
+      //std::cerr << "Originals: " << MapToString(originalSelectors) << "\n";
+      module->extender->delNonOriginalSelectors(
+        originalSelectors, unsatisfiedExtensions);
+      //std::cerr << "unsatisfiedExtensions after del " << SetToString(unsatisfiedExtensions) << "\n";
+
+    }
+
+    //std::cerr << "Check unsatisfiedExtensions now\n";
+
+    if (!unsatisfiedExtensions.empty()) {
+      ExtensionObj extension = *unsatisfiedExtensions.begin();
+      throw Exception::UnsatisfiedExtend(traces, extension);
+    }
+
   }
 
   CssParentNode* Eval::hoistStyleRule(CssParentNode* node)
@@ -2184,7 +2367,7 @@ namespace Sass {
 
   Value* Eval::visitExtendRule(ExtendRule* e)
   {
-
+    //std::cerr << "Visit extend\n";
     if (!isInStyleRule() /* || !declarationName.empty() */) {
       callStackFrame csf(logger, e->pstate());
       throw Exception::RuntimeException(traces,
@@ -2225,19 +2408,21 @@ namespace Sass {
 
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {
-              for (Root* mod : modctx->upstream) {
-                if (mod->extender) mod->extender->addExtension(selector(), simple, mediaStack.back(), e->is_optional());
-              }
+//UUU              for (Root* mod : modctx->upstream) {
+//UUU                if (mod->extender) mod->extender->addExtension(selector(), simple, mediaStack.back(), e->is_optional());
+//UUU              }
               // Pass every selector we ever see to extender (to make them findable for extend)
-              if (modctx) modctx->addExtension(selector(), simple, mediaStack.back(), e->is_optional());
-              else if (extender2) extender2->addExtension(selector(), simple, mediaStack.back(), e->is_optional());
+              if (extctx33) extctx33->addExtension(selector(), simple, mediaStack.back(), e, e->is_optional());
+              else std::cerr << "No modctx\n";
+                // if (extender2) extender2->addExtension(selector(), simple, mediaStack.back(), e, e->is_optional());
             }
 
           }
           else {
             // Add to all upstreams we saw sofar
-            if (modctx) modctx->addExtension(selector(), compound->first(), mediaStack.back(), e->is_optional());
-            else if (extender2) extender2->addExtension(selector(), compound->first(), mediaStack.back(), e->is_optional());
+            if (extctx33) extctx33->addExtension(selector(), compound->first(), mediaStack.back(), e, e->is_optional());
+            else std::cerr << "No modctx\n";
+//        else if (extender2) extender2->addExtension(selector(), compound->first(), mediaStack.back(), e, e->is_optional());
           }
 
         }

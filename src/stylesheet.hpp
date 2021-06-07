@@ -22,7 +22,7 @@ namespace Sass {
   {
   public:
 
-    sass::vector<Root*> upstreams;
+    // sass::vector<Root*> upstreams;
 
     // Import object through which this module was loaded.
     // It also has the input type (css vs sass) attached
@@ -36,6 +36,7 @@ namespace Sass {
       const SelectorListObj& extender,
       const SimpleSelectorObj& target,
       const CssMediaRuleObj& mediaQueryContext,
+      const ExtendRuleObj& extend,
       bool is_optional);
 
 

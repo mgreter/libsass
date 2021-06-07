@@ -26,7 +26,8 @@ namespace Sass {
   class EnvFrame;
 
   class Module;
-  class Extender;
+  class ExtensionStore;
+  class Extension;
   class BuiltInMod;
   class WithConfig;
   class OutputBuffer;
@@ -189,13 +190,12 @@ namespace Sass {
   // common classes
   class Eval;
 
-  class Extension;
-
   // declare classes that are instances of memory nodes
   #define IMPL_MEM_OBJ(type) \
     typedef SharedPtr<type> type##Obj;
 
   IMPL_MEM_OBJ(Extension);
+  IMPL_MEM_OBJ(ExtensionStore);
 
   IMPL_MEM_OBJ(SourceData);
   IMPL_MEM_OBJ(Import);

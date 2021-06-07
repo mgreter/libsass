@@ -336,6 +336,15 @@ namespace Sass {
     return minSpecificity_;
   }
 
+  ComplexSelector* ComplexSelector::produce() {
+      sass::vector<SelectorComponentObj> copy;
+      for (SelectorComponent* child : elements_) {
+          copy.emplace_back(child->produce());
+      }
+      return SASS_MEMORY_NEW(ComplexSelector,
+          pstate_, std::move(copy));
+  }
+
   bool ComplexSelector::hasInvisible() const
   {
     if (empty()) return true;
@@ -495,6 +504,16 @@ namespace Sass {
       }
     }
     return minSpecificity_;
+  }
+
+  CompoundSelector* CompoundSelector::produce()
+  {
+    sass::vector<SimpleSelectorObj> copy;
+    for (SimpleSelector* child : elements_) {
+      copy.emplace_back(child);
+    }
+    return SASS_MEMORY_NEW(CompoundSelector,
+      pstate_, std::move(copy));
   }
 
   bool CompoundSelector::hasAnyExplicitParent() const

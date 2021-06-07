@@ -8,16 +8,76 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-#include "ast_css.hpp"
+#include "ast_fwd_decl.hpp"
+#include "ast_selectors.hpp"
+#include "backtrace.hpp"
 
 namespace Sass {
+
+  class Extender {
+  public:
+
+    // The span in which this selector was defined.
+    SourceSpan pstate; // use from extender
+
+    // The selector in which the `@extend` appeared.
+    ComplexSelectorObj selector;
+
+    // The minimum specificity required for any
+    // selector generated from this extender.
+    size_t specificity;
+
+    // Whether this extender represents a selector that was originally
+    // in the document, rather than one defined with `@extend`.
+    bool isOriginal;
+
+    // The extension that created this [Extender]. Not all [Extender]s
+    // are created by extensions. Some simply represent the
+    // original selectors that exist in the document.
+    Extension* extension;
+
+    // The media query context to which this extend is restricted,
+    // or `null` if it can apply within any context.
+    CssMediaRuleObj mediaContext;
+
+    // Value constructor
+    Extender(
+      const SourceSpan& pstate, 
+      ComplexSelector* extender,
+      size_t specificity,
+      bool isOriginal,
+      CssMediaRuleObj media = {}) :
+      pstate(pstate),
+      selector(extender),
+      specificity(specificity),
+      isOriginal(isOriginal),
+      extension(nullptr),
+      mediaContext(media)
+    {}
+
+    Extender() :
+      selector({}),
+      specificity(0),
+      isOriginal(false),
+      extension(nullptr)
+    {}
+
+    // Asserts that the [mediaContext] for a selector is 
+    // compatible with the query context for this extender.
+    void assertCompatibleMediaContext(CssMediaRuleObj mediaContext, BackTraces& traces) const;
+
+  };
 
   class Extension : public RefCounted {
 
   public:
 
+    sass::string toString() const;
+
+    SourceSpan pstate;
+
     // The selector in which the `@extend` appeared.
-    ComplexSelectorObj extender;
+    Extender extender;
 
     // The selector that's being extended.
     // `null` for one-off extensions.
@@ -43,51 +103,28 @@ namespace Sass {
 
     // Creates a one-off extension that's not intended to be modified over time.
     // If [specificity] isn't passed, it defaults to `extender.maxSpecificity`.
-    Extension(ComplexSelectorObj extender) :
-      extender(extender),
-      specificity(0),
-      isOptional(true),
-      isOriginal(false),
-      isConsumed(false)
-    {}
+    Extension(
+      const SourceSpan& pstate,
+      ComplexSelectorObj& extender,
+      const SimpleSelectorObj& target,
+      const CssMediaRuleObj& mediaContext = {},
+      bool isOptional = false,
+      bool isOriginal = true);
 
     // Copy constructor
-    Extension(const Extension& extension) :
-      extender(extension.extender),
-      target(extension.target),
-      specificity(extension.specificity),
-      isOptional(extension.isOptional),
-      isOriginal(extension.isOriginal),
-      isConsumed(extension.isConsumed),
-      mediaContext(extension.mediaContext)
-    {}
+    Extension(const Extension& extension);
 
     // Default constructor
-    Extension() :
-      specificity(0),
-      isOptional(false),
-      isOriginal(false),
-      isConsumed(false)
-    {}
+    Extension();
 
     // Copy assignment operator
-    Extension& operator=(const Extension& other)
-    {
-      extender = other.extender;
-      target = other.target;
-      specificity = other.specificity;
-      isOptional = other.isOptional;
-      isOriginal = other.isOriginal;
-      isConsumed = other.isConsumed;
-      mediaContext = other.mediaContext;
-      return *this;
-    }
+    Extension& operator=(const Extension& other);
 
     // Asserts that the [mediaContext] for a selector is 
     // compatible with the query context for this extender.
     void assertCompatibleMediaContext(CssMediaRuleObj mediaContext, BackTraces& traces) const;
 
-    Extension* withExtender(const ComplexSelectorObj& newExtender) const;
+    Extension* withExtender(ComplexSelectorObj& newExtender) const;
 
   };
 

@@ -266,16 +266,20 @@ namespace Sass {
     {}
 
     // Thrown when a non-optional extend found nothing to extend
-    UnsatisfiedExtend::UnsatisfiedExtend(BackTraces traces, Extension extension)
+    UnsatisfiedExtend::UnsatisfiedExtend(BackTraces traces, Extension* extension)
       : Base("The target selector was not found.\n"
         // Calling inspect to the placeholder is visible
-        "Use \"@extend " + extension.target->inspect() +
+        "Use \"@extend " + extension->target->inspect() +
         " !optional\" to avoid this error.",
-        traces, extension.target->pstate())
+        traces, extension->pstate)
     {}
 
     // Thrown when we extend across incompatible media contexts
-    ExtendAcrossMedia::ExtendAcrossMedia(BackTraces traces, Extension extension)
+    ExtendAcrossMedia::ExtendAcrossMedia(BackTraces traces, const Extension* extension)
+      : Base("You may not @extend selectors across media queries.", traces)
+    {}
+
+    ExtendAcrossMedia::ExtendAcrossMedia(BackTraces traces, const Extender* extender)
       : Base("You may not @extend selectors across media queries.", traces)
     {}
 

@@ -15,7 +15,7 @@ namespace Sass {
     eval(eval),
     root(root),
     compiler(eval.compiler),
-    modctx(eval.modctx),
+    modctx(eval.modctx42),
     wconfig(eval.wconfig),
     idxs(root->idxs)
   {}

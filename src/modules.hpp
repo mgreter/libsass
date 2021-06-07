@@ -72,7 +72,7 @@ namespace Sass {
 
     // The extensions defined in this module, which is also able to update
     // [css]'s style rules in-place based on downstream extensions.
-    Extender* extender = nullptr;
+    ExtensionStoreObj extender = nullptr;
 
     // Special set with global assignments
     // Needed for imports within style-rules
@@ -84,7 +84,7 @@ namespace Sass {
     Module(EnvRefs* idxs);
 
     // Check if there are any unsatisfied extends (will throw)
-    bool checkForUnsatisfiedExtends(Extension& unsatisfied) const;
+    bool checkForUnsatisfiedExtends3(Extension& unsatisfied) const;
 
   };
 

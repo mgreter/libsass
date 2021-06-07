@@ -45,6 +45,8 @@ namespace Sass {
     // Returns the at-rule name for [node], or `null` if it's not an at-rule.
     virtual const sass::string& getAtRuleName() const { return Strings::empty; }
 
+    virtual CssNode* produce() { return this; }
+
     // Is this really obsolete now?
     // size_t tabs() const { return 0; }
     // void tabs(size_t tabs) const { }
@@ -101,6 +103,9 @@ namespace Sass {
       return parent_ && bubbles(stopAtMediaRule) ?
         parent_->bubbleThrough(stopAtMediaRule) : this;
     }
+
+    // virtual CssNode* produce() const override;
+
 
     // Declare up-casting methods
     DECLARE_ISA_CASTER(CssAtRule);
@@ -259,6 +264,15 @@ namespace Sass {
       return visitor->visitCssRoot(this);
     }
 
+    CssNode* produce() override final {
+      CssNodeVector copy;
+      for (CssNode* child : elements_) {
+          copy.emplace_back(child->produce());
+      }
+      return SASS_MEMORY_NEW(CssRoot,
+        pstate_, std::move(copy));
+    }
+
     CssRoot* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(CssRoot, this);
     }
@@ -395,6 +409,17 @@ namespace Sass {
     // Css visitor and rendering entry function
     void accept(CssVisitor<void>* visitor) override final {
       return visitor->visitCssStyleRule(this);
+    }
+
+    CssNode* produce() override final {
+      CssNodeVector copy;
+      for (CssNode* child : elements_) {
+        copy.emplace_back(child->produce());
+      }
+      return SASS_MEMORY_NEW(CssStyleRule,
+        pstate_, parent_,
+        selector_->produce(),
+        std::move(copy));
     }
 
     // Declare via macro to allow line/col debugging

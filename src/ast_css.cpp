@@ -86,6 +86,15 @@ namespace Sass {
     return true;
   }
 
+  // CssNode* CssParentNode::produce() const {
+  //     CssNodeVector copy;
+  //     for (CssNode* child : elements_) {
+  //         copy.emplace_back(child->produce());
+  //     }
+  //     return SASS_MEMORY_NEW(CssParentNode,
+  //         pstate_, parent_, std::move(copy));
+  // }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

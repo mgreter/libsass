@@ -510,6 +510,7 @@ namespace Sass {
             ImportStackFrame iframe(compiler, sheet->import);
             LocalOption<bool> scoped(compiler.hasWithConfig,
               compiler.hasWithConfig || hasWith);
+            // RAII_PTR(Root, extctx33, root);
             eval.compileModule(sheet);
             wconfig.finalize(compiler);
           }

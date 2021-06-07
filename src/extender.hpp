@@ -13,12 +13,20 @@
 
 #include "ast_helpers.hpp"
 #include "backtrace.hpp"
+#include "extension.hpp"
 
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   // Different hash map types used by extender
   /////////////////////////////////////////////////////////////////////////
+
+  // This is special (ptrs!)
+  typedef UnorderedSet<
+    ExtensionObj,
+    ObjPtrHash,
+    ObjPtrEquality
+  > ExtSet;
 
   // This is special (ptrs!)
   typedef UnorderedSet<
@@ -74,14 +82,16 @@ namespace Sass {
     >,
     ObjHash,
     ObjEquality,
-    Sass::Allocator<std::pair<const SimpleSelectorObj, sass::vector<ExtensionObj>>>
+    Sass::Allocator<std::pair<const SimpleSelectorObj, sass::vector<Extender>>>
   > ExtByExtMap;
   
-  class Extender {
+  class ExtensionStore : public RefCounted {
 
   public:
 
     enum ExtendMode { TARGETS, REPLACE, NORMAL, };
+
+    mutable ExtSmplSelSet wasExtended2;
 
   private:
 
@@ -100,13 +110,22 @@ namespace Sass {
     // A map from all simple selectors in the stylesheet to the rules that
     // contain them.This is used to find which rules an `@extend` applies to.
     /////////////////////////////////////////////////////////////////////////
-    ExtSelMap selectors;
+  public:
+    ExtSelMap selectors54;
 
     /////////////////////////////////////////////////////////////////////////
     // A map from all extended simple selectors
     // to the sources of those extensions.
     /////////////////////////////////////////////////////////////////////////
     ExtSelExtMap extensionsBySimpleSelector;
+
+    /// Whether this extender has no extensions.
+    bool isEmpty() const {
+      // Simply check if anything was registered
+      return extensionsBySimpleSelector.empty();
+    }
+
+    sass::string toString();
 
     /////////////////////////////////////////////////////////////////////////
     // A map from all simple selectors in extenders to
@@ -162,13 +181,16 @@ namespace Sass {
     // Constructor with specific [mode].
     // [traces] are needed to throw errors.
     /////////////////////////////////////////////////////////////////////////
-    Extender(ExtendMode mode, BackTraces& traces);
-    Extender();
+    ExtensionStore(ExtendMode mode, BackTraces& traces);
+    ExtensionStore();
+
+    void addNonOriginalSelectors(ExtSmplSelSet originalSelectors, ExtSet& unsatisfiedExtensions);
+    void delNonOriginalSelectors(ExtSmplSelSet originalSelectors, ExtSet& unsatisfiedExtensions);
 
     /////////////////////////////////////////////////////////////////////////
     // Empty desctructor
     /////////////////////////////////////////////////////////////////////////
-    // ~Extender() {};
+    // ~ExtensionStore() {};
 
     /////////////////////////////////////////////////////////////////////////
     // Extends [selector] with [source] extender and [targets] extendees.
@@ -208,7 +230,7 @@ namespace Sass {
     // Registers the [SimpleSelector]s in [list]
     // to point to [rule] in [selectors].
     /////////////////////////////////////////////////////////////////////////
-    void registerSelector(
+    void _registerSelector(
       const SelectorListObj& list,
       const SelectorListObj& rule);
 
@@ -224,6 +246,7 @@ namespace Sass {
       const SelectorListObj& extender,
       const SimpleSelectorObj& target,
       const CssMediaRuleObj& mediaQueryContext,
+      const ExtendRuleObj& extend,
       bool is_optional = false);
 
     /////////////////////////////////////////////////////////////////////////
@@ -239,8 +262,17 @@ namespace Sass {
     // extend any selector. Updates the passed reference
     // to point to that Extension for further analysis.
     /////////////////////////////////////////////////////////////////////////
-    bool checkForUnsatisfiedExtends(
+    bool checkForUnsatisfiedExtends2(
       Extension& unsatisfied) const;
+
+    /////////////////////////////////////////////////////////////////////////
+    /// Extends [this] with all the extensions in [extensions].
+    /// These extensions will extend all selectors already in [this],
+    /// but they will *not* extend other extensions from [extenders].
+    /////////////////////////////////////////////////////////////////////////
+    void addExtensions(
+      sass::vector<ExtensionStoreObj>& extensionStores);
+
 
   private:
 
@@ -269,7 +301,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     // Note: dart-sass throws an error in here
     /////////////////////////////////////////////////////////////////////////
-    void extendExistingStyleRules(
+    void _extendExistingSelectors(
       const ExtListSelSet& rules,
       const ExtSelExtMap& newExtensions);
 
@@ -280,7 +312,7 @@ namespace Sass {
     // selector list, so that relevant results don't get trimmed too early.
     // Returns `null` (Note: empty map) if there are no extensions to add.
     /////////////////////////////////////////////////////////////////////////
-    void extendExistingExtensions( // was ExtSelExtMap
+    ExtSelExtMap _extendExistingExtensions( // was ExtSelExtMap
       // Taking in a reference here makes MSVC debug stuck!?
       const sass::vector<ExtensionObj>& extensions,
       const ExtSelExtMap& newExtensions);
@@ -308,14 +340,14 @@ namespace Sass {
     // Returns a one-off [Extension] whose
     // extender is composed solely of [simple].
     /////////////////////////////////////////////////////////////////////////
-    Extension* extensionForSimple(
+    Extender extenderForSimple(
       const SimpleSelectorObj& simple) const;
 
     /////////////////////////////////////////////////////////////////////////
     // Returns a one-off [Extension] whose extender is composed
     // solely of a compound selector containing [simples].
     /////////////////////////////////////////////////////////////////////////
-    Extension* extensionForCompound(
+    Extender extenderForCompound(
       // Taking in a reference here makes MSVC debug stuck!?
       const CompoundSelectorObj& compound) const;
 
@@ -335,7 +367,7 @@ namespace Sass {
     // Extends [simple] without extending the
     // contents of any selector pseudos it contains.
     /////////////////////////////////////////////////////////////////////////
-    sass::vector<ExtensionObj> extendWithoutPseudo(
+    sass::vector<Extender> extendWithoutPseudo(
       const SimpleSelectorObj& simple,
       const ExtSelExtMap& extensions,
       ExtSmplSelSet* targetsUsed) const;
@@ -344,7 +376,7 @@ namespace Sass {
     // Extends [simple] and also extending the
     // contents of any selector pseudos it contains.
     /////////////////////////////////////////////////////////////////////////
-    sass::vector<sass::vector<ExtensionObj>> extendSimple(
+    sass::vector<sass::vector<Extender>> extendSimple(
       const SimpleSelectorObj& simple,
       const ExtSelExtMap& extensions,
       const CssMediaRuleObj& mediaQueryContext,

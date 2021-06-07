@@ -27,7 +27,7 @@ namespace Sass {
     Compiler& compiler,
     SourceDataObj source) :
     compiler(compiler),
-    modctx(compiler.modctx),
+    modctx(compiler.modctx3),
     wconfig(compiler.wconfig),
     // hasWithConfig(compiler.hasWithConfig),
     scanner(compiler, source),

@@ -31,6 +31,8 @@
 #include "plugins.hpp"
 #include "file.hpp"
 
+#include "debugger.hpp"
+
 #include <cstring>
 #include <csignal>
 #ifdef _MSC_VER
@@ -157,15 +159,17 @@ namespace Sass {
 
     Eval eval(*this, *this, plainCss);
 
-    root->extender = new Extender(Extender::NORMAL, eval.logger);
+    // root->extender = SASS_MEMORY_NEW(ExtensionStore, ExtensionStore::NORMAL, eval.logger);
 
-    CssRootObj compiled = eval.acceptRoot(root);
+    CssRootObj compiled = eval.acceptRoot2(root);
 
-    Extension unsatisfied;
-    // check that all extends were used
-    if (root->checkForUnsatisfiedExtends(unsatisfied)) {
-      throw Exception::UnsatisfiedExtend(*this, unsatisfied);
-    }
+    // debug_ast(compiled);
+
+    // Extension unsatisfied;
+    // // check that all extends were used
+    // if (root->checkForUnsatisfiedExtends3(unsatisfied)) {
+    //   // throw Exception::UnsatisfiedExtend(*this, unsatisfied);
+    // }
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
@@ -734,7 +738,8 @@ namespace Sass {
       stylesheet->import = import;
     }
 
-    stylesheet->extender = new Extender(Extender::NORMAL, *this);
+    stylesheet->extender = SASS_MEMORY_NEW(ExtensionStore, ExtensionStore::NORMAL, *this);
+    // std::cerr << "!! Create import store " << abs_path  << " => " << stylesheet->extender.ptr() << "\n";
 
     // Return pointer, it is already managed
     // Don't call detach, as it could leak then

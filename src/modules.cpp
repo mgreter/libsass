@@ -17,13 +17,18 @@ namespace Sass {
 
   // Check if there are any unsatisfied extends (will throw)
 
-  bool Module::checkForUnsatisfiedExtends(Extension & unsatisfied) const
+  bool Module::checkForUnsatisfiedExtends3(Extension & unsatisfied) const
   {
-    if (extender->checkForUnsatisfiedExtends(unsatisfied)) {
+    ExtSmplSelSet originals;
+    for (auto& entry : extender->selectors54) {
+      originals.insert(entry.first);
+    }
+
+    if (extender->checkForUnsatisfiedExtends2(unsatisfied)) {
       return true;
     }
     for (auto& asd : upstream) {
-      if (asd->checkForUnsatisfiedExtends(unsatisfied)) {
+      if (asd->checkForUnsatisfiedExtends3(unsatisfied)) {
         return true;
       }
     }

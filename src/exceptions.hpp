@@ -20,6 +20,7 @@
 
 namespace Sass {
 
+  class Extender;
   class BackTrace;
 
   sass::string toSentence(
@@ -257,12 +258,13 @@ namespace Sass {
 
     class UnsatisfiedExtend : public Base {
     public:
-      UnsatisfiedExtend(BackTraces traces, Extension extension);
+      UnsatisfiedExtend(BackTraces traces, Extension* extension);
     };
 
     class ExtendAcrossMedia : public Base {
     public:
-      ExtendAcrossMedia(BackTraces traces, Extension extension);
+      ExtendAcrossMedia(BackTraces traces, const Extension* extension);
+      ExtendAcrossMedia(BackTraces traces, const Extender* extender);
     };
 
     class IoError : public Base {

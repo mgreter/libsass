@@ -44,6 +44,8 @@
 #include "ast_expressions.hpp"
 #include "parser_expression.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
 
   // Import some namespaces
@@ -667,7 +669,12 @@ namespace Sass {
     // Check if we have any parent
     // Meaning we append to the root
     if (!current->parent()) {
-      current->concat(children);
+      CssNodeVector copy;
+      for (CssNode* child : children) {
+        current->append(child);
+        // copy.push_back(child);
+      }
+      // current->concat(children);
       return;
     }
     // Process all children to be added
@@ -705,19 +712,20 @@ namespace Sass {
     auto oldCurrent = current;
     current = root->compiled;
 
-    if (modctx) {
-      modctx->upstreams.push_back(root);
-    }
+    // if (modctx42) {
+    //   // Wrong, add to modules?
+    //   modctx42->upstreams.push_back(root);
+    // }
 
     RAII_MODULE(modules, root);
-    RAII_PTR(Root, modctx, root);
+    RAII_PTR(Root, modctx42, root);
     EnvRefs* idxs = root->idxs;
 
     EnvRefs* mframe(compiler.getCurrentModule());
 
     // Make frame scope active for evaluation
     EnvScope scoped(compiler.varRoot, idxs);
-    RAII_PTR(Extender, extender2, root->extender);
+    RAII_PTR(ExtensionStore, extender2, root->extender);
 
     selectorStack.push_back(nullptr);
     for (auto& child : root->elements()) {
@@ -740,7 +748,7 @@ namespace Sass {
     rule->wasExposed(true);
     // if (!rule->module32()) return;
     mergeForwards(rule->module32()->idxs,
-      modctx, rule, compiler);
+      modctx42, rule, compiler);
 
   }
 
@@ -855,18 +863,24 @@ namespace Sass {
   }
   // EO exposeImpRule
 
+  // Import shares this environment's variables,
+  // functions, and mixins, but not its modules.
   void Eval::acceptIncludeImport(IncludeImport* rule)
   {
     BackTrace trace(rule->pstate(), Strings::importRule);
     callStackFrame cframe(logger, trace);
     if (Root* root = loadModRule(rule)) {
       ImportStackFrame iframe(compiler, root->import);
-      EnvScope scoped(compiler.varRoot, root->idxs);
-      if (modctx) {
-        modctx->upstreams.push_back(root);
-      }
+      modctx42->upstream.push_back(root);
       RAII_MODULE(modules, root);
-      RAII_PTR(Root, modctx, root);
+
+      // We need to RAII objects
+      // One to append upstream modules
+      // Another to add extend selectors
+      // Only different for import?
+
+      // RAII_PTR(Root, modctx42, root);
+      RAII_PTR(Root, modctx42, root);
       RAII_FLAG(inImport, true);
       exposeImpRule(rule);
       // Imports are always executed again
@@ -881,20 +895,28 @@ namespace Sass {
 
     BackTrace trace(rule->pstate(), Strings::useRule);
     callStackFrame cframe(logger, trace);
-
+//    std::cerr << "LOad: " << rule->url() << "\n";
     if (Root* root = loadModRule(rule)) {
-      compiler.modctx->upstream.push_back(root);
+      modctx42->upstream.push_back(root);
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.hasWithConfig,
           compiler.hasWithConfig || rule->hasConfig);
         RAII_PTR(WithConfig, wconfig, rule);
+        RAII_PTR(Root, extctx33, root);
         compileModule(root);
+        //       std::cerr << "URL: " << root->import->getAbsPath() << "\n";
+        // debug_ast(root->compiled);
         rule->finalize(compiler);
         insertModule(root);
       }
       else if (inImport) {
         // We must also produce inner modules somehow
+        // We must create copies of selectors, after they
+        // have been extended internally, but we must not
+        // extend the original selectors of e.g. used modules,
+        // since they might be re-used in another context where
+        // these inner changes should not be visible.
         insertModule(root);
       }
       else if (rule->hasConfig) {
@@ -915,12 +937,13 @@ namespace Sass {
     callStackFrame frame333(logger, trace);
 
     if (Root* root = loadModRule(rule)) {
-      compiler.modctx->upstream.push_back(root);
+      modctx42->upstream.push_back(root);
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> scoped(compiler.hasWithConfig,
           compiler.hasWithConfig || rule->hasConfig);
         RAII_PTR(WithConfig, wconfig, rule);
+        RAII_PTR(Root, extctx33, root);
         compileModule(root);
         rule->finalize(compiler);
         insertModule(root);
