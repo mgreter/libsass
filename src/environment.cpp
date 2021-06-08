@@ -901,7 +901,7 @@ namespace Sass {
 
     BackTrace trace(rule->pstate(), Strings::useRule);
     callStackFrame cframe(logger, trace);
-    std::cerr << "LOad: " << rule->url() << "\n";
+    // std::cerr << "LOad: " << rule->url() << "\n";
     if (Root* root = loadModRule(rule)) {
       modctx42->upstream.push_back(root);
       if (!root->isCompiled) {
