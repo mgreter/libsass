@@ -672,6 +672,9 @@ namespace Sass {
       CssNodeVector copy;
       for (CssNode* child : children) {
         current->append(child);
+        if (auto css = child->isaCssStyleRule()) {
+          extender2->_registerSelector(css->selector(), css->selector());
+        }
         // copy.push_back(child);
       }
       // current->concat(children);
@@ -690,6 +693,7 @@ namespace Sass {
           }
           SelectorListObj resolved = css->selector()->resolveParentSelectors(
             parent->selector(), compiler, true);
+          extender2->_registerSelector(resolved, resolved);
           current->parent()->append(SASS_MEMORY_NEW(CssStyleRule,
             css->pstate(), current, resolved, { inner }));
         }
