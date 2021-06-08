@@ -100,7 +100,7 @@ namespace Sass {
     // Whether we're currently building the output of a `@keyframes` rule.
     bool inKeyframes = false;
 
-    void insertModule(Module* module);
+    void insertModule(Module* module, bool clone = false);
     void compileModule(Root* module);
 
     /////////////////////////////////////////////////////////////////////////
