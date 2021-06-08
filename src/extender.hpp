@@ -80,7 +80,7 @@ namespace Sass {
     sass::vector<ExtensionObj>,
     ObjHash,
     ObjEquality,
-    Sass::Allocator<std::pair<const SimpleSelectorObj, std::vector<ExtensionObj>>>
+    Sass::Allocator<std::pair<const SimpleSelectorObj, sass::vector<ExtensionObj>>>
   > ExtByExtMap;
   
   class ExtensionStore : public RefCounted {
