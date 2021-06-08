@@ -77,12 +77,10 @@ namespace Sass {
 
   typedef UnorderedMap<
     SimpleSelectorObj,
-    sass::vector<
-    ExtensionObj
-    >,
+    sass::vector<ExtensionObj>,
     ObjHash,
     ObjEquality,
-    Sass::Allocator<std::pair<const SimpleSelectorObj, sass::vector<Extender>>>
+    Sass::Allocator<std::pair<const SimpleSelectorObj, std::vector<ExtensionObj>>>
   > ExtByExtMap;
   
   class ExtensionStore : public RefCounted {
