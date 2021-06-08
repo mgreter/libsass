@@ -673,7 +673,9 @@ namespace Sass {
       for (CssNode* child : children) {
         current->append(child);
         if (auto css = child->isaCssStyleRule()) {
-          extender2->_registerSelector(css->selector(), css->selector());
+          if (!css->selector()->hasPlaceholder()) {
+            extender2->_registerSelector(css->selector(), css->selector());
+          }
         }
         // copy.push_back(child);
       }
@@ -899,7 +901,7 @@ namespace Sass {
 
     BackTrace trace(rule->pstate(), Strings::useRule);
     callStackFrame cframe(logger, trace);
-//    std::cerr << "LOad: " << rule->url() << "\n";
+    std::cerr << "LOad: " << rule->url() << "\n";
     if (Root* root = loadModRule(rule)) {
       modctx42->upstream.push_back(root);
       if (!root->isCompiled) {
@@ -908,6 +910,7 @@ namespace Sass {
           compiler.hasWithConfig || rule->hasConfig);
         RAII_PTR(WithConfig, wconfig, rule);
         RAII_PTR(Root, extctx33, root);
+        RAII_PTR(Root, modctx42, root);
         compileModule(root);
         //       std::cerr << "URL: " << root->import->getAbsPath() << "\n";
         // debug_ast(root->compiled);

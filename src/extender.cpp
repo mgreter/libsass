@@ -750,7 +750,7 @@ namespace Sass {
 
         // Private selectors can't be extended across module boundaries.
         if (auto* placeholder = target->isaPlaceholderSelector()) {
-          if (placeholder->isPrivate93()) return;
+          if (placeholder->isPrivate93()) return; // continue?
         }
 
         // Find existing extensions to extend.
