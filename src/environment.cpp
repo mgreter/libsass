@@ -666,12 +666,12 @@ namespace Sass {
 
     // The children to be added to the document
     auto children(module->compiled->elements());
-      for (auto& child : children) {
-        child = child->produce();
-      }
-      if (clone) {
-        module->compiled->elements() = children;
-      }
+//      for (auto& child : children) {
+//        child = child->produce();
+//      }
+//      if (clone) {
+//        module->compiled->elements() = children;
+//      }
 
     // Check if we have any parent
     // Meaning we append to the root
@@ -931,8 +931,8 @@ namespace Sass {
         // extend the original selectors of e.g. used modules,
         // since they might be re-used in another context where
         // these inner changes should not be visible.
-        RAII_FLAG(inImport, false);
-        insertModule(root, true);
+        //RAII_FLAG(inImport, false);
+        insertModule(root, false);
       }
       else if (rule->hasConfig) {
         throw Exception::ParserException(compiler,
