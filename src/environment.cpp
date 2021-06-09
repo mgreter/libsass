@@ -656,8 +656,6 @@ namespace Sass {
     // Nothing to be added yet? Error?
     if (module->compiled == nullptr) return;
 
-    // module->compiled = module->compiled->produce2();
-
     // For imports we always reproduce
 //    if (inImport) {
 //      // Don't like the recursion, but OK
@@ -667,19 +665,23 @@ namespace Sass {
 //    }
 
     // The children to be added to the document
-    auto& children(module->compiled->elements());
-    // Check if we haven't any parent
+    auto children(module->compiled->elements());
+      for (auto& child : children) {
+        child = child->produce();
+      }
+      if (clone) {
+        module->compiled->elements() = children;
+      }
+
+    // Check if we have any parent
     // Meaning we append to the root
     if (!current->parent()) {
-      // debug_ast(module->compiled);
       CssNodeVector copy;
       for (CssNode* child : children) {
         current->append(child);
         if (auto css = child->isaCssStyleRule()) {
           if (!css->selector()->hasPlaceholder()) {
-            auto sel = css->selector(); // SASS_MEMORY_COPY(css->selector());
-            if (clone) sel = SASS_MEMORY_COPY(css->selector());
-            if (clone) extender2->_registerSelector(sel, sel);
+            extender2->_registerSelector(css->selector(), css->selector());
           }
         }
         // copy.push_back(child);
@@ -889,27 +891,15 @@ namespace Sass {
       // One to append upstream modules
       // Another to add extend selectors
       // Only different for import?
-      
-      // RAII_PTR(Root, extctx33, root);
-      CssRootObj css = SASS_MEMORY_NEW(CssRoot, rule->pstate());
-      {
-        RAII_PTR(CssParentNode, current, css);
-        RAII_PTR(Root, modctx42, root);
-        RAII_FLAG(inImport, true);
-        exposeImpRule(rule);
-        // Imports are always executed again
-        for (const StatementObj& item : root->elements()) {
-          item->accept(this);
-        }
-      }
 
-      for (auto& child : css->elements()) {
-        if (auto rule = child->isaCssStyleRule()) {
-          extender2->addSelector(rule->selector(), mediaStack.back());
-        }
+      // RAII_PTR(Root, modctx42, root);
+      RAII_PTR(Root, modctx42, root);
+      RAII_FLAG(inImport, true);
+      exposeImpRule(rule);
+      // Imports are always executed again
+      for (const StatementObj& item : root->elements()) {
+        item->accept(this);
       }
-
-      current->concat(css);
     }
   }
 
@@ -932,7 +922,7 @@ namespace Sass {
         //       std::cerr << "URL: " << root->import->getAbsPath() << "\n";
         // debug_ast(root->compiled);
         rule->finalize(compiler);
-        insertModule(root, true);
+        insertModule(root);
       }
       else if (inImport) {
         // We must also produce inner modules somehow
@@ -941,6 +931,7 @@ namespace Sass {
         // extend the original selectors of e.g. used modules,
         // since they might be re-used in another context where
         // these inner changes should not be visible.
+        RAII_FLAG(inImport, false);
         insertModule(root, true);
       }
       else if (rule->hasConfig) {
