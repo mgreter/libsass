@@ -464,7 +464,7 @@ namespace Sass {
     bool onlyPublic)
   {
     if (list.isNull() || list->empty()) return;
-    //std::cerr << "REGISTERING " << rule.ptr() << " - " << rule->toString() << "\n";
+    // std::cerr << "Reg selector " << rule.ptr() << " - " << rule->toString() << "\n";
     for (auto complex : list->elements()) {
       for (auto component : complex->elements()) {
         if (auto compound = component->isaCompoundSelector()) {

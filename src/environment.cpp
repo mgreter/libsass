@@ -656,6 +656,8 @@ namespace Sass {
     // Nothing to be added yet? Error?
     if (module->compiled == nullptr) return;
 
+    // std::cerr << "Insert module " << modctx42->import->getImpPath() << "\n";
+
     // For imports we always reproduce
 //    if (inImport) {
 //      // Don't like the recursion, but OK
@@ -666,9 +668,11 @@ namespace Sass {
 
     // The children to be added to the document
     auto children(module->compiled->elements());
-    //for (auto& child : children) {
-    //  child = child->produce();
-    //}
+    if (inImport) {
+      for (auto& child : children) {
+        child = child->produce();
+      }
+    }
     //module->compiled->elements() = children;
 
     if (clone) {
@@ -703,7 +707,7 @@ namespace Sass {
           }
           SelectorListObj resolved = css->selector()->resolveParentSelectors(
             parent->selector(), compiler, true);
-          extender2->_registerSelector(resolved, resolved);
+          extender2->_registerSelector(resolved, resolved, true);
           current->parent()->append(SASS_MEMORY_NEW(CssStyleRule,
             css->pstate(), current, resolved, { inner }));
         }
@@ -923,6 +927,8 @@ namespace Sass {
         //       std::cerr << "URL: " << root->import->getAbsPath() << "\n";
         // debug_ast(root->compiled);
         rule->finalize(compiler);
+
+        // Only first occurence is inserted
         insertModule(root);
       }
       else if (inImport) {
