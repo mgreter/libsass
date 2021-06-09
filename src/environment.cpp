@@ -666,9 +666,9 @@ namespace Sass {
 
     // The children to be added to the document
     auto children(module->compiled->elements());
-    for (auto& child : children) {
-      child = child->produce();
-    }
+    //for (auto& child : children) {
+    //  child = child->produce();
+    //}
     //module->compiled->elements() = children;
 
     if (clone) {
