@@ -666,11 +666,12 @@ namespace Sass {
 
     // The children to be added to the document
     auto children(module->compiled->elements());
+    for (auto& child : children) {
+      child = child->produce();
+    }
+    //module->compiled->elements() = children;
+
     if (clone) {
-      for (auto& child : children) {
-        child = child->produce();
-      }
-      module->compiled->elements() = children;
     }
 
     // Check if we have any parent
@@ -678,12 +679,12 @@ namespace Sass {
     if (!current->parent()) {
       CssNodeVector copy;
       for (CssNode* child : children) {
-        current->append(child);
         if (auto css = child->isaCssStyleRule()) {
-          if (!css->selector()->hasPlaceholder()) {
-            extender2->_registerSelector(css->selector(), css->selector());
-          }
+          // if (!css->selector()->hasPlaceholder()) {
+            extender2->_registerSelector(css->selector(), css->selector(), true);
+            // }
         }
+        current->append(child);
         // copy.push_back(child);
       }
       // current->concat(children);
@@ -932,7 +933,7 @@ namespace Sass {
         // since they might be re-used in another context where
         // these inner changes should not be visible.
         //RAII_FLAG(inImport, false);
-        insertModule(root, false);
+        insertModule(root, true);
       }
       else if (rule->hasConfig) {
         throw Exception::ParserException(compiler,

@@ -460,7 +460,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   void ExtensionStore::_registerSelector(
     const SelectorListObj& list,
-    const SelectorListObj& rule)
+    const SelectorListObj& rule,
+    bool onlyPublic)
   {
     if (list.isNull() || list->empty()) return;
     //std::cerr << "REGISTERING " << rule.ptr() << " - " << rule->toString() << "\n";
@@ -469,7 +470,14 @@ namespace Sass {
         if (auto compound = component->isaCompoundSelector()) {
           for (const SimpleSelectorObj& simple : compound->elements()) {
             // Creating this structure can take up to 5%
-            selectors54[simple].insert(rule);
+            if (auto ph = simple->isaPlaceholderSelector()) {
+              if (!onlyPublic || !ph->isPrivate93()) {
+                selectors54[simple].insert(rule);
+              }
+            }
+            else {
+              selectors54[simple].insert(rule);
+            }
             if (auto pseudo = simple->isaPseudoSelector()) {
               if (pseudo->selector()) {
                 auto selectorInPseudo = pseudo->selector();

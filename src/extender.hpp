@@ -230,7 +230,8 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     void _registerSelector(
       const SelectorListObj& list,
-      const SelectorListObj& rule);
+      const SelectorListObj& rule,
+      bool onlyPublic = false);
 
     /////////////////////////////////////////////////////////////////////////
     // Adds an extension to this extender. The [extender] is the selector for the
