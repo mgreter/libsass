@@ -666,12 +666,12 @@ namespace Sass {
 
     // The children to be added to the document
     auto children(module->compiled->elements());
-//      for (auto& child : children) {
-//        child = child->produce();
-//      }
-//      if (clone) {
-//        module->compiled->elements() = children;
-//      }
+    if (clone) {
+      for (auto& child : children) {
+        child = child->produce();
+      }
+      module->compiled->elements() = children;
+    }
 
     // Check if we have any parent
     // Meaning we append to the root
